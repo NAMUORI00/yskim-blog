@@ -1,5 +1,6 @@
-baseURL: https://example.com/
-locale: ko-kr
+baseURL: https://yskim-blog.pages.dev/
+defaultContentLanguage: ko
+defaultContentLanguageInSubdir: false
 title: yskim blog
 timeZone: Asia/Seoul
 enableRobotsTXT: true
@@ -16,22 +17,90 @@ markup:
     noClasses: false
 
 params:
-  description: Research, engineering, and notes published from an Obsidian-first workflow.
+  description: 연구, 엔지니어링, 지식관리 노트를 한국어 중심으로 발행합니다.
   author: yskim
   handle: namuori
-  profile: Research engineering notes, Obsidian publishing, and maintainable systems.
+  profile: 연구 엔지니어링, 지식관리, Obsidian 기반 출판 워크플로를 다룹니다.
   location: Seoul, Korea
   topics:
-    - research-engineering
+    - 연구엔지니어링
     - video-rag
     - obsidian
     - hugo
 
 menu:
   main:
-    - name: Posts
+    - name: 글
       pageRef: /posts
       weight: 10
-    - name: About
+    - name: 소개
       pageRef: /pages/about
       weight: 20
+
+languages:
+  ko:
+    locale: ko-kr
+    label: 한국어
+    title: yskim blog
+    weight: 1
+    params:
+      description: 연구, 엔지니어링, 지식관리 노트를 한국어 중심으로 발행합니다.
+      profile: 연구 엔지니어링, 지식관리, Obsidian 기반 출판 워크플로를 다룹니다.
+      ui:
+        allPosts: 모든 글
+        intro: 소개 / ABOUT
+        knowledgeGraph: 지식 그래프
+        languageSwitch: English
+        languageSwitchLabel: 영어 번역 보기
+        noTranslation: 아직 영어 번역이 없습니다
+        onThisBlog: 블로그
+        recent: 최근 글
+        search: 검색
+        searchPlaceholder: 글 검색
+        tags: 태그
+        readmeTitle: 공개 노트 출판 흐름
+        readmeLead: 개인적인 초안은 Obsidian에 남기고, 공개 가능한 글만 Hugo와 GitHub를 거쳐 Cloudflare Pages로 배포합니다.
+        workflowWrite: Obsidian에서 작성
+        workflowReview: GitHub에서 검수
+        workflowDeploy: Cloudflare에 배포
+    menu:
+      main:
+        - name: 글
+          pageRef: /posts
+          weight: 10
+        - name: 소개
+          pageRef: /pages/about
+          weight: 20
+  en:
+    locale: en-us
+    label: English
+    title: yskim blog
+    weight: 2
+    params:
+      description: English translations of Korean-first research and engineering notes.
+      profile: Research engineering, knowledge work, and Obsidian-based publishing workflows.
+      ui:
+        allPosts: All posts
+        intro: About / 소개
+        knowledgeGraph: Knowledge Graph
+        languageSwitch: 한국어
+        languageSwitchLabel: Read the Korean original
+        noTranslation: Korean original only
+        onThisBlog: On this blog
+        recent: Recent
+        search: Search
+        searchPlaceholder: Search notes
+        tags: Tags
+        readmeTitle: Public-note publishing flow
+        readmeLead: Draft thinking stays in Obsidian. Public posts move through Hugo, GitHub review, and Cloudflare Pages.
+        workflowWrite: Write in Obsidian
+        workflowReview: Review in GitHub
+        workflowDeploy: Deploy on Cloudflare
+    menu:
+      main:
+        - name: Posts
+          pageRef: /posts
+          weight: 10
+        - name: About
+          pageRef: /pages/about
+          weight: 20

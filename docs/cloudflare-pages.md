@@ -28,3 +28,9 @@ Add the same `HUGO_VERSION` value to both Production and Preview environments so
 - Check canonical URLs, redirects, and the 404 page after the first production deploy.
 
 Private Obsidian vault paths and export automation are intentionally excluded from this public repository.
+
+The deployed site is multilingual:
+
+- Korean default: `/`
+- English translations: `/en/`
+- Post translation pairs share the same `slug` and `translationKey`.

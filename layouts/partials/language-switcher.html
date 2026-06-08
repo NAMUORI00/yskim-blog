@@ -1,0 +1,8 @@
+{{ $label := site.Params.ui.languageSwitchLabel }}
+{{ with .Translations }}
+  {{ range . }}
+    <a class="language-switch" href="{{ .RelPermalink }}" lang="{{ .Language.Lang }}" aria-label="{{ $label }}">{{ site.Params.ui.languageSwitch }}</a>
+  {{ end }}
+{{ else }}
+  <span class="language-switch is-disabled">{{ site.Params.ui.noTranslation }}</span>
+{{ end }}

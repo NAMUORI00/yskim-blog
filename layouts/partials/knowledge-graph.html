@@ -1,0 +1,41 @@
+{{ $page := . }}
+{{ $tags := $page.Params.tags | default slice }}
+{{ $related := slice }}
+{{ range where site.RegularPages "Section" "posts" }}
+  {{ if ne .RelPermalink $page.RelPermalink }}
+    {{ $shared := intersect ($tags | default slice) (.Params.tags | default slice) }}
+    {{ if gt (len $shared) 0 }}
+      {{ $related = $related | append . }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+{{ $related = first 3 $related }}
+
+<aside class="knowledge-graph-card" aria-labelledby="knowledge-graph-title">
+  <div class="knowledge-graph-heading">
+    <p class="sidebar-title" id="knowledge-graph-title">{{ site.Params.ui.knowledgeGraph }}</p>
+    <span>{{ len $tags }} tags · {{ len $related }} links</span>
+  </div>
+  <svg class="knowledge-graph" viewBox="0 0 260 190" role="img" aria-labelledby="knowledge-graph-title">
+    <line class="graph-edge" x1="130" y1="92" x2="64" y2="45"></line>
+    <line class="graph-edge" x1="130" y1="92" x2="204" y2="45"></line>
+    <line class="graph-edge" x1="130" y1="92" x2="58" y2="142"></line>
+    <line class="graph-edge" x1="130" y1="92" x2="204" y2="144"></line>
+    <circle class="graph-node graph-node-main" cx="130" cy="92" r="28"></circle>
+    <text class="graph-label graph-label-main" x="130" y="96" text-anchor="middle">{{ truncate 18 $page.Title }}</text>
+
+    {{ range $index, $tag := first 4 $tags }}
+      {{ $positions := slice (dict "x" 64 "y" 45) (dict "x" 204 "y" 45) (dict "x" 58 "y" 142) (dict "x" 204 "y" 144) }}
+      {{ $pos := index $positions $index }}
+      <circle class="graph-node graph-node-tag" cx="{{ $pos.x }}" cy="{{ $pos.y }}" r="20"></circle>
+      <text class="graph-label" x="{{ $pos.x }}" y="{{ add $pos.y 4 }}" text-anchor="middle">#{{ truncate 9 $tag }}</text>
+    {{ end }}
+  </svg>
+  {{ with $related }}
+    <div class="graph-related">
+      {{ range . }}
+        <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+      {{ end }}
+    </div>
+  {{ end }}
+</aside>

@@ -4,6 +4,8 @@ Public Hugo blog source for `yskim blog`.
 
 This repository contains only the deployable static-site source: Hugo configuration, layouts, published Markdown content, static assets, and CI checks. Draft notes, vault paths, private export automation, and local publishing operations live in the private operations repository.
 
+Korean is the default language. English translations are published under `/en/` with matching `translationKey` values. Single post pages include a small Obsidian-style knowledge graph in the upper-right post header.
+
 ## Local preview
 
 Install Hugo extended `0.162.1`, then run:

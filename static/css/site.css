@@ -208,6 +208,34 @@ code {
   text-decoration: none;
 }
 
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.language-switch {
+  display: inline-flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 7px 12px;
+  color: var(--accent-strong);
+  background: #eef2eb;
+  border: 1px solid #d9e0d4;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.language-switch.is-disabled {
+  color: var(--faint);
+  background: rgba(255, 255, 255, 0.7);
+  border-color: var(--line);
+}
+
 .readme-card {
   overflow: hidden;
   margin-bottom: 18px;
@@ -376,7 +404,94 @@ code {
 }
 
 .post-header {
+  position: relative;
   border-bottom: 1px solid var(--line);
+}
+
+.post-header-tools {
+  margin-top: 16px;
+}
+
+.knowledge-graph-card {
+  position: absolute;
+  top: 22px;
+  right: 22px;
+  width: min(280px, 36%);
+  padding: 12px;
+  background: rgba(246, 247, 242, 0.94);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.knowledge-graph-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.knowledge-graph-heading .sidebar-title {
+  margin-bottom: 0;
+}
+
+.knowledge-graph-heading span {
+  color: var(--faint);
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+.knowledge-graph {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 8px;
+}
+
+.graph-edge {
+  stroke: #c6d3c8;
+  stroke-width: 1.4;
+}
+
+.graph-node {
+  fill: #ffffff;
+  stroke: #9bb29f;
+  stroke-width: 1.5;
+}
+
+.graph-node-main {
+  fill: #305c47;
+  stroke: #203f31;
+}
+
+.graph-node-tag {
+  fill: #eef4ef;
+}
+
+.graph-label {
+  fill: #34463b;
+  font-size: 9px;
+  font-weight: 750;
+  pointer-events: none;
+}
+
+.graph-label-main {
+  fill: #ffffff;
+  font-size: 8px;
+}
+
+.graph-related {
+  display: grid;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.graph-related a {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-overflow: ellipsis;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
 .content {
@@ -517,6 +632,16 @@ code {
   .site-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .header-actions {
+    justify-content: flex-start;
+  }
+
+  .knowledge-graph-card {
+    position: static;
+    width: 100%;
+    margin-top: 18px;
   }
 
   .stat-grid {

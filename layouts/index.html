@@ -7,21 +7,21 @@
       <strong>README.md</strong>
     </div>
     <div class="readme-body">
-      <p class="eyebrow">소개 / ABOUT</p>
-      <h1>Research and engineering notes, made publishable.</h1>
-      <p class="lead">Private thinking stays in Obsidian. Public posts are exported into Hugo, reviewed through GitHub pull requests, previewed on Cloudflare Pages, and shipped from <code>main</code>.</p>
+      <p class="eyebrow">{{ site.Params.ui.intro }}</p>
+      <h1>{{ site.Params.ui.readmeTitle }}</h1>
+      <p class="lead">{{ site.Params.ui.readmeLead }}</p>
       <div class="stat-grid" aria-label="Publishing workflow">
         <div>
           <strong>01</strong>
-          <span>Write in Obsidian</span>
+          <span>{{ site.Params.ui.workflowWrite }}</span>
         </div>
         <div>
           <strong>02</strong>
-          <span>Review in GitHub</span>
+          <span>{{ site.Params.ui.workflowReview }}</span>
         </div>
         <div>
           <strong>03</strong>
-          <span>Deploy on Cloudflare</span>
+          <span>{{ site.Params.ui.workflowDeploy }}</span>
         </div>
       </div>
     </div>
@@ -29,8 +29,8 @@
 
   <section class="readme-card post-section" aria-labelledby="recent-posts">
     <div class="section-heading">
-      <p class="eyebrow">최근 글</p>
-      <h2 id="recent-posts">Recently Published</h2>
+      <p class="eyebrow">{{ site.Params.ui.recent }}</p>
+      <h2 id="recent-posts">{{ site.Params.ui.allPosts }}</h2>
     </div>
     {{ $posts := where site.RegularPages "Section" "posts" }}
     {{ if $posts }}

@@ -32,7 +32,7 @@ function Get-FrontMatterLines($Text, $Path) {
 
 Get-ChildItem -LiteralPath $postsRoot -Recurse -File -Filter "*.md" | ForEach-Object {
   $path = $_.FullName
-  if ($_.Name -eq "_index.md") {
+  if ($_.BaseName -eq "_index" -or $_.Name -match "^_index\.[A-Za-z-]+\.md$") {
     return
   }
 

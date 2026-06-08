@@ -1,21 +1,22 @@
 <aside class="blog-sidebar" aria-label="Blog sidebar">
   <section class="sidebar-card search-card">
-    <p class="sidebar-title">SEARCH</p>
+    <p class="sidebar-title">{{ site.Params.ui.search }}</p>
     <form action="/posts/" method="get">
       <label class="sr-only" for="site-search">Search posts</label>
-      <input id="site-search" type="search" name="q" placeholder="Search notes">
+      <input id="site-search" type="search" name="q" placeholder="{{ site.Params.ui.searchPlaceholder }}">
     </form>
   </section>
 
   <section class="sidebar-card">
-    <p class="sidebar-title">ON THIS BLOG</p>
-    <a href="/posts/">Posts</a>
-    <a href="/pages/about/">About</a>
-    <a href="/index.xml">RSS</a>
+    <p class="sidebar-title">{{ site.Params.ui.onThisBlog }}</p>
+    {{ range site.Menus.main }}
+      <a href="{{ .URL | relLangURL }}">{{ .Name }}</a>
+    {{ end }}
+    <a href="{{ "/index.xml" | relLangURL }}">RSS</a>
   </section>
 
   <section class="sidebar-card">
-    <p class="sidebar-title">RECENT</p>
+    <p class="sidebar-title">{{ site.Params.ui.recent }}</p>
     {{ range first 5 (where site.RegularPages "Section" "posts") }}
       <a class="sidebar-post" href="{{ .RelPermalink }}">
         <span>{{ .Title }}</span>
@@ -27,7 +28,7 @@
   </section>
 
   <section class="sidebar-card">
-    <p class="sidebar-title">TAGS</p>
+    <p class="sidebar-title">{{ site.Params.ui.tags }}</p>
     <div class="sidebar-tags">
       {{ range $name, $taxonomy := site.Taxonomies.tags }}
         <a href="{{ "/tags/" | relLangURL }}{{ $name | urlize }}/">#{{ $name }}</a>

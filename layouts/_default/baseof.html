@@ -34,9 +34,12 @@
         <header class="site-header">
           <div>
             <p class="eyebrow">Obsidian-first publishing</p>
-            <p class="header-title">Public notes exported from a private vault.</p>
+            <p class="header-title">{{ site.Params.ui.readmeLead }}</p>
           </div>
-          <a class="header-action" href="/posts/">All posts</a>
+          <div class="header-actions">
+            {{ partial "language-switcher.html" . }}
+            <a class="header-action" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.allPosts }}</a>
+          </div>
         </header>
         <main>
           {{ block "main" . }}{{ end }}
