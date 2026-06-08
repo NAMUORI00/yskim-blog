@@ -93,8 +93,8 @@ code {
 
 .site-shell {
   display: grid;
-  grid-template-columns: minmax(96px, 1fr) minmax(0, 6fr) minmax(260px, 3fr);
-  gap: 30px;
+  grid-template-columns: minmax(88px, 0.7fr) minmax(0, 6.5fr) minmax(260px, 2.6fr);
+  gap: 28px;
   width: min(100% - 40px, 1500px);
   margin: 0 auto;
   padding: 28px 0 46px;
@@ -109,7 +109,7 @@ code {
 
 .profile-rail {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .avatar {
@@ -134,7 +134,7 @@ code {
 }
 
 .profile-block {
-  padding: 14px;
+  padding: 12px;
 }
 
 .profile-kicker,
@@ -166,7 +166,7 @@ code {
 .profile-copy {
   margin: 0;
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.86rem;
 }
 
 .topic-list,
@@ -175,6 +175,10 @@ code {
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+}
+
+.profile-rail .topic-list {
+  display: none;
 }
 
 .topic-list span,
@@ -228,7 +232,7 @@ code {
 
 .rail-nav {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .rail-search-link::before {
@@ -730,11 +734,21 @@ code {
 .sidebar-card {
   display: grid;
   gap: 12px;
-  padding: 16px 14px;
+  padding: 15px 14px;
   background: transparent;
   border: 0;
   border-bottom: 1px solid var(--line);
   border-radius: 0;
+}
+
+.sidebar-graph-card {
+  gap: 8px;
+  padding-top: 16px;
+}
+
+.sidebar-graph-card .sidebar-heading-row span {
+  color: var(--faint);
+  font-size: 0.75rem;
 }
 
 .sidebar-card:last-child {
@@ -761,12 +775,12 @@ code {
 
 .sidebar-nav {
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .sidebar-nav a {
   display: block;
-  padding: 9px 10px;
+  padding: 8px 10px;
   color: var(--text);
   background: var(--panel-soft);
   border: 1px solid var(--line);
@@ -798,7 +812,7 @@ code {
 
 .sidebar-post {
   display: block;
-  padding: 10px 0;
+  padding: 9px 0;
   color: var(--text);
   background: transparent;
   border-top: 1px solid var(--line);

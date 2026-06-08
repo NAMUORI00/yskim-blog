@@ -50,6 +50,7 @@ languages:
         allPosts: 모든 글
         about: 소개
         intro: 최근 노트
+        graphHint: 노트 연결
         knowledgeGraph: 지식 그래프
         languageSwitch: English
         languageSwitchLabel: 영어 번역 보기
@@ -118,6 +119,7 @@ languages:
         allPosts: All posts
         about: About
         intro: Recent notes
+        graphHint: Note links
         knowledgeGraph: Knowledge Graph
         languageSwitch: 한국어
         languageSwitchLabel: Read the Korean original
