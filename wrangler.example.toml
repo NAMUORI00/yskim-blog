@@ -1,0 +1,8 @@
+name = "yskim-blog"
+compatibility_date = "2026-06-08"
+pages_build_output_dir = "public"
+
+[[d1_databases]]
+binding = "COMMENTS_DB"
+database_name = "yskim_blog_comments"
+database_id = "replace-with-real-d1-database-id"

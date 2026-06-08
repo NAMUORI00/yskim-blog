@@ -35,6 +35,19 @@
             <span>#{{ . }}</span>
           {{ end }}
         </div>
+        <section class="rail-section" aria-label="{{ site.Params.ui.categories }}">
+          <p class="rail-section-title">{{ site.Params.ui.categories }}</p>
+          <nav class="rail-category-list">
+            {{ range $name, $taxonomy := site.Taxonomies.categories }}
+              <a href="{{ "/categories/" | relLangURL }}{{ $name | urlize }}/">
+                <span>{{ $name }}</span>
+                <strong>{{ len $taxonomy }}</strong>
+              </a>
+            {{ else }}
+              <span class="rail-empty">{{ site.Params.ui.noCategories }}</span>
+            {{ end }}
+          </nav>
+        </section>
         <nav class="rail-nav" aria-label="Main navigation">
           {{ range site.Menus.main }}
             <a href="{{ .URL }}">{{ .Name }}</a>

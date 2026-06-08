@@ -3,6 +3,8 @@ title: "첫 공개 노트"
 date: 2026-06-08
 draft: false
 slug: "obsidian-hugo-publishing-smoke-test"
+categories:
+  - 연구 노트
 tags:
   - meta
   - research
@@ -10,6 +12,7 @@ tags:
 summary: "연구와 지식관리 노트를 어떤 기준으로 남길지 정리한 첫 공개 글입니다."
 canonical: ""
 translationKey: "obsidian-hugo-publishing-smoke-test"
+comments: true
 ---
 
 이곳에는 연구를 진행하며 남겨둘 만한 생각, 구현 메모, 읽은 자료의 맥락을 기록합니다.

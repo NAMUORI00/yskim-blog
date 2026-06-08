@@ -6,7 +6,8 @@ $ErrorActionPreference = "Stop"
 
 $postsRoot = Join-Path $Root "content\posts"
 $staticRoot = Join-Path $Root "static"
-$requiredFields = @("title", "date", "draft", "slug", "tags", "summary")
+$requiredFields = @("title", "date", "draft", "slug", "categories", "tags", "summary", "translationKey", "comments")
+$listFields = @("categories", "tags")
 $errors = New-Object System.Collections.Generic.List[string]
 
 function Add-Error($Message) {
@@ -44,9 +45,9 @@ Get-ChildItem -LiteralPath $postsRoot -Recurse -File -Filter "*.md" | ForEach-Ob
   $frontMatterText = $frontMatter -join "`n"
 
   foreach ($field in $requiredFields) {
-    if ($field -eq "tags") {
-      if ($frontMatterText -notmatch "(?m)^tags:\s*$") {
-        Add-Error "Missing YAML list field 'tags': $path"
+    if ($listFields -contains $field) {
+      if ($frontMatterText -notmatch "(?m)^$field\s*:\s*$") {
+        Add-Error "Missing YAML list field '$field': $path"
       }
       continue
     }
@@ -57,6 +58,9 @@ Get-ChildItem -LiteralPath $postsRoot -Recurse -File -Filter "*.md" | ForEach-Ob
 
   if ($frontMatterText -match "(?m)^publish:\s*") {
     Add-Error "Obsidian-only field 'publish' must not be exported: $path"
+  }
+  if ($frontMatterText -notmatch "(?m)^comments:\s*(true|false)\s*$") {
+    Add-Error "Frontmatter field 'comments' must be true or false: $path"
   }
   if ($text -match "\[\[[^\]]+\]\]") {
     Add-Error "Obsidian wikilink remains in exported content: $path"

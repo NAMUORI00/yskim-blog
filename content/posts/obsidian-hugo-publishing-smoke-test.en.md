@@ -3,6 +3,8 @@ title: "First Public Note"
 date: 2026-06-08
 draft: false
 slug: "obsidian-hugo-publishing-smoke-test"
+categories:
+  - Research Notes
 tags:
   - meta
   - research
@@ -10,6 +12,7 @@ tags:
 summary: "A short opening note on what this research and knowledge-work blog is for."
 canonical: ""
 translationKey: "obsidian-hugo-publishing-smoke-test"
+comments: true
 ---
 
 This blog is a place for notes worth keeping from research, engineering, and knowledge-work projects.

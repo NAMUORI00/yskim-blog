@@ -6,6 +6,10 @@ timeZone: Asia/Seoul
 enableRobotsTXT: true
 summaryLength: 32
 
+taxonomies:
+  category: categories
+  tag: tags
+
 permalinks:
   posts: /posts/:slug/
 
@@ -27,6 +31,21 @@ params:
     - video-rag
     - obsidian
     - hugo
+  comments:
+    enabled: true
+    giscus:
+      enabled: true
+      repo: NAMUORI00/yskim-blog
+      repoId: R_kgDOSz9RGA
+      category: General
+      categoryId: DIC_kwDOSz9RGM4C-vLv
+      mapping: pathname
+      reactionsEnabled: "1"
+      inputPosition: bottom
+    anonymous:
+      enabled: false
+      turnstileSiteKey: ""
+      moderation: true
 
 menu:
   main:
@@ -60,7 +79,20 @@ languages:
         search: 검색
         searchPlaceholder: 글 검색
         browsePosts: 글 목록 보기
+        categories: 카테고리
+        noCategories: 아직 카테고리가 없습니다
         tags: 태그
+        comments: 댓글
+        commentsGitHub: GitHub 댓글
+        commentsAnonymous: 익명 댓글
+        commentsName: 이름
+        commentsBody: 댓글 내용
+        commentsSubmit: 등록
+        commentsLoading: 댓글을 불러오는 중입니다
+        commentsEmpty: 아직 댓글이 없습니다
+        commentsModerated: 익명 댓글은 확인 후 공개됩니다.
+        commentsSaved: 댓글이 접수되었습니다
+        commentsError: 댓글 기능 설정을 확인해야 합니다
         headerEyebrow: 연구 노트
         readmeTitle: 연구와 지식관리를 기록하는 블로그
         readmeLead: 생각을 정리하고, 검증 가능한 기록을 남기기 위한 개인 연구 노트입니다.
@@ -129,7 +161,20 @@ languages:
         search: Search
         searchPlaceholder: Search notes
         browsePosts: Browse posts
+        categories: Categories
+        noCategories: No categories yet
         tags: Tags
+        comments: Comments
+        commentsGitHub: GitHub comments
+        commentsAnonymous: Anonymous comments
+        commentsName: Name
+        commentsBody: Comment
+        commentsSubmit: Submit
+        commentsLoading: Loading comments
+        commentsEmpty: No comments yet
+        commentsModerated: Anonymous comments are shown after review.
+        commentsSaved: Comment received
+        commentsError: Comment settings need attention
         headerEyebrow: Research notes
         readmeTitle: Notes on research and knowledge work
         readmeLead: A Korean-first notebook for thinking clearly, keeping evidence, and publishing useful records.

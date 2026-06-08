@@ -5,7 +5,7 @@ This public repository is designed for Cloudflare Pages with GitHub integration.
 ## Build settings
 
 - Framework preset: Hugo
-- Build command: `hugo --gc --minify`
+- Build command: `hugo --gc --minify --cleanDestinationDir`
 - Build output directory: `public`
 - Production branch: `main`
 - Environment variable: `HUGO_VERSION=0.162.1`
@@ -27,10 +27,21 @@ Add the same `HUGO_VERSION` value to both Production and Preview environments so
 - Update `baseURL` in `hugo.yaml` from `https://example.com/` to the final domain.
 - Check canonical URLs, redirects, and the 404 page after the first production deploy.
 
-Private Obsidian vault paths and export automation are intentionally excluded from this public repository.
+Private Obsidian vault paths and export automation are intentionally excluded from this public repository. This repository receives only public-ready Markdown through pull requests.
 
 The deployed site is multilingual:
 
 - Korean default: `/`
 - English translations: `/en/`
 - Post translation pairs share the same `slug` and `translationKey`.
+
+## Comment bindings
+
+Anonymous comments require Pages Functions bindings after the code is deployed:
+
+- `COMMENTS_DB`: D1 database binding for comment rows.
+- `TURNSTILE_SECRET_KEY`: encrypted secret used for server-side Turnstile validation.
+- `COMMENTS_ADMIN_TOKEN`: encrypted secret used by the moderation API.
+- `COMMENTS_AUTO_APPROVE`: optional plain variable. Keep unset or `false` for review-before-publish.
+
+Configure the D1 binding in the Cloudflare dashboard under the Pages project settings, or copy `wrangler.example.toml` to `wrangler.toml` after a real D1 database ID exists.

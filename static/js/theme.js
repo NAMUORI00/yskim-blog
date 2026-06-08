@@ -43,6 +43,19 @@
       toggle.textContent = targetLabel;
       toggle.setAttribute("aria-pressed", String(nextTheme === "dark"));
     }
+
+    const giscusFrame = document.querySelector("iframe.giscus-frame");
+    if (giscusFrame) {
+      giscusFrame.contentWindow.postMessage({
+        giscus: {
+          setConfig: {
+            theme: nextTheme,
+          },
+        },
+      }, "https://giscus.app");
+    }
+
+    window.dispatchEvent(new CustomEvent("yskim:theme-change", { detail: { theme: nextTheme } }));
   };
 
   setTheme(getPreferredTheme(), false);
