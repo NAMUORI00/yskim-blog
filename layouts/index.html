@@ -4,50 +4,19 @@
       <span></span>
       <span></span>
       <span></span>
-      <strong>README.md</strong>
-      <em>/ Obsidian vault / Hugo site</em>
+      <strong>{{ site.Title }}</strong>
+      <em>{{ site.Params.ui.onThisBlog }}</em>
     </div>
     <div class="readme-body">
-      <div class="readme-status-strip" aria-label="{{ site.Params.ui.statusLabel }}">
-        <span>{{ site.Params.ui.statusVault }}: _Blog/30_Ready</span>
-        <span>{{ site.Params.ui.statusBuild }}: Hugo</span>
-        <span>{{ site.Params.ui.statusDeploy }}: Cloudflare Pages</span>
-      </div>
       <div class="readme-intro">
         <p class="eyebrow">{{ site.Params.ui.intro }}</p>
         <h1>{{ site.Params.ui.readmeTitle }}</h1>
         <p class="lead">{{ site.Params.ui.readmeLead }}</p>
       </div>
-      <div class="stat-grid" aria-label="{{ site.Params.ui.workflowLabel }}">
-        <div>
-          <strong>01</strong>
-          <span>{{ site.Params.ui.workflowWrite }}</span>
-          <small>{{ site.Params.ui.workflowWriteNote }}</small>
-        </div>
-        <div>
-          <strong>02</strong>
-          <span>{{ site.Params.ui.workflowReview }}</span>
-          <small>{{ site.Params.ui.workflowReviewNote }}</small>
-        </div>
-        <div>
-          <strong>03</strong>
-          <span>{{ site.Params.ui.workflowBuild }}</span>
-          <small>{{ site.Params.ui.workflowBuildNote }}</small>
-        </div>
-        <div>
-          <strong>04</strong>
-          <span>{{ site.Params.ui.workflowDeploy }}</span>
-          <small>{{ site.Params.ui.workflowDeployNote }}</small>
-        </div>
+      <div class="hero-actions">
+        <a class="primary-link" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.browsePosts }}</a>
+        <a class="text-link" href="{{ "/pages/about/" | relLangURL }}">{{ site.Params.ui.about }}</a>
       </div>
-      <section class="frontmatter-preview" aria-labelledby="frontmatter-title">
-        <h2 id="frontmatter-title">{{ site.Params.ui.frontmatterTitle }}</h2>
-        <pre><code>---
-title: "{{ site.Params.ui.frontmatterPostTitle }}"
-tags: [obsidian, hugo, publishing]
-publish: true
----</code></pre>
-      </section>
     </div>
   </section>
 

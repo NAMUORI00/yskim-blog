@@ -1,24 +1,19 @@
 ---
-title: "Obsidian에서 Hugo로 발행하는 테스트"
+title: "첫 공개 노트"
 date: 2026-06-08
 draft: false
 slug: "obsidian-hugo-publishing-smoke-test"
 tags:
   - meta
-  - workflow
-  - hugo
-summary: "Obsidian 초안에서 Hugo 공개 사이트로 이어지는 발행 경로를 검증하기 위한 첫 테스트 글입니다."
+  - research
+  - notes
+summary: "연구와 지식관리 노트를 어떤 기준으로 남길지 정리한 첫 공개 글입니다."
 canonical: ""
 translationKey: "obsidian-hugo-publishing-smoke-test"
 ---
 
-이 글은 공개 Hugo 빌드의 첫 번째 발행 경로를 검증하기 위해 작성했습니다.
+이곳에는 연구를 진행하며 남겨둘 만한 생각, 구현 메모, 읽은 자료의 맥락을 기록합니다.
 
-공개 저장소에는 배포 가능한 사이트 소스, 공개 콘텐츠, 검증 스크립트만 남깁니다. 개인 초안, Obsidian vault 경로, export 자동화는 비공개 운영 저장소에 보관합니다.
+글은 완성된 결론만 모아두기보다, 판단이 바뀐 이유와 검증한 근거를 함께 남기는 쪽을 목표로 합니다. 나중에 다시 읽었을 때 그때의 선택을 재현할 수 있어야 좋은 노트라고 봅니다.
 
-```powershell
-.\scripts\validate-content.ps1
-hugo --gc --minify
-```
-
-이 구조를 기준으로 한국어 글을 기본 원문으로 두고, 필요한 경우 `/en/` 아래에 영문 번역을 함께 발행합니다.
+한국어 글을 기본 원문으로 두고, 필요한 글은 영어 번역을 함께 붙입니다. 공개할 만한 노트만 블로그로 옮기고, 아직 정리되지 않은 초안은 개인 작업 공간에 남겨둡니다.

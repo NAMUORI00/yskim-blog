@@ -25,7 +25,7 @@
       <aside class="profile-rail" aria-label="Profile">
         <a class="avatar" href="/" aria-label="{{ site.Title }} home">YS</a>
         <div class="profile-block">
-          <p class="profile-kicker">README.md</p>
+          <p class="profile-kicker">NOTEBOOK</p>
           <a class="brand" href="/">{{ site.Title }}</a>
           <p class="handle">@{{ site.Params.handle }}</p>
           <p class="profile-copy">{{ site.Params.profile }}</p>
@@ -35,18 +35,12 @@
             <span>#{{ . }}</span>
           {{ end }}
         </div>
-        <a class="rail-search-link" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.browsePosts }}</a>
         <nav class="rail-nav" aria-label="Main navigation">
           {{ range site.Menus.main }}
             <a href="{{ .URL }}">{{ .Name }}</a>
           {{ end }}
           <a href="{{ "/index.xml" | relLangURL }}">RSS</a>
         </nav>
-        <div class="publish-flow" aria-label="{{ site.Params.ui.publishFlow }}">
-          <span>Obsidian</span>
-          <span>Hugo</span>
-          <span>Cloudflare</span>
-        </div>
       </aside>
 
       <div class="content-column">

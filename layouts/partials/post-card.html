@@ -1,8 +1,6 @@
 <article class="post-card">
   <div class="post-card-main">
     <div class="post-meta-row">
-      <span class="file-icon" aria-hidden="true">md</span>
-      <span class="post-file-name">{{ with .File }}{{ .LogicalName }}{{ else }}{{ .Slug }}.md{{ end }}</span>
       <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
       {{ with .Params.lang }}<span>{{ upper . }}</span>{{ end }}
     </div>

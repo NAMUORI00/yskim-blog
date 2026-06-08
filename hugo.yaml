@@ -20,7 +20,7 @@ params:
   description: 연구, 엔지니어링, 지식관리 노트를 한국어 중심으로 발행합니다.
   author: yskim
   handle: namuori
-  profile: 연구 엔지니어링, 지식관리, Obsidian 기반 출판 워크플로를 다룹니다.
+  profile: 연구, 엔지니어링, 지식관리 노트를 기록합니다.
   location: Seoul, Korea
   topics:
     - 연구엔지니어링
@@ -45,10 +45,11 @@ languages:
     weight: 1
     params:
       description: 연구, 엔지니어링, 지식관리 노트를 한국어 중심으로 발행합니다.
-      profile: 연구 엔지니어링, 지식관리, Obsidian 기반 출판 워크플로를 다룹니다.
+      profile: 연구, 엔지니어링, 지식관리 노트를 기록합니다.
       ui:
         allPosts: 모든 글
-        intro: 소개 / ABOUT
+        about: 소개
+        intro: 최근 노트
         knowledgeGraph: 지식 그래프
         languageSwitch: English
         languageSwitchLabel: 영어 번역 보기
@@ -59,9 +60,9 @@ languages:
         searchPlaceholder: 글 검색
         browsePosts: 글 목록 보기
         tags: 태그
-        headerEyebrow: Obsidian 우선 발행
-        readmeTitle: Obsidian에서 Hugo로 발행하는 연구 노트
-        readmeLead: 개인적인 초안은 Obsidian에 남기고, 공개 가능한 Markdown만 Hugo로 빌드하여 정적 사이트로 배포합니다.
+        headerEyebrow: 연구 노트
+        readmeTitle: 연구와 지식관리를 기록하는 블로그
+        readmeLead: 생각을 정리하고, 검증 가능한 기록을 남기기 위한 개인 연구 노트입니다.
         statusLabel: 발행 상태
         statusVault: 보관함
         statusBuild: 빌드
@@ -85,7 +86,7 @@ languages:
         viewArchive: 아카이브 보기
         openPost: 열기
         publishFlow: 발행 흐름
-        footerFlow: 작성은 Obsidian Markdown, 빌드는 Hugo, 배포는 Cloudflare Pages.
+        footerFlow: Obsidian에서 작성한 공개 노트를 Hugo로 발행합니다.
         sidebarVault: 보관함
         sidebarBuild: 빌드
         sidebarGraph: 그래프
@@ -112,10 +113,11 @@ languages:
     weight: 2
     params:
       description: English translations of Korean-first research and engineering notes.
-      profile: Research engineering, knowledge work, and Obsidian-based publishing workflows.
+      profile: Notes on research, engineering, and knowledge work.
       ui:
         allPosts: All posts
-        intro: About / 소개
+        about: About
+        intro: Recent notes
         knowledgeGraph: Knowledge Graph
         languageSwitch: 한국어
         languageSwitchLabel: Read the Korean original
@@ -126,9 +128,9 @@ languages:
         searchPlaceholder: Search notes
         browsePosts: Browse posts
         tags: Tags
-        headerEyebrow: Obsidian-first publishing
-        readmeTitle: Research notes published from Obsidian to Hugo
-        readmeLead: Private drafts stay in Obsidian. Public Markdown is checked, built with Hugo, and deployed as a static site.
+        headerEyebrow: Research notes
+        readmeTitle: Notes on research and knowledge work
+        readmeLead: A Korean-first notebook for thinking clearly, keeping evidence, and publishing useful records.
         statusLabel: Publishing status
         statusVault: Vault
         statusBuild: Build
@@ -152,7 +154,7 @@ languages:
         viewArchive: View archive
         openPost: Open
         publishFlow: Publishing flow
-        footerFlow: Written in Obsidian Markdown, built with Hugo, deployed on Cloudflare Pages.
+        footerFlow: Public notes are written in Obsidian and published with Hugo.
         sidebarVault: Vault
         sidebarBuild: Build
         sidebarGraph: Graph

@@ -5,10 +5,10 @@ draft: false
 slug: "about"
 tags:
   - meta
-summary: "About this blog and its publishing workflow."
+summary: "What this blog covers and how its notes are framed."
 translationKey: "about"
 ---
 
-This blog is designed around an Obsidian-first publishing workflow.
+This blog collects durable notes from research, engineering, and knowledge-work projects.
 
-Korean is the default source language. English pages are secondary translations under `/en/`. Public content lives in the deployable Hugo repository, while drafts and publishing operations remain in a private repository.
+The focus is on how a problem was framed, what evidence supported a decision, and what should be checked next. Korean is the default source language, with English translations added when useful.

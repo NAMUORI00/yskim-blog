@@ -4,7 +4,7 @@
       <span></span>
       <span></span>
       <span></span>
-      <strong>{{ .Slug | default (.Title | urlize) }}.md</strong>
+      <strong>{{ .Title }}.md</strong>
     </div>
     <header class="post-header">
       <p class="eyebrow">{{ .Date.Format "2006-01-02" }}</p>
@@ -18,7 +18,6 @@
       <div class="post-header-tools">
         {{ partial "language-switcher.html" . }}
       </div>
-      {{ partial "knowledge-graph.html" . }}
     </header>
     <div class="content">
       {{ .Content }}
