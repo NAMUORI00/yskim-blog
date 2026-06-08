@@ -742,13 +742,18 @@ code {
 }
 
 .sidebar-graph-card {
-  gap: 8px;
-  padding-top: 16px;
+  gap: 6px;
+  padding-top: 14px;
 }
 
 .sidebar-graph-card .sidebar-heading-row span {
   color: var(--faint);
   font-size: 0.75rem;
+}
+
+.sidebar-graph-card .mini-graph {
+  width: min(100%, 210px);
+  margin: 2px auto 0;
 }
 
 .sidebar-card:last-child {
