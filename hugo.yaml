@@ -58,12 +58,20 @@ languages:
         search: 검색
         searchPlaceholder: 글 검색
         tags: 태그
-        readmeTitle: 공개 노트 출판 흐름
-        readmeLead: 개인적인 초안은 Obsidian에 남기고, 공개 가능한 글만 Hugo와 GitHub를 거쳐 Cloudflare Pages로 배포합니다.
+        readmeTitle: Obsidian에서 Hugo로 발행하는 연구 노트
+        readmeLead: 개인적인 초안은 Obsidian에 남기고, 공개 가능한 Markdown만 Hugo로 빌드하여 정적 사이트로 배포합니다.
+        statusLabel: 발행 상태
         workflowLabel: 출판 워크플로
-        workflowWrite: Obsidian에서 작성
-        workflowReview: GitHub에서 검수
+        workflowWrite: Obsidian Markdown
+        workflowWriteNote: 초안 작성
+        workflowReview: Frontmatter check
+        workflowReviewNote: 메타데이터 점검
+        workflowBuild: Hugo build
+        workflowBuildNote: 정적 사이트 빌드
         workflowDeploy: Cloudflare에 배포
+        workflowDeployNote: 배포 및 캐시
+        frontmatterTitle: Frontmatter 예시
+        frontmatterPostTitle: Obsidian에서 Hugo로 발행하는 연구 노트
         statusObsidian: Obsidian draft
         statusGitHub: GitHub checked
         statusCloudflare: Cloudflare live
@@ -71,6 +79,13 @@ languages:
         statusBilingual: KO / EN
         viewArchive: 아카이브 보기
         openPost: 열기
+        publishFlow: 발행 흐름
+        footerFlow: 작성은 Obsidian Markdown, 빌드는 Hugo, 배포는 Cloudflare Pages.
+        vaultReady: 공개 폴더
+        vaultFormat: 문서 형식
+        buildEngine: 빌드 엔진
+        buildReview: 검수
+        buildDeploy: 배포
     menu:
       main:
         - name: 글
@@ -99,12 +114,20 @@ languages:
         search: Search
         searchPlaceholder: Search notes
         tags: Tags
-        readmeTitle: Public-note publishing flow
-        readmeLead: Draft thinking stays in Obsidian. Public posts move through Hugo, GitHub review, and Cloudflare Pages.
+        readmeTitle: Research notes published from Obsidian to Hugo
+        readmeLead: Private drafts stay in Obsidian. Public Markdown is checked, built with Hugo, and deployed as a static site.
+        statusLabel: Publishing status
         workflowLabel: Publishing workflow
-        workflowWrite: Write in Obsidian
-        workflowReview: Review in GitHub
+        workflowWrite: Obsidian Markdown
+        workflowWriteNote: Draft notes
+        workflowReview: Frontmatter check
+        workflowReviewNote: Metadata review
+        workflowBuild: Hugo build
+        workflowBuildNote: Static site build
         workflowDeploy: Deploy on Cloudflare
+        workflowDeployNote: Publish and cache
+        frontmatterTitle: Frontmatter example
+        frontmatterPostTitle: Research notes published from Obsidian to Hugo
         statusObsidian: Obsidian draft
         statusGitHub: GitHub checked
         statusCloudflare: Cloudflare live
@@ -112,6 +135,13 @@ languages:
         statusBilingual: KO / EN
         viewArchive: View archive
         openPost: Open
+        publishFlow: Publishing flow
+        footerFlow: Written in Obsidian Markdown, built with Hugo, deployed on Cloudflare Pages.
+        vaultReady: Public folder
+        vaultFormat: Document format
+        buildEngine: Build engine
+        buildReview: Review
+        buildDeploy: Deploy
     menu:
       main:
         - name: Posts

@@ -1,34 +1,42 @@
 <aside class="blog-sidebar" aria-label="Blog sidebar">
-  <section class="sidebar-card search-card">
-    <p class="sidebar-title">{{ site.Params.ui.search }}</p>
-    <form action="/posts/" method="get">
-      <label class="sr-only" for="site-search">Search posts</label>
-      <input id="site-search" type="search" name="q" placeholder="{{ site.Params.ui.searchPlaceholder }}">
-    </form>
-  </section>
-
   <section class="sidebar-card">
-    <p class="sidebar-title">{{ site.Params.ui.onThisBlog }}</p>
-    <div class="sidebar-status">
-      <span>{{ site.Params.ui.statusPublic }}</span>
-      <span>{{ site.Params.ui.statusBilingual }}</span>
+    <p class="sidebar-title">Vault</p>
+    <div class="sidebar-kv">
+      <span>{{ site.Params.ui.vaultReady }}</span>
+      <strong>_Blog/30_Ready</strong>
+      <span>{{ site.Params.ui.vaultFormat }}</span>
+      <strong>Markdown + frontmatter</strong>
     </div>
-    {{ range site.Menus.main }}
-      <a href="{{ .URL | relLangURL }}">{{ .Name }}</a>
-    {{ end }}
-    <a href="{{ "/index.xml" | relLangURL }}">RSS</a>
   </section>
 
   <section class="sidebar-card">
-    <p class="sidebar-title">{{ site.Params.ui.recent }}</p>
-    {{ range first 5 (where site.RegularPages "Section" "posts") }}
-      <a class="sidebar-post" href="{{ .RelPermalink }}">
-        <span>{{ .Title }}</span>
-        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006.01.02" }}</time>
-      </a>
-    {{ else }}
-      <p class="sidebar-empty">No published posts yet.</p>
-    {{ end }}
+    <p class="sidebar-title">Build</p>
+    <div class="sidebar-kv">
+      <span>{{ site.Params.ui.buildEngine }}</span>
+      <strong>Hugo</strong>
+      <span>{{ site.Params.ui.buildReview }}</span>
+      <strong>GitHub</strong>
+      <span>{{ site.Params.ui.buildDeploy }}</span>
+      <strong>Cloudflare Pages</strong>
+    </div>
+  </section>
+
+  <section class="sidebar-card graph-card">
+    <p class="sidebar-title">Graph</p>
+    <svg class="mini-graph" viewBox="0 0 180 120" role="img" aria-label="{{ site.Params.ui.knowledgeGraph }}">
+      <line x1="86" y1="58" x2="42" y2="32"></line>
+      <line x1="86" y1="58" x2="136" y2="30"></line>
+      <line x1="86" y1="58" x2="50" y2="92"></line>
+      <line x1="86" y1="58" x2="128" y2="88"></line>
+      <line x1="42" y1="32" x2="50" y2="92"></line>
+      <line x1="136" y1="30" x2="128" y2="88"></line>
+      <circle class="node-main" cx="86" cy="58" r="11"></circle>
+      <circle cx="42" cy="32" r="7"></circle>
+      <circle cx="136" cy="30" r="7"></circle>
+      <circle cx="50" cy="92" r="7"></circle>
+      <circle cx="128" cy="88" r="7"></circle>
+    </svg>
+    <a class="sidebar-text-link" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.viewArchive }}</a>
   </section>
 
   <section class="sidebar-card">

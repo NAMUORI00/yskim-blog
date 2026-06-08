@@ -23,11 +23,21 @@
             <span>#{{ . }}</span>
           {{ end }}
         </div>
+        <form class="rail-search" action="{{ "/posts/" | relLangURL }}" method="get">
+          <label class="sr-only" for="rail-search-input">{{ site.Params.ui.search }}</label>
+          <input id="rail-search-input" type="search" name="q" placeholder="{{ site.Params.ui.searchPlaceholder }}">
+        </form>
         <nav class="rail-nav" aria-label="Main navigation">
           {{ range site.Menus.main }}
             <a href="{{ .URL }}">{{ .Name }}</a>
           {{ end }}
+          <a href="{{ "/index.xml" | relLangURL }}">RSS</a>
         </nav>
+        <div class="publish-flow" aria-label="{{ site.Params.ui.publishFlow }}">
+          <span>Obsidian</span>
+          <span>Hugo</span>
+          <span>Cloudflare</span>
+        </div>
       </aside>
 
       <div class="content-column">
@@ -45,7 +55,7 @@
           {{ block "main" . }}{{ end }}
         </main>
         <footer class="site-footer">
-          <p>Hugo + GitHub + Cloudflare Pages. Drafted in Obsidian.</p>
+          <p>{{ site.Params.ui.footerFlow }}</p>
         </footer>
       </div>
 

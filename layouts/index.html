@@ -5,13 +5,13 @@
       <span></span>
       <span></span>
       <strong>README.md</strong>
-      <em>/ public-notes</em>
+      <em>/ Obsidian vault / Hugo site</em>
     </div>
     <div class="readme-body">
-      <div class="readme-status-strip" aria-label="Publishing status">
-        <span>{{ site.Params.ui.statusObsidian }}</span>
-        <span>{{ site.Params.ui.statusGitHub }}</span>
-        <span>{{ site.Params.ui.statusCloudflare }}</span>
+      <div class="readme-status-strip" aria-label="{{ site.Params.ui.statusLabel }}">
+        <span>Vault: _Blog/30_Ready</span>
+        <span>Build: Hugo</span>
+        <span>Deploy: Cloudflare Pages</span>
       </div>
       <div class="readme-intro">
         <p class="eyebrow">{{ site.Params.ui.intro }}</p>
@@ -22,16 +22,32 @@
         <div>
           <strong>01</strong>
           <span>{{ site.Params.ui.workflowWrite }}</span>
+          <small>{{ site.Params.ui.workflowWriteNote }}</small>
         </div>
         <div>
           <strong>02</strong>
           <span>{{ site.Params.ui.workflowReview }}</span>
+          <small>{{ site.Params.ui.workflowReviewNote }}</small>
         </div>
         <div>
           <strong>03</strong>
+          <span>{{ site.Params.ui.workflowBuild }}</span>
+          <small>{{ site.Params.ui.workflowBuildNote }}</small>
+        </div>
+        <div>
+          <strong>04</strong>
           <span>{{ site.Params.ui.workflowDeploy }}</span>
+          <small>{{ site.Params.ui.workflowDeployNote }}</small>
         </div>
       </div>
+      <section class="frontmatter-preview" aria-labelledby="frontmatter-title">
+        <h2 id="frontmatter-title">{{ site.Params.ui.frontmatterTitle }}</h2>
+        <pre><code>---
+title: "{{ site.Params.ui.frontmatterPostTitle }}"
+tags: [obsidian, hugo, publishing]
+publish: true
+---</code></pre>
+      </section>
     </div>
   </section>
 
@@ -45,7 +61,7 @@
     </div>
     {{ $posts := where site.RegularPages "Section" "posts" }}
     {{ if $posts }}
-      <div class="post-list">
+      <div class="post-list markdown-file-list">
       {{ range first 10 $posts }}
         {{ partial "post-card.html" . }}
       {{ end }}
