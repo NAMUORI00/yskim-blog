@@ -5,12 +5,20 @@
       <span></span>
       <span></span>
       <strong>README.md</strong>
+      <em>/ public-notes</em>
     </div>
     <div class="readme-body">
-      <p class="eyebrow">{{ site.Params.ui.intro }}</p>
-      <h1>{{ site.Params.ui.readmeTitle }}</h1>
-      <p class="lead">{{ site.Params.ui.readmeLead }}</p>
-      <div class="stat-grid" aria-label="Publishing workflow">
+      <div class="readme-status-strip" aria-label="Publishing status">
+        <span>{{ site.Params.ui.statusObsidian }}</span>
+        <span>{{ site.Params.ui.statusGitHub }}</span>
+        <span>{{ site.Params.ui.statusCloudflare }}</span>
+      </div>
+      <div class="readme-intro">
+        <p class="eyebrow">{{ site.Params.ui.intro }}</p>
+        <h1>{{ site.Params.ui.readmeTitle }}</h1>
+        <p class="lead">{{ site.Params.ui.readmeLead }}</p>
+      </div>
+      <div class="stat-grid" aria-label="{{ site.Params.ui.workflowLabel }}">
         <div>
           <strong>01</strong>
           <span>{{ site.Params.ui.workflowWrite }}</span>
@@ -29,8 +37,11 @@
 
   <section class="readme-card post-section" aria-labelledby="recent-posts">
     <div class="section-heading">
-      <p class="eyebrow">{{ site.Params.ui.recent }}</p>
-      <h2 id="recent-posts">{{ site.Params.ui.allPosts }}</h2>
+      <div>
+        <p class="eyebrow">{{ site.Params.ui.recent }}</p>
+        <h2 id="recent-posts">{{ site.Params.ui.allPosts }}</h2>
+      </div>
+      <a class="section-link" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.viewArchive }}</a>
     </div>
     {{ $posts := where site.RegularPages "Section" "posts" }}
     {{ if $posts }}

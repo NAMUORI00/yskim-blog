@@ -60,9 +60,17 @@ languages:
         tags: 태그
         readmeTitle: 공개 노트 출판 흐름
         readmeLead: 개인적인 초안은 Obsidian에 남기고, 공개 가능한 글만 Hugo와 GitHub를 거쳐 Cloudflare Pages로 배포합니다.
+        workflowLabel: 출판 워크플로
         workflowWrite: Obsidian에서 작성
         workflowReview: GitHub에서 검수
         workflowDeploy: Cloudflare에 배포
+        statusObsidian: Obsidian draft
+        statusGitHub: GitHub checked
+        statusCloudflare: Cloudflare live
+        statusPublic: 공개 소스
+        statusBilingual: KO / EN
+        viewArchive: 아카이브 보기
+        openPost: 열기
     menu:
       main:
         - name: 글
@@ -93,9 +101,17 @@ languages:
         tags: Tags
         readmeTitle: Public-note publishing flow
         readmeLead: Draft thinking stays in Obsidian. Public posts move through Hugo, GitHub review, and Cloudflare Pages.
+        workflowLabel: Publishing workflow
         workflowWrite: Write in Obsidian
         workflowReview: Review in GitHub
         workflowDeploy: Deploy on Cloudflare
+        statusObsidian: Obsidian draft
+        statusGitHub: GitHub checked
+        statusCloudflare: Cloudflare live
+        statusPublic: Public source
+        statusBilingual: KO / EN
+        viewArchive: View archive
+        openPost: Open
     menu:
       main:
         - name: Posts

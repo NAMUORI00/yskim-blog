@@ -1,13 +1,17 @@
 <article class="post-card">
-  <div class="post-meta-row">
-    <span class="hash-dot">#</span>
-    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+  <div class="post-card-main">
+    <div class="post-meta-row">
+      <span class="hash-dot">#</span>
+      <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+      {{ with .Params.lang }}<span>{{ upper . }}</span>{{ end }}
+    </div>
+    <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+    {{ with .Params.summary }}<p>{{ . }}</p>{{ else }}<p>{{ .Summary }}</p>{{ end }}
+    {{ with .Params.tags }}
+      <ul class="tags" aria-label="Tags">
+        {{ range . }}<li>{{ . }}</li>{{ end }}
+      </ul>
+    {{ end }}
   </div>
-  <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
-  {{ with .Params.summary }}<p>{{ . }}</p>{{ else }}<p>{{ .Summary }}</p>{{ end }}
-  {{ with .Params.tags }}
-    <ul class="tags" aria-label="Tags">
-      {{ range . }}<li>{{ . }}</li>{{ end }}
-    </ul>
-  {{ end }}
+  <a class="post-card-open" href="{{ .RelPermalink }}" aria-label="{{ .Title }}">{{ site.Params.ui.openPost }}</a>
 </article>

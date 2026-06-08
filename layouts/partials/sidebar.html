@@ -9,6 +9,10 @@
 
   <section class="sidebar-card">
     <p class="sidebar-title">{{ site.Params.ui.onThisBlog }}</p>
+    <div class="sidebar-status">
+      <span>{{ site.Params.ui.statusPublic }}</span>
+      <span>{{ site.Params.ui.statusBilingual }}</span>
+    </div>
     {{ range site.Menus.main }}
       <a href="{{ .URL | relLangURL }}">{{ .Name }}</a>
     {{ end }}
