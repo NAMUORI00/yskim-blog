@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Comment Moderation | yskim blog</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #fbfbf8;
+        --panel: #ffffff;
+        --panel-soft: #f8f8f8;
+        --text: #1f241f;
+        --heading: #222822;
+        --muted: #71786f;
+        --faint: #9aa197;
+        --line: #dedede;
+        --accent: #305c47;
+        --accent-strong: #162f25;
+        --danger: #9f3f3f;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          color-scheme: dark;
+          --bg: #171c19;
+          --panel: #1e241f;
+          --panel-soft: #242a25;
+          --text: #e7e4da;
+          --heading: #f3f1e8;
+          --muted: #aaa79b;
+          --faint: #7f8479;
+          --line: #343b35;
+          --accent: #91ccaa;
+          --accent-strong: #d6ead8;
+          --danger: #f0a0a0;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        color: var(--text);
+        background: var(--bg);
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+        line-height: 1.62;
+      }
+
+      main {
+        width: min(100% - 32px, 980px);
+        margin: 0 auto;
+        padding: 32px 0 48px;
+      }
+
+      header {
+        display: flex;
+        align-items: flex-end;
+        justify-content: space-between;
+        gap: 16px;
+        padding-bottom: 18px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      h1,
+      h2,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        color: var(--heading);
+        font-size: clamp(1.7rem, 4vw, 2.4rem);
+        line-height: 1.18;
+      }
+
+      .eyebrow {
+        margin-bottom: 8px;
+        color: var(--accent);
+        font-size: 0.76rem;
+        font-weight: 800;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .auth-panel,
+      .toolbar,
+      .comment-list,
+      .empty-state {
+        margin-top: 18px;
+        padding: 16px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+      }
+
+      .auth-panel {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 10px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      input,
+      button {
+        min-height: 38px;
+        color: var(--text);
+        font: inherit;
+      }
+
+      input {
+        width: 100%;
+        padding: 8px 10px;
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+      }
+
+      button {
+        padding: 7px 12px;
+        color: var(--accent-strong);
+        background: var(--panel-soft);
+        border: 1px solid var(--line);
+        border-radius: 4px;
+        cursor: pointer;
+      }
+
+      button[aria-pressed="true"],
+      button.primary {
+        color: var(--panel);
+        background: var(--accent);
+        border-color: var(--accent);
+      }
+
+      button.danger {
+        color: var(--danger);
+      }
+
+      button:disabled {
+        cursor: wait;
+        opacity: 0.62;
+      }
+
+      .comment-list {
+        display: grid;
+        gap: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      article {
+        display: grid;
+        gap: 10px;
+        padding: 16px;
+        border-top: 1px solid var(--line);
+      }
+
+      article:first-child {
+        border-top: 0;
+      }
+
+      article header {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        align-items: start;
+        padding: 0;
+        border: 0;
+      }
+
+      article strong {
+        display: block;
+        color: var(--heading);
+      }
+
+      article a,
+      article time {
+        color: var(--muted);
+        font-size: 0.84rem;
+      }
+
+      article p {
+        white-space: pre-wrap;
+      }
+
+      .actions {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      .empty-state {
+        color: var(--muted);
+      }
+
+      @media (max-width: 640px) {
+        header,
+        .auth-panel,
+        .toolbar,
+        article header {
+          display: grid;
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">COMMENT ADMIN</p>
+          <h1>댓글 승인 관리</h1>
+        </div>
+        <p class="muted">토큰은 이 브라우저 세션에만 저장됩니다.</p>
+      </header>
+
+      <form class="auth-panel" data-token-form>
+        <input name="token" type="password" autocomplete="current-password" placeholder="COMMENTS_ADMIN_TOKEN" required>
+        <button class="primary" type="submit">토큰 적용</button>
+      </form>
+
+      <section class="toolbar" aria-label="Moderation filters">
+        <div class="tabs">
+          <button type="button" data-status="pending" aria-pressed="true">대기</button>
+          <button type="button" data-status="approved" aria-pressed="false">승인됨</button>
+          <button type="button" data-status="rejected" aria-pressed="false">거절됨</button>
+        </div>
+        <button type="button" data-refresh>새로고침</button>
+      </section>
+
+      <section data-status-message class="empty-state">관리 토큰을 입력하면 댓글을 불러옵니다.</section>
+      <section data-comment-list class="comment-list" hidden></section>
+    </main>
+
+    <script>
+      (() => {
+        const apiPath = "/api/comments/moderate";
+        const tokenKey = "yskim-comments-admin-token";
+        const form = document.querySelector("[data-token-form]");
+        const tokenInput = form.elements.token;
+        const statusButtons = Array.from(document.querySelectorAll("[data-status]"));
+        const refreshButton = document.querySelector("[data-refresh]");
+        const statusMessage = document.querySelector("[data-status-message]");
+        const list = document.querySelector("[data-comment-list]");
+        let currentStatus = "pending";
+
+        const escapeHtml = (value) => String(value).replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[char]);
+
+        const getToken = () => sessionStorage.getItem(tokenKey) || "";
+
+        const setBusy = (busy) => {
+          refreshButton.disabled = busy;
+          statusButtons.forEach((button) => {
+            button.disabled = busy;
+          });
+        };
+
+        const setMessage = (message) => {
+          statusMessage.hidden = false;
+          statusMessage.textContent = message;
+        };
+
+        const requestModeration = async (path, options = {}) => {
+          const token = getToken();
+          if (!token) {
+            throw new Error("관리 토큰을 입력해야 합니다.");
+          }
+          const response = await fetch(path, {
+            ...options,
+            headers: {
+              "Accept": "application/json",
+              "Authorization": `Bearer ${token}`,
+              ...(options.headers || {}),
+            },
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) {
+            throw new Error(payload.error || "요청에 실패했습니다.");
+          }
+          return payload;
+        };
+
+        const render = (comments) => {
+          if (!comments.length) {
+            list.hidden = true;
+            setMessage("표시할 댓글이 없습니다.");
+            return;
+          }
+
+          statusMessage.hidden = true;
+          list.hidden = false;
+          list.innerHTML = comments.map((comment) => `
+            <article data-id="${escapeHtml(comment.id)}">
+              <header>
+                <div>
+                  <strong>${escapeHtml(comment.author)}</strong>
+                  <a href="${escapeHtml(comment.path)}" target="_blank" rel="noreferrer">${escapeHtml(comment.path)}</a>
+                </div>
+                <time datetime="${escapeHtml(comment.created_at)}">${escapeHtml(comment.created_at)}</time>
+              </header>
+              <p>${escapeHtml(comment.body)}</p>
+              <div class="actions">
+                ${comment.status !== "approved" ? '<button type="button" data-action="approve">승인</button>' : ""}
+                ${comment.status !== "rejected" ? '<button class="danger" type="button" data-action="reject">거절</button>' : ""}
+              </div>
+            </article>
+          `).join("");
+        };
+
+        const loadComments = async () => {
+          setBusy(true);
+          setMessage("댓글을 불러오는 중입니다.");
+          try {
+            const payload = await requestModeration(`${apiPath}?status=${encodeURIComponent(currentStatus)}`);
+            render(payload.comments || []);
+          } catch (error) {
+            list.hidden = true;
+            setMessage(error.message);
+          } finally {
+            setBusy(false);
+          }
+        };
+
+        form.addEventListener("submit", (event) => {
+          event.preventDefault();
+          sessionStorage.setItem(tokenKey, tokenInput.value.trim());
+          loadComments();
+        });
+
+        statusButtons.forEach((button) => {
+          button.addEventListener("click", () => {
+            currentStatus = button.dataset.status;
+            statusButtons.forEach((item) => {
+              item.setAttribute("aria-pressed", String(item === button));
+            });
+            loadComments();
+          });
+        });
+
+        refreshButton.addEventListener("click", loadComments);
+
+        list.addEventListener("click", async (event) => {
+          const button = event.target.closest("[data-action]");
+          const article = event.target.closest("article[data-id]");
+          if (!button || !article) {
+            return;
+          }
+
+          setBusy(true);
+          try {
+            await requestModeration(apiPath, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                id: article.dataset.id,
+                action: button.dataset.action,
+              }),
+            });
+            await loadComments();
+          } catch (error) {
+            setMessage(error.message);
+          } finally {
+            setBusy(false);
+          }
+        });
+
+        const savedToken = getToken();
+        if (savedToken) {
+          tokenInput.value = savedToken;
+          loadComments();
+        }
+      })();
+    </script>
+  </body>
+</html>

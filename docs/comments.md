@@ -72,6 +72,8 @@ The moderation API is:
 - `POST /api/comments/moderate` with `{ "id": "...", "action": "approve" }`
 - `POST /api/comments/moderate` with `{ "id": "...", "action": "reject" }`
 
+The browser moderation page is available at `/admin/comments.html`. It is intentionally not linked from the blog UI, has `noindex,nofollow`, and still requires `COMMENTS_ADMIN_TOKEN` because all moderation requests go through the protected API.
+
 Moderation requests must include:
 
 ```text
