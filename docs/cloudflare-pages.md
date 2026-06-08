@@ -44,4 +44,4 @@ Anonymous comments require Pages Functions bindings after the code is deployed:
 - `COMMENTS_ADMIN_TOKEN`: encrypted secret used by the moderation API.
 - `COMMENTS_AUTO_APPROVE`: optional plain variable. Keep unset or `false` for review-before-publish.
 
-Configure the D1 binding in the Cloudflare dashboard under the Pages project settings, or copy `wrangler.example.toml` to `wrangler.toml` after a real D1 database ID exists.
+Configure the D1 binding with `scripts/setup-cloudflare-comments.ps1`, or add it manually in the Cloudflare dashboard under the Pages project settings. A generated `wrangler.toml` may be committed because the D1 database ID is not a secret; do not commit Turnstile secrets or moderation tokens.

@@ -27,6 +27,31 @@ The theme toggle sends light and dark theme updates to the Giscus frame.
 
 Use the Cloudflare mode when comments should support anonymous visitors with CAPTCHA protection:
 
+1. Authenticate Wrangler with `npx wrangler login`, or set `CLOUDFLARE_API_TOKEN` in non-interactive environments.
+2. Create a Turnstile widget in Cloudflare.
+3. Run `scripts/setup-cloudflare-comments.ps1`.
+4. Commit the generated `wrangler.toml` and the updated `hugo.yaml`.
+5. Let GitHub and Cloudflare deploy the change.
+
+Example:
+
+```powershell
+.\scripts\setup-cloudflare-comments.ps1 `
+  -TurnstileSiteKey "<public-site-key>" `
+  -TurnstileSecretKey "<secret-key>" `
+  -AdminToken "<long-random-admin-token>"
+```
+
+The script will:
+
+- Create or reuse the `yskim_blog_comments` D1 database.
+- Apply `schema/comments.sql`.
+- Write `wrangler.toml` with the `COMMENTS_DB` binding.
+- Store `TURNSTILE_SECRET_KEY` and `COMMENTS_ADMIN_TOKEN` as Pages secrets.
+- Enable `params.comments.anonymous.enabled` when a Turnstile site key is supplied.
+
+Manual setup is also possible:
+
 1. Create a D1 database.
 2. Apply `schema/comments.sql` to the database.
 3. Bind the database to the Pages project as `COMMENTS_DB`.

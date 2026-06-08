@@ -32,6 +32,9 @@ jobs:
       - name: Markdown lint
         run: npx --yes markdownlint-cli2 "**/*.md" "#public"
 
+      - name: Build Pages Functions
+        run: npx --yes wrangler pages functions build functions --outdir "$RUNNER_TEMP/pages-functions-build"
+
       - name: Build
         run: hugo --gc --minify --cleanDestinationDir
 
