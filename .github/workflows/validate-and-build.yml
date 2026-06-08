@@ -33,4 +33,13 @@ jobs:
         run: npx --yes markdownlint-cli2 "**/*.md" "#public"
 
       - name: Build
-        run: hugo --gc --minify
+        run: hugo --gc --minify --cleanDestinationDir
+
+      - name: Guard against development assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          if grep -R "livereload.js\|port=1313" public; then
+            echo "Development-only livereload asset was found in the production build."
+            exit 1
+          fi

@@ -5,7 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
     <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
+    <script>
+      (() => {
+        try {
+          const saved = localStorage.getItem("yskim-theme");
+          const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          document.documentElement.dataset.theme = saved || preferred;
+        } catch {
+          document.documentElement.dataset.theme = "light";
+        }
+      })();
+    </script>
     <link rel="stylesheet" href="/css/site.css">
+    <script src="/js/theme.js" defer></script>
     {{ with .Params.canonical }}<link rel="canonical" href="{{ . }}">{{ end }}
   </head>
   <body class="nmr-skin theme-light sidebar-right cover-readme density-default">
@@ -23,10 +35,7 @@
             <span>#{{ . }}</span>
           {{ end }}
         </div>
-        <form class="rail-search" action="{{ "/posts/" | relLangURL }}" method="get">
-          <label class="sr-only" for="rail-search-input">{{ site.Params.ui.search }}</label>
-          <input id="rail-search-input" type="search" name="q" placeholder="{{ site.Params.ui.searchPlaceholder }}">
-        </form>
+        <a class="rail-search-link" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.browsePosts }}</a>
         <nav class="rail-nav" aria-label="Main navigation">
           {{ range site.Menus.main }}
             <a href="{{ .URL }}">{{ .Name }}</a>
@@ -43,11 +52,19 @@
       <div class="content-column">
         <header class="site-header">
           <div>
-            <p class="eyebrow">Obsidian-first publishing</p>
+            <p class="eyebrow">{{ site.Params.ui.headerEyebrow }}</p>
             <p class="header-title">{{ site.Params.ui.readmeLead }}</p>
           </div>
           <div class="header-actions">
             {{ partial "language-switcher.html" . }}
+            <button
+              class="header-action theme-toggle"
+              type="button"
+              data-theme-toggle
+              data-light-label="{{ site.Params.ui.themeLight }}"
+              data-dark-label="{{ site.Params.ui.themeDark }}"
+              aria-label="{{ site.Params.ui.themeToggle }}"
+            >{{ site.Params.ui.themeDark }}</button>
             <a class="header-action" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.allPosts }}</a>
           </div>
         </header>

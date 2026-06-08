@@ -57,10 +57,15 @@ languages:
         recent: 최근 글
         search: 검색
         searchPlaceholder: 글 검색
+        browsePosts: 글 목록 보기
         tags: 태그
+        headerEyebrow: Obsidian 우선 발행
         readmeTitle: Obsidian에서 Hugo로 발행하는 연구 노트
         readmeLead: 개인적인 초안은 Obsidian에 남기고, 공개 가능한 Markdown만 Hugo로 빌드하여 정적 사이트로 배포합니다.
         statusLabel: 발행 상태
+        statusVault: 보관함
+        statusBuild: 빌드
+        statusDeploy: 배포
         workflowLabel: 출판 워크플로
         workflowWrite: Obsidian Markdown
         workflowWriteNote: 초안 작성
@@ -81,11 +86,17 @@ languages:
         openPost: 열기
         publishFlow: 발행 흐름
         footerFlow: 작성은 Obsidian Markdown, 빌드는 Hugo, 배포는 Cloudflare Pages.
+        sidebarVault: 보관함
+        sidebarBuild: 빌드
+        sidebarGraph: 그래프
         vaultReady: 공개 폴더
         vaultFormat: 문서 형식
         buildEngine: 빌드 엔진
         buildReview: 검수
         buildDeploy: 배포
+        themeToggle: 화면 테마 전환
+        themeDark: 다크
+        themeLight: 라이트
     menu:
       main:
         - name: 글
@@ -113,10 +124,15 @@ languages:
         recent: Recent
         search: Search
         searchPlaceholder: Search notes
+        browsePosts: Browse posts
         tags: Tags
+        headerEyebrow: Obsidian-first publishing
         readmeTitle: Research notes published from Obsidian to Hugo
         readmeLead: Private drafts stay in Obsidian. Public Markdown is checked, built with Hugo, and deployed as a static site.
         statusLabel: Publishing status
+        statusVault: Vault
+        statusBuild: Build
+        statusDeploy: Deploy
         workflowLabel: Publishing workflow
         workflowWrite: Obsidian Markdown
         workflowWriteNote: Draft notes
@@ -137,11 +153,17 @@ languages:
         openPost: Open
         publishFlow: Publishing flow
         footerFlow: Written in Obsidian Markdown, built with Hugo, deployed on Cloudflare Pages.
+        sidebarVault: Vault
+        sidebarBuild: Build
+        sidebarGraph: Graph
         vaultReady: Public folder
         vaultFormat: Document format
         buildEngine: Build engine
         buildReview: Review
         buildDeploy: Deploy
+        themeToggle: Toggle color theme
+        themeDark: Dark
+        themeLight: Light
     menu:
       main:
         - name: Posts

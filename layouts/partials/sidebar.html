@@ -1,6 +1,7 @@
 <aside class="blog-sidebar" aria-label="Blog sidebar">
+  {{ $isPost := and .IsPage (eq .Section "posts") }}
   <section class="sidebar-card">
-    <p class="sidebar-title">Vault</p>
+    <p class="sidebar-title">{{ site.Params.ui.sidebarVault }}</p>
     <div class="sidebar-kv">
       <span>{{ site.Params.ui.vaultReady }}</span>
       <strong>_Blog/30_Ready</strong>
@@ -10,7 +11,7 @@
   </section>
 
   <section class="sidebar-card">
-    <p class="sidebar-title">Build</p>
+    <p class="sidebar-title">{{ site.Params.ui.sidebarBuild }}</p>
     <div class="sidebar-kv">
       <span>{{ site.Params.ui.buildEngine }}</span>
       <strong>Hugo</strong>
@@ -21,8 +22,9 @@
     </div>
   </section>
 
+  {{ if not $isPost }}
   <section class="sidebar-card graph-card">
-    <p class="sidebar-title">Graph</p>
+    <p class="sidebar-title">{{ site.Params.ui.sidebarGraph }}</p>
     <svg class="mini-graph" viewBox="0 0 180 120" role="img" aria-label="{{ site.Params.ui.knowledgeGraph }}">
       <line x1="86" y1="58" x2="42" y2="32"></line>
       <line x1="86" y1="58" x2="136" y2="30"></line>
@@ -38,6 +40,7 @@
     </svg>
     <a class="sidebar-text-link" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.viewArchive }}</a>
   </section>
+  {{ end }}
 
   <section class="sidebar-card">
     <p class="sidebar-title">{{ site.Params.ui.tags }}</p>
