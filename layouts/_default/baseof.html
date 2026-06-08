@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="{{ site.Language.Locale | default "ko-kr" }}">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{{ with .Description }}{{ . }}{{ else }}{{ site.Params.description }}{{ end }}">
+    <title>{{ if .IsHome }}{{ site.Title }}{{ else }}{{ .Title }} | {{ site.Title }}{{ end }}</title>
+    <link rel="stylesheet" href="/css/site.css">
+    {{ with .Params.canonical }}<link rel="canonical" href="{{ . }}">{{ end }}
+  </head>
+  <body class="nmr-skin theme-light sidebar-right cover-readme density-default">
+    <div class="site-shell">
+      <aside class="profile-rail" aria-label="Profile">
+        <a class="avatar" href="/" aria-label="{{ site.Title }} home">YS</a>
+        <div class="profile-block">
+          <p class="profile-kicker">README.md</p>
+          <a class="brand" href="/">{{ site.Title }}</a>
+          <p class="handle">@{{ site.Params.handle }}</p>
+          <p class="profile-copy">{{ site.Params.profile }}</p>
+        </div>
+        <div class="topic-list" aria-label="Topics">
+          {{ range site.Params.topics }}
+            <span>#{{ . }}</span>
+          {{ end }}
+        </div>
+        <nav class="rail-nav" aria-label="Main navigation">
+          {{ range site.Menus.main }}
+            <a href="{{ .URL }}">{{ .Name }}</a>
+          {{ end }}
+        </nav>
+      </aside>
+
+      <div class="content-column">
+        <header class="site-header">
+          <div>
+            <p class="eyebrow">Obsidian-first publishing</p>
+            <p class="header-title">Public notes exported from a private vault.</p>
+          </div>
+          <a class="header-action" href="/posts/">All posts</a>
+        </header>
+        <main>
+          {{ block "main" . }}{{ end }}
+        </main>
+        <footer class="site-footer">
+          <p>Hugo + GitHub + Cloudflare Pages. Drafted in Obsidian.</p>
+        </footer>
+      </div>
+
+      {{ partial "sidebar.html" . }}
+    </div>
+  </body>
+</html>

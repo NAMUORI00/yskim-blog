@@ -1,0 +1,13 @@
+<article class="post-card">
+  <div class="post-meta-row">
+    <span class="hash-dot">#</span>
+    <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006-01-02" }}</time>
+  </div>
+  <h3><a href="{{ .RelPermalink }}">{{ .Title }}</a></h3>
+  {{ with .Params.summary }}<p>{{ . }}</p>{{ else }}<p>{{ .Summary }}</p>{{ end }}
+  {{ with .Params.tags }}
+    <ul class="tags" aria-label="Tags">
+      {{ range . }}<li>{{ . }}</li>{{ end }}
+    </ul>
+  {{ end }}
+</article>

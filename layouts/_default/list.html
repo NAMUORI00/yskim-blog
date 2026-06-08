@@ -1,0 +1,20 @@
+{{ define "main" }}
+  <section class="readme-card page-heading">
+    <div class="filebar">
+      <span></span>
+      <span></span>
+      <span></span>
+      <strong>{{ .Title | urlize }}.md</strong>
+    </div>
+    <h1>{{ .Title }}</h1>
+    {{ with .Description }}<p>{{ . }}</p>{{ end }}
+  </section>
+
+  <section class="readme-card post-list">
+    {{ range .Pages }}
+      {{ partial "post-card.html" . }}
+    {{ else }}
+      <p>No pages found.</p>
+    {{ end }}
+  </section>
+{{ end }}

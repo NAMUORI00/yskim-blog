@@ -1,0 +1,39 @@
+<aside class="blog-sidebar" aria-label="Blog sidebar">
+  <section class="sidebar-card search-card">
+    <p class="sidebar-title">SEARCH</p>
+    <form action="/posts/" method="get">
+      <label class="sr-only" for="site-search">Search posts</label>
+      <input id="site-search" type="search" name="q" placeholder="Search notes">
+    </form>
+  </section>
+
+  <section class="sidebar-card">
+    <p class="sidebar-title">ON THIS BLOG</p>
+    <a href="/posts/">Posts</a>
+    <a href="/pages/about/">About</a>
+    <a href="/index.xml">RSS</a>
+  </section>
+
+  <section class="sidebar-card">
+    <p class="sidebar-title">RECENT</p>
+    {{ range first 5 (where site.RegularPages "Section" "posts") }}
+      <a class="sidebar-post" href="{{ .RelPermalink }}">
+        <span>{{ .Title }}</span>
+        <time datetime="{{ .Date.Format "2006-01-02" }}">{{ .Date.Format "2006.01.02" }}</time>
+      </a>
+    {{ else }}
+      <p class="sidebar-empty">No published posts yet.</p>
+    {{ end }}
+  </section>
+
+  <section class="sidebar-card">
+    <p class="sidebar-title">TAGS</p>
+    <div class="sidebar-tags">
+      {{ range $name, $taxonomy := site.Taxonomies.tags }}
+        <a href="{{ "/tags/" | relLangURL }}{{ $name | urlize }}/">#{{ $name }}</a>
+      {{ else }}
+        <span>No tags yet.</span>
+      {{ end }}
+    </div>
+  </section>
+</aside>

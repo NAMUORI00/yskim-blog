@@ -1,0 +1,46 @@
+{{ define "main" }}
+  <section class="readme-card hero-readme">
+    <div class="filebar">
+      <span></span>
+      <span></span>
+      <span></span>
+      <strong>README.md</strong>
+    </div>
+    <div class="readme-body">
+      <p class="eyebrow">소개 / ABOUT</p>
+      <h1>Research and engineering notes, made publishable.</h1>
+      <p class="lead">Private thinking stays in Obsidian. Public posts are exported into Hugo, reviewed through GitHub pull requests, previewed on Cloudflare Pages, and shipped from <code>main</code>.</p>
+      <div class="stat-grid" aria-label="Publishing workflow">
+        <div>
+          <strong>01</strong>
+          <span>Write in Obsidian</span>
+        </div>
+        <div>
+          <strong>02</strong>
+          <span>Review in GitHub</span>
+        </div>
+        <div>
+          <strong>03</strong>
+          <span>Deploy on Cloudflare</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="readme-card post-section" aria-labelledby="recent-posts">
+    <div class="section-heading">
+      <p class="eyebrow">최근 글</p>
+      <h2 id="recent-posts">Recently Published</h2>
+    </div>
+    {{ $posts := where site.RegularPages "Section" "posts" }}
+    {{ if $posts }}
+      <div class="post-list">
+      {{ range first 10 $posts }}
+        {{ partial "post-card.html" . }}
+      {{ end }}
+      </div>
+    {{ else }}
+      <p>No posts have been published yet.</p>
+    {{ end }}
+  </section>
+{{ end }}

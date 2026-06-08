@@ -1,0 +1,37 @@
+baseURL: https://example.com/
+locale: ko-kr
+title: yskim blog
+timeZone: Asia/Seoul
+enableRobotsTXT: true
+summaryLength: 32
+
+permalinks:
+  posts: /posts/:slug/
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: false
+  highlight:
+    noClasses: false
+
+params:
+  description: Research, engineering, and notes published from an Obsidian-first workflow.
+  author: yskim
+  handle: namuori
+  profile: Research engineering notes, Obsidian publishing, and maintainable systems.
+  location: Seoul, Korea
+  topics:
+    - research-engineering
+    - video-rag
+    - obsidian
+    - hugo
+
+menu:
+  main:
+    - name: Posts
+      pageRef: /posts
+      weight: 10
+    - name: About
+      pageRef: /pages/about
+      weight: 20

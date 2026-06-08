@@ -1,0 +1,23 @@
+{{ define "main" }}
+  <article class="readme-card post">
+    <div class="filebar">
+      <span></span>
+      <span></span>
+      <span></span>
+      <strong>{{ .Slug | default (.Title | urlize) }}.md</strong>
+    </div>
+    <header class="post-header">
+      <p class="eyebrow">{{ .Date.Format "2006-01-02" }}</p>
+      <h1>{{ .Title }}</h1>
+      {{ with .Params.summary }}<p class="summary">{{ . }}</p>{{ end }}
+      {{ with .Params.tags }}
+        <ul class="tags" aria-label="Tags">
+          {{ range . }}<li>{{ . }}</li>{{ end }}
+        </ul>
+      {{ end }}
+    </header>
+    <div class="content">
+      {{ .Content }}
+    </div>
+  </article>
+{{ end }}

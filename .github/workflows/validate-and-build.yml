@@ -1,0 +1,36 @@
+name: Validate and build Hugo site
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+env:
+  HUGO_VERSION: 0.162.1
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Hugo
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -L "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz" -o hugo.tar.gz
+          mkdir "$RUNNER_TEMP/hugo-bin"
+          tar -xzf hugo.tar.gz -C "$RUNNER_TEMP/hugo-bin"
+          echo "$RUNNER_TEMP/hugo-bin" >> "$GITHUB_PATH"
+
+      - name: Validate exported content
+        shell: pwsh
+        run: ./scripts/validate-content.ps1
+
+      - name: Markdown lint
+        run: npx --yes markdownlint-cli2 "**/*.md" "#public"
+
+      - name: Build
+        run: hugo --gc --minify
