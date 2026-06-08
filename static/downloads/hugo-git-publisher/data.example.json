@@ -1,0 +1,10 @@
+{
+  "readyFolder": "_Blog/30_Ready",
+  "assetFolder": "_Blog/assets",
+  "publicRepoPath": "C:/Users/yskim/Documents/Projects/yskim-blog-public",
+  "postsFolder": "content/posts",
+  "imageFolder": "static/images/blog",
+  "githubHost": "github.com",
+  "autoPush": false,
+  "commitMessage": "content: publish obsidian notes"
+}
