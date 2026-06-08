@@ -71,9 +71,6 @@ languages:
         - name: 소개
           pageRef: /pages/about
           weight: 20
-        - name: 설치
-          pageRef: /pages/hugo-git-publisher-installer
-          weight: 30
   en:
     locale: en-us
     label: English
@@ -107,6 +104,3 @@ languages:
         - name: About
           pageRef: /pages/about
           weight: 20
-        - name: Installer
-          pageRef: /pages/hugo-git-publisher-installer
-          weight: 30
