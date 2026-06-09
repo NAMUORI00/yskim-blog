@@ -9,3 +9,11 @@ CREATE TABLE IF NOT EXISTS comments (
 
 CREATE INDEX IF NOT EXISTS idx_comments_path_status_created
 ON comments(path, status, created_at);
+
+CREATE TABLE IF NOT EXISTS reactions (
+  path TEXT NOT NULL,
+  reaction TEXT NOT NULL,
+  count INTEGER NOT NULL DEFAULT 0,
+  updated_at TEXT NOT NULL,
+  PRIMARY KEY (path, reaction)
+);

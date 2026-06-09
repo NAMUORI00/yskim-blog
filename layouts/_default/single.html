@@ -23,6 +23,7 @@
       <div class="content">
         {{ .Content }}
       </div>
+      {{ partial "post-reactions.html" . }}
       {{ partial "comments.html" . }}
     </div>
   </article>

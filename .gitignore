@@ -6,6 +6,7 @@ Thumbs.db
 node_modules/
 .wrangler/
 .wrangler-functions-build/
+.wrangler-pages-dev-*.log
 content/
 static/images/
 .private-content/

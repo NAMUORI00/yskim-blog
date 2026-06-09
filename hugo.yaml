@@ -100,7 +100,7 @@ params:
 
       mapping: pathname
 
-      reactionsEnabled: "1"
+      reactionsEnabled: "0"
 
       inputPosition: bottom
 
@@ -175,6 +175,10 @@ languages:
         tags: 태그
 
         comments: 댓글
+        reactions: 반응
+        reactionLike: 좋아요
+        reactionUseful: 유용해요
+        reactionReread: 다시 읽기
 
         commentsGitHub: GitHub 댓글
 

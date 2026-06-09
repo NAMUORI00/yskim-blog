@@ -961,6 +961,79 @@ body.theme-dark .chroma .s {
   color: #a3d4b8;
 }
 
+.post-reactions {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.post-reactions-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.post-reactions-heading .eyebrow {
+  margin-bottom: 0;
+}
+
+.post-reactions-status {
+  min-height: 1rem;
+  margin: 0;
+  color: var(--faint);
+  font-size: var(--font-xs);
+}
+
+.post-reaction-buttons {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-2);
+}
+
+.post-reaction-buttons button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: 40px;
+  padding: var(--space-2) var(--space-3);
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+
+.post-reaction-buttons button:hover,
+.post-reaction-buttons button.is-active {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.post-reaction-buttons span {
+  min-width: 0;
+  overflow: hidden;
+  font-size: var(--font-sm);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.post-reaction-buttons strong {
+  min-width: 1.75rem;
+  color: var(--accent);
+  font-size: var(--font-xs);
+  font-weight: 800;
+  text-align: right;
+}
+
 .post-comments {
   margin-top: var(--space-6);
   padding-top: var(--space-5);
@@ -1339,6 +1412,15 @@ body.theme-dark .chroma .s {
   .post-comments {
     margin-top: var(--space-5);
     padding-top: var(--space-4);
+  }
+
+  .post-reactions {
+    margin-top: var(--space-5);
+    padding: var(--space-3);
+  }
+
+  .post-reaction-buttons {
+    grid-template-columns: 1fr;
   }
 
   .post-feed {

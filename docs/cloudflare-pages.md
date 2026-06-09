@@ -16,11 +16,11 @@ GitHub Actions builds the site, uploads `public/`, and deploys with `cloudflare/
 
 Register these in GitHub → `yskim-blog` → Settings → Secrets and variables → Actions:
 
-| Secret | Purpose |
-|--------|---------|
-| `CONTENT_REPO_TOKEN` | Read access to `yskim-blog-private` for private content checkout |
-| `CLOUDFLARE_API_TOKEN` | Deploy to Cloudflare Pages (Account + Cloudflare Pages Edit) |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id for Pages deploy |
+| Secret                  | Purpose                                                                |
+| ----------------------- | ---------------------------------------------------------------------- |
+| `CONTENT_REPO_TOKEN`    | Read access to `yskim-blog-private` for private content checkout       |
+| `CLOUDFLARE_API_TOKEN`  | Deploy to Cloudflare Pages (Account + Cloudflare Pages Edit)           |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id for Pages deploy                                 |
 
 `GITHUB_TOKEN` is provided automatically for deployment status updates.
 

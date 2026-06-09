@@ -23,6 +23,26 @@ params:
 
 The theme toggle sends light and dark theme updates to the Giscus frame.
 
+Giscus reactions are disabled in `hugo.yaml` because the reaction controls are
+rendered separately between the post body and the GitHub comment thread. This
+keeps the Giscus iframe focused on authenticated GitHub comments.
+
+## Post reactions
+
+Post pages render a lightweight reaction bar above the comments section. The
+buttons are managed by `static/js/reactions.js` and the Pages Function at
+`/api/reactions`.
+
+- Without a `COMMENTS_DB` binding, the reaction bar still works per browser with
+  local storage and the API reports `mode: "local"`.
+- With a `COMMENTS_DB` binding, the same API stores shared counts in the
+  `reactions` table from `schema/comments.sql` and reports `mode: "shared"`.
+
+The public reaction API is:
+
+- `GET /api/reactions?path=/posts/example/`
+- `POST /api/reactions` with `{ "path": "...", "previousReaction": "like", "reaction": "useful" }`
+
 ## Anonymous comments
 
 Use the Cloudflare mode when comments should support anonymous visitors with CAPTCHA protection:
