@@ -16,26 +16,11 @@
     {{- end -}}
     {{- $links = $links | append (dict "source" $mainId "target" $tagId) -}}
   {{- end -}}
-
-  {{- $tags := $page.Params.tags | default slice -}}
-  {{- $related := slice -}}
-  {{- range where site.RegularPages "Section" "posts" -}}
-    {{- if ne .RelPermalink $page.RelPermalink -}}
-      {{- $shared := intersect $tags (.Params.tags | default slice) -}}
-      {{- if gt (len $shared) 0 -}}
-        {{- $related = $related | append . -}}
-      {{- end -}}
-    {{- end -}}
-  {{- end -}}
-  {{- range first 5 $related -}}
-    {{- $postId := printf "post:%s" (.Params.slug | default .File.ContentBaseName) -}}
-    {{- if not (index $nodeIds $postId) -}}
-      {{- $nodes = $nodes | append (dict "id" $postId "label" .Title "type" "post" "url" .RelPermalink) -}}
-      {{- $nodeIds = merge $nodeIds (dict $postId true) -}}
-    {{- end -}}
-    {{- $links = $links | append (dict "source" $mainId "target" $postId) -}}
-  {{- end -}}
 {{- else -}}
+  {{- $handle := site.Params.handle | default site.Params.author | default site.Title -}}
+  {{- $rootId := printf "profile:%s" ($handle | urlize) -}}
+  {{- $nodes = $nodes | append (dict "id" $rootId "label" $handle "type" "main" "url" ("/" | relLangURL)) -}}
+  {{- $nodeIds = merge $nodeIds (dict $rootId true) -}}
   {{- $posts := where site.RegularPages "Section" "posts" -}}
   {{- range first 6 $posts -}}
     {{- $postId := printf "post:%s" (.Params.slug | default .File.ContentBaseName) -}}
@@ -43,6 +28,7 @@
       {{- $nodes = $nodes | append (dict "id" $postId "label" .Title "type" "post" "url" .RelPermalink) -}}
       {{- $nodeIds = merge $nodeIds (dict $postId true) -}}
     {{- end -}}
+    {{- $links = $links | append (dict "source" $rootId "target" $postId) -}}
     {{- range .Params.tags | default slice -}}
       {{- $tagId := printf "tag:%s" (. | urlize) -}}
       {{- if not (index $nodeIds $tagId) -}}

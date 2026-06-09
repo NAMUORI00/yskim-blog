@@ -104,11 +104,25 @@
       if (mainNode) {
         mainNode.x = 0;
         mainNode.y = 0;
-        const ring = size * 0.44;
+        const posts = children.filter((node) => node.type === "post");
+        const tags = children.filter((node) => node.type === "tag");
+        const others = children.filter((node) => node.type !== "post" && node.type !== "tag");
+        const placeRing = (items, ring, offset = -Math.PI / 2) => {
+          items.forEach((node, index) => {
+            const angle = (index / Math.max(items.length, 1)) * Math.PI * 2 + offset;
+            node.x = Math.cos(angle) * ring;
+            node.y = Math.sin(angle) * ring;
+          });
+        };
+
+        placeRing(posts, size * 0.27);
+        placeRing(tags, posts.length ? size * 0.45 : size * 0.36, -Math.PI / 2 + Math.PI / Math.max(tags.length, 2));
+        placeRing(others, size * 0.4);
         children.forEach((node, index) => {
+          if (node.x !== 0 || node.y !== 0) return;
           const angle = (index / Math.max(children.length, 1)) * Math.PI * 2 - Math.PI / 2;
-          node.x = Math.cos(angle) * ring;
-          node.y = Math.sin(angle) * ring;
+          node.x = Math.cos(angle) * size * 0.42;
+          node.y = Math.sin(angle) * size * 0.42;
         });
         return;
       }
@@ -158,7 +172,8 @@
         let dy = target.y - source.y;
         let dist = Math.hypot(dx, dy) || 0.01;
         const touchesHub = source.type === "main" || target.type === "main";
-        const linkDistance = touchesHub ? hubLinkDistance : peerLinkDistance;
+        const connectsTag = source.type === "tag" || target.type === "tag";
+        const linkDistance = touchesHub ? hubLinkDistance : connectsTag ? peerLinkDistance : size * 0.22;
         const force = (dist - linkDistance) * linkStrength;
         dx = (dx / dist) * force;
         dy = (dy / dist) * force;
