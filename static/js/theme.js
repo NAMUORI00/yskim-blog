@@ -28,6 +28,22 @@
     return darkQuery.matches ? "dark" : "light";
   };
 
+  const syncGiscusTheme = (theme) => {
+    const giscusFrame = document.querySelector("iframe.giscus-frame");
+    if (!giscusFrame || !giscusFrame.contentWindow) {
+      return false;
+    }
+
+    giscusFrame.contentWindow.postMessage({
+      giscus: {
+        setConfig: {
+          theme,
+        },
+      },
+    }, "https://giscus.app");
+    return true;
+  };
+
   const setTheme = (theme, persist) => {
     const nextTheme = theme === "dark" ? "dark" : "light";
     body.classList.toggle("theme-dark", nextTheme === "dark");
@@ -47,21 +63,26 @@
       toggle.setAttribute("aria-label", targetLabel);
     }
 
-    const giscusFrame = document.querySelector("iframe.giscus-frame");
-    if (giscusFrame) {
-      giscusFrame.contentWindow.postMessage({
-        giscus: {
-          setConfig: {
-            theme: nextTheme,
-          },
-        },
-      }, "https://giscus.app");
-    }
+    syncGiscusTheme(nextTheme);
 
     window.dispatchEvent(new CustomEvent("yskim:theme-change", { detail: { theme: nextTheme } }));
   };
 
   setTheme(getPreferredTheme(), false);
+
+  const observer = new MutationObserver(() => {
+    const synced = syncGiscusTheme(document.documentElement.dataset.theme || getPreferredTheme());
+    if (synced) {
+      observer.disconnect();
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+  window.addEventListener("load", () => {
+    const synced = syncGiscusTheme(document.documentElement.dataset.theme || getPreferredTheme());
+    if (synced) {
+      observer.disconnect();
+    }
+  });
 
   if (toggle) {
     toggle.addEventListener("click", () => {
