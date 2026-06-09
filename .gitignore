@@ -5,6 +5,7 @@ resources/_gen/
 Thumbs.db
 node_modules/
 .wrangler/
+.wrangler-functions-build/
 content/
 static/images/
 .private-content/
