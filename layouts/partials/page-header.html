@@ -1,0 +1,20 @@
+<header class="page-header">
+  {{ if eq .Kind "term" }}
+    {{ if eq .Type "categories" }}
+      <p class="page-header-kicker">{{ site.Params.ui.categories }}</p>
+    {{ else if eq .Type "tags" }}
+      <p class="page-header-kicker">{{ site.Params.ui.tags }}</p>
+    {{ else }}
+      <p class="page-header-kicker">{{ .Type }}</p>
+    {{ end }}
+  {{ else if eq .Section "posts" }}
+    <p class="page-header-kicker">{{ site.Params.ui.allPosts }}</p>
+  {{ else }}
+    <p class="page-header-kicker">{{ .Section | default .Type }}</p>
+  {{ end }}
+  <h1>{{ .Title }}</h1>
+  {{ with .Description }}<p class="page-header-desc">{{ . }}</p>{{ end }}
+  {{ with .Pages }}
+    <p class="page-header-count">{{ len . }} {{ site.Params.ui.postsCount }}</p>
+  {{ end }}
+</header>

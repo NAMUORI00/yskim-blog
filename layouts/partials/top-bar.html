@@ -1,0 +1,80 @@
+<header class="top-bar">
+
+  <div class="top-bar-inner">
+
+    <a class="top-bar-brand" href="{{ "/" | relLangURL }}">{{ site.Title }}</a>
+
+    <nav class="top-bar-nav" aria-label="Main navigation">
+
+      <a
+
+        href="{{ "/" | relLangURL }}"
+
+        class="{{ if .IsHome }}is-active{{ end }}"
+
+        {{ if .IsHome }}aria-current="page"{{ end }}
+
+      >{{ site.Params.ui.navHome }}</a>
+
+      {{ range site.Menus.main }}
+
+        <a
+
+          href="{{ .URL }}"
+
+          class="{{ if $.IsMenuCurrent "main" . }}is-active{{ end }}"
+
+          {{ if $.IsMenuCurrent "main" . }}aria-current="page"{{ end }}
+
+        >{{ .Name }}</a>
+
+      {{ end }}
+
+      <a class="top-bar-external" href="https://namuori.net/" target="_blank" rel="noopener noreferrer">{{ site.Params.ui.navPortfolio }} ↗</a>
+
+    </nav>
+
+    <div class="top-bar-utils">
+
+      <button
+
+        class="theme-toggle"
+
+        type="button"
+
+        data-theme-toggle
+
+        data-light-label="{{ site.Params.ui.themeLight }}"
+
+        data-dark-label="{{ site.Params.ui.themeDark }}"
+
+        aria-label="{{ site.Params.ui.themeToggle }}"
+
+        aria-pressed="false"
+
+        title="{{ site.Params.ui.themeDark }}"
+
+      >
+
+        <svg class="theme-icon theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+
+          <circle cx="12" cy="12" r="5"></circle>
+
+          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
+
+        </svg>
+
+        <svg class="theme-icon theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+
+        </svg>
+
+      </button>
+
+    </div>
+
+  </div>
+
+</header>
+

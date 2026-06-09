@@ -1,42 +1,18 @@
 {{ define "main" }}
-  <section class="readme-card hero-readme">
-    <div class="filebar">
-      <span></span>
-      <span></span>
-      <span></span>
-      <strong>{{ site.Title }}</strong>
-      <em>{{ site.Params.ui.onThisBlog }}</em>
-    </div>
-    <div class="readme-body">
-      <div class="readme-intro">
-        <p class="eyebrow">{{ site.Params.ui.intro }}</p>
-        <h1>{{ site.Params.ui.readmeTitle }}</h1>
-        <p class="lead">{{ site.Params.ui.readmeLead }}</p>
-      </div>
-      <div class="hero-actions">
-        <a class="primary-link" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.browsePosts }}</a>
-        <a class="text-link" href="{{ "/pages/about/" | relLangURL }}">{{ site.Params.ui.about }}</a>
-      </div>
-    </div>
-  </section>
-
-  <section class="readme-card post-section" aria-labelledby="recent-posts">
-    <div class="section-heading">
-      <div>
-        <p class="eyebrow">{{ site.Params.ui.recent }}</p>
-        <h2 id="recent-posts">{{ site.Params.ui.allPosts }}</h2>
-      </div>
+  <section class="post-feed post-feed--home">
+    <div class="section-heading section-heading--home">
+      <h1>{{ site.Title }}</h1>
       <a class="section-link" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.viewArchive }}</a>
     </div>
     {{ $posts := where site.RegularPages "Section" "posts" }}
     {{ if $posts }}
-      <div class="post-list markdown-file-list">
+      <div class="post-list">
       {{ range first 10 $posts }}
         {{ partial "post-card.html" . }}
       {{ end }}
       </div>
     {{ else }}
-      <p>No posts have been published yet.</p>
+      <p class="empty-state">{{ site.Params.ui.noPostsYet }}</p>
     {{ end }}
   </section>
 {{ end }}

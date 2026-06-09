@@ -1,20 +1,13 @@
 {{ define "main" }}
-  <section class="readme-card page-heading">
-    <div class="filebar">
-      <span></span>
-      <span></span>
-      <span></span>
-      <strong>{{ .Title }}.md</strong>
-    </div>
-    <h1>{{ .Title }}</h1>
-    {{ with .Description }}<p>{{ . }}</p>{{ end }}
-  </section>
+  {{ partial "page-header.html" . }}
 
-  <section class="readme-card post-list">
-    {{ range .Pages }}
-      {{ partial "post-card.html" . }}
-    {{ else }}
-      <p>No pages found.</p>
-    {{ end }}
+  <section class="post-feed">
+    <div class="post-list">
+      {{ range .Pages }}
+        {{ partial "post-card.html" . }}
+      {{ else }}
+        <p class="empty-state">{{ site.Params.ui.noPagesFound }}</p>
+      {{ end }}
+    </div>
   </section>
 {{ end }}

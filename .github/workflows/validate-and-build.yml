@@ -1,20 +1,78 @@
-name: Validate and build Hugo site
+name: Build and deploy Hugo site
 
 on:
   pull_request:
   push:
     branches:
       - main
+  repository_dispatch:
+    types:
+      - content-updated
 
 env:
   HUGO_VERSION: 0.162.1
+  PRIVATE_CONTENT_DIR: .private-content
 
 jobs:
-  validate:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout site repository
         uses: actions/checkout@v4
+
+      - name: Read content repository config
+        id: content_repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          owner="NAMUORI00"
+          name="yskim-blog-private"
+          ref="main"
+          if [[ -f hugo.yaml ]]; then
+            block="$(awk '
+              /^[[:space:]]*contentRepo:[[:space:]]*$/ { capture=1; next }
+              capture && /^[[:space:]]*[A-Za-z0-9_]+:/ && $0 !~ /^[[:space:]]*(owner|name|ref|paths):/ { exit }
+              capture { print }
+            ' hugo.yaml | tr -d '\r')"
+            parsed_owner="$(grep -E '^[[:space:]]*owner:' <<<"$block" | head -n1 | awk '{print $2}' | tr -d '\r')"
+            parsed_name="$(grep -E '^[[:space:]]*name:' <<<"$block" | head -n1 | awk '{print $2}' | tr -d '\r')"
+            parsed_ref="$(grep -E '^[[:space:]]*ref:' <<<"$block" | head -n1 | awk '{print $2}' | tr -d '\r')"
+            [[ -n "$parsed_owner" ]] && owner="$parsed_owner"
+            [[ -n "$parsed_name" ]] && name="$parsed_name"
+            [[ -n "$parsed_ref" ]] && ref="$parsed_ref"
+          fi
+          echo "owner=$owner" >> "$GITHUB_OUTPUT"
+          echo "name=$name" >> "$GITHUB_OUTPUT"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "slug=${owner}/${name}" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout private content repository
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ steps.content_repo.outputs.slug }}
+          token: ${{ secrets.CONTENT_REPO_TOKEN }}
+          path: ${{ env.PRIVATE_CONTENT_DIR }}
+          ref: ${{ steps.content_repo.outputs.ref }}
+
+      - name: Fetch content
+        shell: bash
+        run: bash .github/scripts/fetch-content.sh
+
+      - name: Validate exported content
+        shell: bash
+        run: bash .github/scripts/validate-content.sh
+
+      - name: Markdown lint
+        run: npx --yes markdownlint-cli2 "content/**/*.md"
+
+      - name: Build Pages Functions
+        run: npx --yes wrangler pages functions build functions --outdir "$RUNNER_TEMP/pages-functions-build"
+
+      - name: Fetch GitHub profile
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: bash
+        run: bash .github/scripts/fetch-github-profile.sh
 
       - name: Install Hugo
         shell: bash
@@ -25,17 +83,7 @@ jobs:
           tar -xzf hugo.tar.gz -C "$RUNNER_TEMP/hugo-bin"
           echo "$RUNNER_TEMP/hugo-bin" >> "$GITHUB_PATH"
 
-      - name: Validate exported content
-        shell: pwsh
-        run: ./scripts/validate-content.ps1
-
-      - name: Markdown lint
-        run: npx --yes markdownlint-cli2 "**/*.md" "#public"
-
-      - name: Build Pages Functions
-        run: npx --yes wrangler pages functions build functions --outdir "$RUNNER_TEMP/pages-functions-build"
-
-      - name: Build
+      - name: Build site
         run: hugo --gc --minify --cleanDestinationDir
 
       - name: Guard against development assets
@@ -46,3 +94,38 @@ jobs:
             echo "Development-only livereload asset was found in the production build."
             exit 1
           fi
+
+      - name: Upload production build
+        uses: actions/upload-artifact@v4
+        with:
+          name: public-site
+          path: public
+          if-no-files-found: error
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: >
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      github.event_name == 'repository_dispatch'
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - name: Checkout site repository
+        uses: actions/checkout@v4
+
+      - name: Download production build
+        uses: actions/download-artifact@v4
+        with:
+          name: public-site
+          path: public
+
+      - name: Deploy to Cloudflare Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: yskim-blog
+          directory: public
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

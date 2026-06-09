@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 
 $postsRoot = Join-Path $Root "content\posts"
 $staticRoot = Join-Path $Root "static"
-$requiredFields = @("title", "date", "draft", "slug", "categories", "tags", "summary", "translationKey", "comments")
+$requiredFields = @("title", "date", "draft", "slug", "categories", "tags", "summary", "comments")
 $listFields = @("categories", "tags")
 $errors = New-Object System.Collections.Generic.List[string]
 
@@ -34,6 +34,9 @@ function Get-FrontMatterLines($Text, $Path) {
 Get-ChildItem -LiteralPath $postsRoot -Recurse -File -Filter "*.md" | ForEach-Object {
   $path = $_.FullName
   if ($_.BaseName -eq "_index" -or $_.Name -match "^_index\.[A-Za-z-]+\.md$") {
+    return
+  }
+  if ($_.Name -match "\.[A-Za-z-]+\.md$") {
     return
   }
 
@@ -75,6 +78,21 @@ Get-ChildItem -LiteralPath $postsRoot -Recurse -File -Filter "*.md" | ForEach-Ob
     $imagePath = Join-Path $staticRoot $relative
     if (-not (Test-Path -LiteralPath $imagePath -PathType Leaf)) {
       Add-Error "Referenced image does not exist: $($match.Groups[1].Value) in $path"
+    }
+  }
+
+  if ($frontMatterText -match "(?m)^cover:\s*(.+)$") {
+    $coverValue = $Matches[1].Trim().Trim('"').Trim("'")
+    if ($coverValue) {
+      if ($coverValue -notmatch "^/") {
+        Add-Error "Cover path must start with /: $path"
+      } else {
+        $coverRelative = $coverValue.TrimStart("/") -replace "/", "\"
+        $coverPath = Join-Path $staticRoot $coverRelative
+        if (-not (Test-Path -LiteralPath $coverPath -PathType Leaf)) {
+          Add-Error "Cover image does not exist: $coverValue in $path"
+        }
+      }
     }
   }
 }

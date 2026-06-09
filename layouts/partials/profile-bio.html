@@ -1,0 +1,7 @@
+{{ $gh := hugo.Data.github }}
+{{ if not $gh }}
+  {{ $gh = site.Params.profileFallback }}
+{{ end }}
+{{ with $gh.bio }}
+  <p class="profile-bio profile-bio--about">{{ . }}</p>
+{{ end }}

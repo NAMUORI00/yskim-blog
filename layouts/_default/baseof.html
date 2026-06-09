@@ -10,9 +10,12 @@
         try {
           const saved = localStorage.getItem("yskim-theme");
           const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-          document.documentElement.dataset.theme = saved || preferred;
+          const theme = saved === "light" || saved === "dark" ? saved : preferred;
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.classList.add("theme-" + theme);
         } catch {
           document.documentElement.dataset.theme = "light";
+          document.documentElement.classList.add("theme-light");
         }
       })();
     </script>
@@ -20,26 +23,27 @@
     <script src="/js/theme.js" defer></script>
     {{ with .Params.canonical }}<link rel="canonical" href="{{ . }}">{{ end }}
   </head>
-  <body class="nmr-skin theme-light sidebar-right cover-readme density-default">
+  <body>
+    <script>
+      (() => {
+        const theme = document.documentElement.dataset.theme || "light";
+        document.body.classList.add("theme-" + theme);
+      })();
+    </script>
+    {{ partial "top-bar.html" . }}
     <div class="site-shell">
       <aside class="profile-rail" aria-label="Profile">
-        <a class="avatar" href="/" aria-label="{{ site.Title }} home">YS</a>
-        <div class="profile-block">
-          <p class="profile-kicker">NOTEBOOK</p>
-          <a class="brand" href="/">{{ site.Title }}</a>
-          <p class="handle">@{{ site.Params.handle }}</p>
-          <p class="profile-copy">{{ site.Params.profile }}</p>
-        </div>
-        <div class="topic-list" aria-label="Topics">
-          {{ range site.Params.topics }}
-            <span>#{{ . }}</span>
-          {{ end }}
-        </div>
+        {{ partial "profile-rail.html" . }}
         <section class="rail-section" aria-label="{{ site.Params.ui.categories }}">
           <p class="rail-section-title">{{ site.Params.ui.categories }}</p>
           <nav class="rail-category-list">
             {{ range $name, $taxonomy := site.Taxonomies.categories }}
-              <a href="{{ "/categories/" | relLangURL }}{{ $name | urlize }}/">
+              {{ $isActive := and (eq $.Kind "term") (eq $.Type "categories") (eq $.Title $name) }}
+              <a
+                href="{{ "/categories/" | relLangURL }}{{ $name | urlize }}/"
+                class="{{ if $isActive }}is-active{{ end }}"
+                {{ if $isActive }}aria-current="page"{{ end }}
+              >
                 <span>{{ $name }}</span>
                 <strong>{{ len $taxonomy }}</strong>
               </a>
@@ -48,38 +52,14 @@
             {{ end }}
           </nav>
         </section>
-        <nav class="rail-nav" aria-label="Main navigation">
-          {{ range site.Menus.main }}
-            <a href="{{ .URL }}">{{ .Name }}</a>
-          {{ end }}
-          <a href="{{ "/index.xml" | relLangURL }}">RSS</a>
-        </nav>
       </aside>
 
       <div class="content-column">
-        <header class="site-header">
-          <div>
-            <p class="eyebrow">{{ site.Params.ui.headerEyebrow }}</p>
-            <p class="header-title">{{ site.Params.ui.readmeLead }}</p>
-          </div>
-          <div class="header-actions">
-            {{ partial "language-switcher.html" . }}
-            <button
-              class="header-action theme-toggle"
-              type="button"
-              data-theme-toggle
-              data-light-label="{{ site.Params.ui.themeLight }}"
-              data-dark-label="{{ site.Params.ui.themeDark }}"
-              aria-label="{{ site.Params.ui.themeToggle }}"
-            >{{ site.Params.ui.themeDark }}</button>
-            <a class="header-action" href="{{ "/posts/" | relLangURL }}">{{ site.Params.ui.allPosts }}</a>
-          </div>
-        </header>
         <main>
           {{ block "main" . }}{{ end }}
         </main>
         <footer class="site-footer">
-          <p>{{ site.Params.ui.footerFlow }}</p>
+          <p>{{ site.Params.ui.footerCopyright }} · <a href="https://namuori.net/" target="_blank" rel="noopener noreferrer">{{ site.Params.ui.navPortfolio }}</a> · <a href="{{ "/index.xml" | relLangURL }}">RSS</a></p>
         </footer>
       </div>
 

@@ -1,223 +1,226 @@
 baseURL: https://yskim-blog.pages.dev/
+
 defaultContentLanguage: ko
+
 defaultContentLanguageInSubdir: false
-title: yskim blog
+
+title: 나무가든
+
 timeZone: Asia/Seoul
+
 enableRobotsTXT: true
+
 summaryLength: 32
 
+
+
 taxonomies:
+
   category: categories
+
   tag: tags
 
+
+
 permalinks:
+
   posts: /posts/:slug/
 
+
+
 markup:
+
   goldmark:
+
     renderer:
+
       unsafe: false
+
   highlight:
+
     noClasses: false
 
+
+
 params:
-  description: 연구, 엔지니어링, 지식관리 노트를 한국어 중심으로 발행합니다.
+
+  description: 연구·엔지니어링·지식관리 노트를 기록하는 블로그.
+
   author: yskim
+
   handle: namuori
-  profile: 연구, 엔지니어링, 지식관리 노트를 기록합니다.
+
   location: Seoul, Korea
-  topics:
-    - 연구엔지니어링
-    - video-rag
-    - obsidian
-    - hugo
+
+  github:
+
+    username: NAMUORI00
+
+  profileFallback:
+
+    login: NAMUORI00
+
+    name: NAMUORI00
+
+    bio: ""
+
+    avatar_url: https://github.com/NAMUORI00.png
+
+    html_url: https://github.com/NAMUORI00
+
+  contentRepo:
+
+    owner: NAMUORI00
+
+    name: yskim-blog-private
+
+    ref: main
+
+    paths:
+
+      - content
+
+      - static/images
+
   comments:
+
     enabled: true
+
     giscus:
+
       enabled: true
+
       repo: NAMUORI00/yskim-blog
+
       repoId: R_kgDOSz9RGA
+
       category: General
+
       categoryId: DIC_kwDOSz9RGM4C-vLv
+
       mapping: pathname
+
       reactionsEnabled: "1"
+
       inputPosition: bottom
+
     anonymous:
+
       enabled: false
+
       turnstileSiteKey: ""
+
       moderation: true
 
+
+
 menu:
+
   main:
+
     - name: 글
+
       pageRef: /posts
+
       weight: 10
+
     - name: 소개
+
       pageRef: /pages/about
+
       weight: 20
 
+
+
 languages:
+
   ko:
+
     locale: ko-kr
+
     label: 한국어
-    title: yskim blog
+
+    title: 나무가든
+
     weight: 1
+
     params:
-      description: 연구, 엔지니어링, 지식관리 노트를 한국어 중심으로 발행합니다.
-      profile: 연구, 엔지니어링, 지식관리 노트를 기록합니다.
+
+      description: 연구·엔지니어링·지식관리 노트를 기록하는 블로그.
+
       ui:
+
+        navHome: 홈
+
+        navPortfolio: Portfolio
+
         allPosts: 모든 글
+
         about: 소개
-        intro: 최근 노트
-        graphHint: 노트 연결
+
         knowledgeGraph: 지식 그래프
-        languageSwitch: English
-        languageSwitchLabel: 영어 번역 보기
-        noTranslation: 아직 영어 번역이 없습니다
-        onThisBlog: 블로그
+
         recent: 최근 글
-        search: 검색
-        searchPlaceholder: 글 검색
-        browsePosts: 글 목록 보기
+
         categories: 카테고리
+
         noCategories: 아직 카테고리가 없습니다
+
+        noPostsYet: 아직 게시된 글이 없습니다.
+
+        noPagesFound: 페이지를 찾을 수 없습니다.
+
+        noTagsYet: 아직 태그가 없습니다.
+
         tags: 태그
+
         comments: 댓글
+
         commentsGitHub: GitHub 댓글
+
         commentsAnonymous: 익명 댓글
+
         commentsName: 이름
+
         commentsBody: 댓글 내용
+
         commentsSubmit: 등록
+
         commentsLoading: 댓글을 불러오는 중입니다
+
         commentsEmpty: 아직 댓글이 없습니다
+
         commentsModerated: 익명 댓글은 확인 후 공개됩니다.
+
         commentsSaved: 댓글이 접수되었습니다
+
         commentsError: 댓글 기능 설정을 확인해야 합니다
-        headerEyebrow: 연구 노트
-        readmeTitle: 연구와 지식관리를 기록하는 블로그
-        readmeLead: 생각을 정리하고, 검증 가능한 기록을 남기기 위한 개인 연구 노트입니다.
-        statusLabel: 발행 상태
-        statusVault: 보관함
-        statusBuild: 빌드
-        statusDeploy: 배포
-        workflowLabel: 출판 워크플로
-        workflowWrite: Obsidian Markdown
-        workflowWriteNote: 초안 작성
-        workflowReview: Frontmatter check
-        workflowReviewNote: 메타데이터 점검
-        workflowBuild: Hugo build
-        workflowBuildNote: 정적 사이트 빌드
-        workflowDeploy: Cloudflare에 배포
-        workflowDeployNote: 배포 및 캐시
-        frontmatterTitle: Frontmatter 예시
-        frontmatterPostTitle: Obsidian에서 Hugo로 발행하는 연구 노트
-        statusObsidian: Obsidian draft
-        statusGitHub: GitHub checked
-        statusCloudflare: Cloudflare live
-        statusPublic: 공개 소스
-        statusBilingual: KO / EN
+
         viewArchive: 아카이브 보기
-        openPost: 열기
-        publishFlow: 발행 흐름
-        footerFlow: Obsidian에서 작성한 공개 노트를 Hugo로 발행합니다.
-        sidebarVault: 보관함
-        sidebarBuild: 빌드
-        sidebarGraph: 그래프
-        vaultReady: 공개 폴더
-        vaultFormat: 문서 형식
-        buildEngine: 빌드 엔진
-        buildReview: 검수
-        buildDeploy: 배포
+
+        postsCount: 글
+
+        footerCopyright: "© yskim"
+
         themeToggle: 화면 테마 전환
+
         themeDark: 다크
+
         themeLight: 라이트
+
     menu:
+
       main:
+
         - name: 글
+
           pageRef: /posts
+
           weight: 10
+
         - name: 소개
+
           pageRef: /pages/about
+
           weight: 20
-  en:
-    locale: en-us
-    label: English
-    title: yskim blog
-    weight: 2
-    params:
-      description: English translations of Korean-first research and engineering notes.
-      profile: Notes on research, engineering, and knowledge work.
-      ui:
-        allPosts: All posts
-        about: About
-        intro: Recent notes
-        graphHint: Note links
-        knowledgeGraph: Knowledge Graph
-        languageSwitch: 한국어
-        languageSwitchLabel: Read the Korean original
-        noTranslation: Korean original only
-        onThisBlog: On this blog
-        recent: Recent
-        search: Search
-        searchPlaceholder: Search notes
-        browsePosts: Browse posts
-        categories: Categories
-        noCategories: No categories yet
-        tags: Tags
-        comments: Comments
-        commentsGitHub: GitHub comments
-        commentsAnonymous: Anonymous comments
-        commentsName: Name
-        commentsBody: Comment
-        commentsSubmit: Submit
-        commentsLoading: Loading comments
-        commentsEmpty: No comments yet
-        commentsModerated: Anonymous comments are shown after review.
-        commentsSaved: Comment received
-        commentsError: Comment settings need attention
-        headerEyebrow: Research notes
-        readmeTitle: Notes on research and knowledge work
-        readmeLead: A Korean-first notebook for thinking clearly, keeping evidence, and publishing useful records.
-        statusLabel: Publishing status
-        statusVault: Vault
-        statusBuild: Build
-        statusDeploy: Deploy
-        workflowLabel: Publishing workflow
-        workflowWrite: Obsidian Markdown
-        workflowWriteNote: Draft notes
-        workflowReview: Frontmatter check
-        workflowReviewNote: Metadata review
-        workflowBuild: Hugo build
-        workflowBuildNote: Static site build
-        workflowDeploy: Deploy on Cloudflare
-        workflowDeployNote: Publish and cache
-        frontmatterTitle: Frontmatter example
-        frontmatterPostTitle: Research notes published from Obsidian to Hugo
-        statusObsidian: Obsidian draft
-        statusGitHub: GitHub checked
-        statusCloudflare: Cloudflare live
-        statusPublic: Public source
-        statusBilingual: KO / EN
-        viewArchive: View archive
-        openPost: Open
-        publishFlow: Publishing flow
-        footerFlow: Public notes are written in Obsidian and published with Hugo.
-        sidebarVault: Vault
-        sidebarBuild: Build
-        sidebarGraph: Graph
-        vaultReady: Public folder
-        vaultFormat: Document format
-        buildEngine: Build engine
-        buildReview: Review
-        buildDeploy: Deploy
-        themeToggle: Toggle color theme
-        themeDark: Dark
-        themeLight: Light
-    menu:
-      main:
-        - name: Posts
-          pageRef: /posts
-          weight: 10
-        - name: About
-          pageRef: /pages/about
-          weight: 20
+

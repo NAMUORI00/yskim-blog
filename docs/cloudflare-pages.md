@@ -1,24 +1,38 @@
 # Cloudflare Pages Setup
 
-This public repository is designed for Cloudflare Pages with GitHub integration.
+This public repository deploys to Cloudflare Pages through GitHub Actions. The Cloudflare dashboard hosts the project and custom domain, but **production builds no longer run inside Cloudflare Pages**.
 
-## Build settings
+## Cloudflare dashboard settings
 
-- Framework preset: Hugo
-- Build command: `hugo --gc --minify --cleanDestinationDir`
-- Build output directory: `public`
+- Framework preset: **None**
+- Build command: leave empty
+- Build output directory: leave empty or `public` (ignored when deploying from Actions)
 - Production branch: `main`
-- Environment variable: `HUGO_VERSION=0.162.1`
+- Disable automatic GitHub builds if Cloudflare still offers a native build hook for this project
 
-Add the same `HUGO_VERSION` value to both Production and Preview environments so pull request previews use the same Hugo version as production.
+GitHub Actions builds the site, uploads `public/`, and deploys with `cloudflare/pages-action`.
+
+## GitHub Actions secrets
+
+Register these in GitHub → `yskim-blog` → Settings → Secrets and variables → Actions:
+
+| Secret | Purpose |
+|--------|---------|
+| `CONTENT_REPO_TOKEN` | Read access to `yskim-blog-private` for private content checkout |
+| `CLOUDFLARE_API_TOKEN` | Deploy to Cloudflare Pages (Account + Cloudflare Pages Edit) |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id for Pages deploy |
+
+`GITHUB_TOKEN` is provided automatically for deployment status updates.
+
+Cloudflare Pages environment variables such as `CONTENT_REPO_TOKEN` and `HUGO_VERSION` are no longer required for production builds.
 
 ## Deployment flow
 
-1. Push a content or code branch to GitHub.
-2. Open a pull request.
-3. Wait for GitHub Actions and Cloudflare Pages preview to finish.
-4. Review the preview URL for layout, mobile rendering, images, code blocks, and metadata.
-5. Merge to `main` only after the preview and checks are acceptable.
+1. Push a theme or code branch to the public repository, or push content to `yskim-blog-private`.
+2. Open a pull request for code changes, or rely on `repository_dispatch` after content merges.
+3. Wait for the GitHub Actions `build` job. Pull requests validate only; production deploy runs on `main` push and content dispatch.
+4. Review the production URL after deploy, or inspect the uploaded `public-site` artifact from pull request runs.
+5. Merge to `main` only after checks are acceptable.
 
 ## Custom domain checklist
 
@@ -27,13 +41,11 @@ Add the same `HUGO_VERSION` value to both Production and Preview environments so
 - Update `baseURL` in `hugo.yaml` from `https://example.com/` to the final domain.
 - Check canonical URLs, redirects, and the 404 page after the first production deploy.
 
-Private Obsidian vault paths and export automation are intentionally excluded from this public repository. This repository receives only public-ready Markdown through pull requests.
+Private Obsidian vault paths and export automation are intentionally excluded from this public repository. Public-ready Markdown is committed only to `yskim-blog-private`.
 
-The deployed site is multilingual:
+Author profile data (name, avatar, bio) is fetched from GitHub during the GitHub Actions build via `.github/scripts/fetch-github-profile.sh` and written to `data/github.yaml`.
 
-- Korean default: `/`
-- English translations: `/en/`
-- Post translation pairs share the same `slug` and `translationKey`.
+Content is fetched from `yskim-blog-private` via `.github/scripts/fetch-content.sh`. See `docs/content-repo-dispatch.md` for token setup and the private-repo rebuild trigger.
 
 ## Comment bindings
 

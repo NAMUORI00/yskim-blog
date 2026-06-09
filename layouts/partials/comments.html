@@ -6,7 +6,7 @@
 {{ $giscusReady := and $comments.enabled $giscus.enabled $giscus.repo $giscus.repoId $giscus.category $giscus.categoryId }}
 {{ $anonymousReady := and $comments.enabled $anonymous.enabled $anonymous.turnstileSiteKey }}
 {{ if and $isPost $pageAllowsComments (or $giscusReady $anonymousReady) }}
-  <section class="comments-panel" id="comments" aria-labelledby="comments-title">
+  <section class="post-comments" id="comments" aria-labelledby="comments-title">
     <div class="comments-heading">
       <p class="eyebrow" id="comments-title">{{ site.Params.ui.comments }}</p>
       {{ if $anonymousReady }}<span>{{ site.Params.ui.commentsModerated }}</span>{{ end }}

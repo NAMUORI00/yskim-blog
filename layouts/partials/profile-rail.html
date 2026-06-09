@@ -1,0 +1,12 @@
+{{ $gh := hugo.Data.github }}
+{{ if not $gh }}
+  {{ $gh = site.Params.profileFallback }}
+{{ end }}
+<a class="avatar" href="{{ $gh.html_url }}" target="_blank" rel="noopener noreferrer" aria-label="{{ $gh.name | default $gh.login }} GitHub">
+  <img src="{{ $gh.avatar_url }}" alt="{{ $gh.name | default $gh.login }}" width="56" height="56" loading="lazy" decoding="async">
+</a>
+<div class="profile-block">
+  <a class="brand" href="/">{{ site.Title }}</a>
+  {{ with $gh.name }}<p class="profile-name">{{ . }}</p>{{ end }}
+  {{ with $gh.bio }}<p class="profile-bio">{{ . }}</p>{{ end }}
+</div>

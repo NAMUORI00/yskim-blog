@@ -33,6 +33,8 @@
     body.classList.toggle("theme-dark", nextTheme === "dark");
     body.classList.toggle("theme-light", nextTheme === "light");
     document.documentElement.dataset.theme = nextTheme;
+    document.documentElement.classList.remove("theme-light", "theme-dark");
+    document.documentElement.classList.add("theme-" + nextTheme);
 
     if (persist) {
       writeSavedTheme(nextTheme);
@@ -40,8 +42,9 @@
 
     if (toggle) {
       const targetLabel = nextTheme === "dark" ? toggle.dataset.lightLabel : toggle.dataset.darkLabel;
-      toggle.textContent = targetLabel;
       toggle.setAttribute("aria-pressed", String(nextTheme === "dark"));
+      toggle.setAttribute("title", targetLabel);
+      toggle.setAttribute("aria-label", targetLabel);
     }
 
     const giscusFrame = document.querySelector("iframe.giscus-frame");

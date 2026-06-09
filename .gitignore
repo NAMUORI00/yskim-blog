@@ -4,3 +4,7 @@ resources/_gen/
 .DS_Store
 Thumbs.db
 node_modules/
+.wrangler/
+content/
+static/images/
+.private-content/
