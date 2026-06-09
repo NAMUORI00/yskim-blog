@@ -31,6 +31,17 @@ function Get-FrontMatterLines($Text, $Path) {
   return $null
 }
 
+if (-not (Test-Path -LiteralPath $postsRoot)) {
+  Write-Host "Content validation passed."
+  exit 0
+}
+
+$organizeScript = Join-Path $Root "scripts\content-paths.mjs"
+& node $organizeScript --check $postsRoot
+if ($LASTEXITCODE -ne 0) {
+  Add-Error "Post files must live under content/posts/<category>/<slug>.md."
+}
+
 Get-ChildItem -LiteralPath $postsRoot -Recurse -File -Filter "*.md" | ForEach-Object {
   $path = $_.FullName
   if ($_.BaseName -eq "_index" -or $_.Name -match "^_index\.[A-Za-z-]+\.md$") {

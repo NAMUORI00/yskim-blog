@@ -89,6 +89,10 @@ if [[ -d "${ROOT}/content" ]]; then
   find "${ROOT}/content" -type f -name '*.en.md' -delete
 fi
 
+if [[ -d "${ROOT}/content/posts" ]]; then
+  node "${ROOT}/scripts/content-paths.mjs" "${ROOT}/content/posts"
+fi
+
 mkdir -p "$DATA_DIR"
 {
   echo "repo: $(yaml_quote "${OWNER}/${NAME}")"

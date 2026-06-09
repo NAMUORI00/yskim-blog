@@ -12,7 +12,7 @@ Each post is published in the language it was written in. Author name, avatar, a
 2. Export public-ready Markdown and images to `yskim-blog-private`.
 3. Open a pull request in the private content repository.
 4. After merge to `main`, the private repo workflow triggers a public site rebuild.
-5. GitHub Actions fetches content, validates frontmatter, builds Hugo, and deploys to Cloudflare Pages.
+5. GitHub Actions fetches content, organizes posts under `content/posts/<category>/<slug>.md`, validates frontmatter, builds Hugo, and deploys to Cloudflare Pages.
 6. Cloudflare Pages serves the production site.
 
 See `docs/obsidian-publishing.md` for frontmatter rules and `docs/content-repo-dispatch.md` for token and dispatch setup.
@@ -36,7 +36,7 @@ Production build:
 hugo --gc --minify --cleanDestinationDir
 ```
 
-Do not commit fetched `content/` or `static/images/` to this repository.
+Do not commit fetched `content/` or `static/images/` to this repository. Fetched posts are automatically organized by first category while keeping public post URLs stable.
 
 ## Comments
 

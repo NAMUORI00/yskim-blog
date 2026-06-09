@@ -8,7 +8,9 @@ Do not commit `content/` or `static/images/` to the public `yskim-blog` reposito
 
 Published posts live in the private repo under `content/posts`.
 
-Use one Markdown file per public post, for example `content/posts/my-note.md`. Each file is published in the language it was written in.
+Use one Markdown file per public post. The source export may be flat, such as `content/posts/my-note.md`, or already grouped. During fetch, the public build normalizes Korean posts to `content/posts/<category-slug>/<slug>.md` from the first `categories` value and the `slug` frontmatter. For example, `categories: [연구 노트]` and `slug: "my-note"` becomes `content/posts/연구-노트/my-note.md`.
+
+This path cleanup is for source organization only. The public URL still uses the Hugo post slug, such as `/posts/my-note/`.
 
 Images belong in `static/images/` in the private repo and are referenced as `/images/...`.
 
@@ -32,6 +34,8 @@ comments: true
 ```
 
 `categories` drive the left Tistory-style sidebar. `tags` remain looser cross-links. `comments: true` enables the comment area when a configured provider exists.
+
+The first category is also the canonical folder parent for the post after fetch. If the category or slug changes, rerun `fetch-content` so the file is moved to the new category folder before validation.
 
 Optional `cover` adds a list-card thumbnail when set to a public path such as `/images/posts/my-note/cover.jpg`. Leave it empty to show a text-only preview card.
 

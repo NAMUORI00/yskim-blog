@@ -65,6 +65,10 @@ if [[ ! -d "$POSTS_ROOT" ]]; then
   exit 0
 fi
 
+if ! node "${ROOT}/scripts/content-paths.mjs" --check "$POSTS_ROOT"; then
+  add_error "Post files must live under content/posts/<category>/<slug>.md."
+fi
+
 while IFS= read -r -d '' file; do
   basename="$(basename "$file" .md)"
   filename="$(basename "$file")"

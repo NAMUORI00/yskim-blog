@@ -162,6 +162,15 @@ try {
     }
   }
 
+  $postsRoot = Join-Path $Root "content\posts"
+  $organizeScript = Join-Path $Root "scripts\content-paths.mjs"
+  if (Test-Path -LiteralPath $postsRoot) {
+    & node $organizeScript $postsRoot
+    if ($LASTEXITCODE -ne 0) {
+      throw "Content path organization failed."
+    }
+  }
+
   Write-ContentSourceMeta @{
     repo = $repoSlug
     ref = $config.ref
