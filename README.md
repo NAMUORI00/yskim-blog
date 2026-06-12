@@ -27,6 +27,8 @@ Install Hugo extended `0.162.1`, authenticate with GitHub (`gh auth login`), the
 hugo server -D
 ```
 
+To preview the Notion-backed source locally, set `CONTENT_SOURCE=notion`, `NOTION_TOKEN`, and `NOTION_DATABASE_ID`, then run the same `fetch-content` command. Generated Markdown and Notion images are build artifacts and should not be edited by hand. In GitHub Actions, use the manual workflow inputs to run either the configured source, the legacy private repo source, or the Notion source.
+
 Production build:
 
 ```powershell

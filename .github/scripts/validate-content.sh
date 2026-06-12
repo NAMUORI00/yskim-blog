@@ -117,6 +117,14 @@ while IFS= read -r -d '' file; do
     add_error "Obsidian embed remains in exported content: ${file}"
   fi
 
+  if grep -Eiq 'https?://[^[:space:])"]*(notion-static\.com|notion\.site|amazonaws\.com)[^[:space:])"]*(X-Amz-|notion|secure)' <<<"$text"; then
+    add_error "Temporary Notion file URL remains in exported content: ${file}"
+  fi
+
+  if grep -Eiq '<(unknown|video|audio|pdf|file)\b|file://' <<<"$text"; then
+    add_error "Unsupported Notion artifact remains in exported content: ${file}"
+  fi
+
   while IFS= read -r image_path; do
     [[ -z "$image_path" ]] && continue
     relative="${image_path#/}"

@@ -121,3 +121,26 @@ Do not do partial updates at first. Full rebuild keeps unpublished, deleted, or 
 - Notion integration token stored as a GitHub Actions secret.
 - Notion database id.
 - Exact database property names for status, slug, category, tags, summary, cover, canonical, and comments.
+
+## Current CMS setup
+
+The Notion CMS database has been created and configured outside this public repository.
+
+GitHub Actions expects these values:
+
+- repository variable `NOTION_DATABASE_ID`;
+- repository secret `NOTION_TOKEN`;
+- repository variable `CONTENT_SOURCE=notion` when the Notion source is ready to become active.
+- optional repository variable `NOTION_STATUS=Published` if the default should be explicit.
+
+Do not commit the Notion token. Keep generated Markdown and images out of source control.
+
+The existing Notion page titled `Markdown` from the old publishing notes has been duplicated into the new CMS as a `Ready` post. It is intentionally not `Published` until the Notion fetcher, image rewriting, math rendering, and unsupported-block checks are verified end to end.
+
+Use the GitHub Actions manual workflow inputs to test the Notion source before cutover:
+
+- `content_source=notion`
+- `notion_status=Ready` for the duplicated `Markdown` validation run, or `Published` for production content.
+- `deploy=false` for a dry run.
+
+After the Notion source passes with real data, set `CONTENT_SOURCE=notion`, keep the production status filter at `Published`, and use the scheduled workflow as the polling deploy path.

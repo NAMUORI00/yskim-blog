@@ -4,6 +4,14 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+if ($env:CONTENT_SOURCE -eq "notion") {
+  & (Join-Path $Root "scripts\fetch-notion-content.ps1") -Root $Root
+  if ($LASTEXITCODE -ne 0) {
+    throw "Notion content fetch failed."
+  }
+  return
+}
+
 $hugoYamlPath = Join-Path $Root "hugo.yaml"
 $dataDir = Join-Path $Root "data"
 $metaPath = Join-Path $dataDir "content-source.yaml"

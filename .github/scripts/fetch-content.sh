@@ -2,6 +2,12 @@
 set -euo pipefail
 
 ROOT="${ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
+
+if [[ "${CONTENT_SOURCE:-repo}" == "notion" ]]; then
+  bash "${ROOT}/.github/scripts/fetch-notion-content.sh"
+  exit 0
+fi
+
 HUGO_YAML="${ROOT}/hugo.yaml"
 DATA_DIR="${ROOT}/data"
 META_PATH="${DATA_DIR}/content-source.yaml"

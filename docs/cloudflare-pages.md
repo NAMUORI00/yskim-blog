@@ -21,8 +21,17 @@ Register these in GitHub → `yskim-blog` → Settings → Secrets and variables
 | `CONTENT_REPO_TOKEN`    | Read access to `yskim-blog-private` for private content checkout       |
 | `CLOUDFLARE_API_TOKEN`  | Deploy to Cloudflare Pages (Account + Cloudflare Pages Edit)           |
 | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id for Pages deploy                                 |
+| `NOTION_TOKEN`          | Read-only Notion integration token for Notion-backed content fetch     |
 
 `GITHUB_TOKEN` is provided automatically for deployment status updates.
+
+Register these repository variables in the same settings area:
+
+| Variable             | Purpose                                                              |
+| -------------------- | -------------------------------------------------------------------- |
+| `CONTENT_SOURCE`     | Set to `notion` after the Notion pipeline is ready to become active  |
+| `NOTION_DATABASE_ID` | Private Notion CMS database id used by the Notion fetcher            |
+| `NOTION_STATUS`      | Optional Notion status filter. Defaults to `Published`               |
 
 Cloudflare Pages environment variables such as `CONTENT_REPO_TOKEN` and `HUGO_VERSION` are no longer required for production builds.
 
@@ -33,6 +42,24 @@ Cloudflare Pages environment variables such as `CONTENT_REPO_TOKEN` and `HUGO_VE
 3. Wait for the GitHub Actions `build` job. Pull requests validate only; production deploy runs on `main` push and content dispatch.
 4. Review the production URL after deploy, or inspect the uploaded `public-site` artifact from pull request runs.
 5. Merge to `main` only after checks are acceptable.
+
+## Manual GitHub Actions runs
+
+The workflow can be started from GitHub Actions with these inputs:
+
+- `content_source=configured`: use the repository variable `CONTENT_SOURCE`, or `repo` when the variable is unset.
+- `content_source=repo`: force the legacy private content repository for this run.
+- `content_source=notion`: force the Notion CMS source for this run. Requires `NOTION_TOKEN` and `NOTION_DATABASE_ID`.
+- `notion_status`: override the Notion status filter for testing, for example `Ready`. Production should use `Published`.
+- `deploy`: deploy the manual build after validation. Disable this for a dry run.
+
+The `repository_dispatch` trigger is reserved for the legacy private content repository and always runs with `CONTENT_SOURCE=repo`.
+
+## Cloudflare GitHub App checks
+
+This repository deploys through GitHub Actions, not through Cloudflare's native GitHub build. If a pull request shows a failing `Cloudflare Pages` check while the GitHub Actions `build` job passes, the remaining failing check is from the Cloudflare Workers and Pages GitHub App/native preview build path.
+
+Keep the Pages project's native Git integration disconnected for this repository. GitHub Actions is the only production build and deploy path; `cloudflare/pages-action` still uses the Cloudflare API secrets for production deploys.
 
 ## Custom domain checklist
 
@@ -45,7 +72,7 @@ Private Obsidian vault paths and export automation are intentionally excluded fr
 
 Author profile data (name, avatar, bio) is fetched from GitHub during the GitHub Actions build via `.github/scripts/fetch-github-profile.sh` and written to `data/github.yaml`.
 
-Content is fetched from `yskim-blog-private` via `.github/scripts/fetch-content.sh`. See `docs/content-repo-dispatch.md` for token setup and the private-repo rebuild trigger.
+Content is fetched through `.github/scripts/fetch-content.sh`. The current fallback source is `yskim-blog-private`; the Notion source is enabled by setting `CONTENT_SOURCE=notion` after `NOTION_TOKEN` and `NOTION_DATABASE_ID` are configured. See `docs/notion-publishing.md` for the Notion publishing path.
 
 ## Comment bindings
 

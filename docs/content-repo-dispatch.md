@@ -58,3 +58,5 @@ jobs:
 ```
 
 When content is pushed to `main`, the public repository workflow runs with the `repository_dispatch` trigger, rebuilds the site with the latest fetched content, and deploys to Cloudflare Pages.
+
+During the Notion migration, this dispatch path remains the legacy private-repo path. The public workflow forces `CONTENT_SOURCE=repo` for `repository_dispatch` events so an old private content push does not accidentally publish a different source. Once Notion is fully active, disable or archive this private-repo dispatch workflow.

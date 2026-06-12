@@ -82,6 +82,12 @@ Get-ChildItem -LiteralPath $postsRoot -Recurse -File -Filter "*.md" | ForEach-Ob
   if ($text -match "(?m)!\[\[[^\]]+\]\]") {
     Add-Error "Obsidian embed remains in exported content: $path"
   }
+  if ($text -match 'https?://[^\s\)`"]*(notion-static\.com|notion\.site|amazonaws\.com)[^\s\)`"]*(X-Amz-|notion|secure)') {
+    Add-Error "Temporary Notion file URL remains in exported content: $path"
+  }
+  if ($text -match '(?i)<(unknown|video|audio|pdf|file)\b|file://') {
+    Add-Error "Unsupported Notion artifact remains in exported content: $path"
+  }
 
   $imageMatches = [regex]::Matches($text, "!\[[^\]]*\]\((/images/[^)]+)\)")
   foreach ($match in $imageMatches) {

@@ -20,6 +20,7 @@
       })();
     </script>
     <link rel="stylesheet" href="/css/site.css">
+    {{ partial "math.html" . }}
     <script src="/js/theme.js" defer></script>
     {{ with .Params.canonical }}<link rel="canonical" href="{{ . }}">{{ end }}
   </head>

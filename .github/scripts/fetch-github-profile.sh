@@ -74,6 +74,23 @@ if [[ -n "${GITHUB_TOKEN:-}" ]]; then
   AUTH_HEADER=(-H "Authorization: Bearer ${GITHUB_TOKEN}")
 fi
 
+if ! command -v jq >/dev/null 2>&1; then
+  if [[ -f "$OUTPUT_PATH" ]]; then
+    echo "jq is unavailable; keeping existing data/github.yaml." >&2
+    exit 0
+  fi
+
+  write_github_data \
+    "$FALLBACK_LOGIN" \
+    "$FALLBACK_NAME" \
+    "$FALLBACK_BIO" \
+    "$FALLBACK_AVATAR" \
+    "$FALLBACK_HTML" \
+    "$FETCHED_AT"
+  echo "jq is unavailable; wrote fallback profile." >&2
+  exit 0
+fi
+
 if RESPONSE="$(curl -fsSL \
   -H "Accept: application/vnd.github+json" \
   -H "User-Agent: namu-garden-blog-fetch-profile" \
