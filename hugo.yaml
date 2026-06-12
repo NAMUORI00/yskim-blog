@@ -34,7 +34,7 @@ markup:
 
     renderer:
 
-      unsafe: false
+      unsafe: true
 
   highlight:
 
@@ -67,20 +67,6 @@ params:
     avatar_url: https://github.com/NAMUORI00.png
 
     html_url: https://github.com/NAMUORI00
-
-  contentRepo:
-
-    owner: NAMUORI00
-
-    name: yskim-blog-private
-
-    ref: main
-
-    paths:
-
-      - content
-
-      - static/images
 
   comments:
 

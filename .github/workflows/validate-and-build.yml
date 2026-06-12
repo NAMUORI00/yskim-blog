@@ -10,15 +10,19 @@ on:
         type: choice
         options:
           - configured
-          - repo
           - notion
       notion_status:
-        description: Notion status filter when the selected source is notion.
+        description: Notion status filter for generated content.
         required: false
         default: Published
         type: string
+      production_branch:
+        description: Branch that stores generated production content and deploys.
+        required: false
+        default: production
+        type: string
       deploy:
-        description: Deploy after a successful manual build.
+        description: Publish the production branch and deploy after a successful manual build.
         required: false
         default: true
         type: boolean
@@ -28,9 +32,6 @@ on:
   push:
     branches:
       - main
-  repository_dispatch:
-    types:
-      - content-updated
 
 permissions:
   contents: read
@@ -41,17 +42,17 @@ concurrency:
 
 env:
   HUGO_VERSION: 0.162.1
-  CONTENT_SOURCE: ${{ github.event_name == 'repository_dispatch' && 'repo' || ((github.event.inputs.content_source == 'repo' || github.event.inputs.content_source == 'notion') && github.event.inputs.content_source || vars.CONTENT_SOURCE || 'repo') }}
+  CONTENT_SOURCE: notion
   NOTION_DATABASE_ID: ${{ vars.NOTION_DATABASE_ID }}
   NOTION_STATUS: ${{ github.event.inputs.notion_status || vars.NOTION_STATUS || 'Published' }}
-  PRIVATE_CONTENT_DIR: .private-content
+  PUBLISH_BRANCH: ${{ github.event.inputs.production_branch || vars.PUBLISH_BRANCH || 'production' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout site repository
+      - name: Checkout project repository
         uses: actions/checkout@v6
 
       - name: Setup Node
@@ -69,65 +70,29 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          case "${CONTENT_SOURCE}" in
-            repo|notion) ;;
-            *)
-              echo "CONTENT_SOURCE must be 'repo' or 'notion', got '${CONTENT_SOURCE}'." >&2
-              exit 1
-              ;;
-          esac
+
+          if [[ "${CONTENT_SOURCE}" != "notion" ]]; then
+            echo "CONTENT_SOURCE must be 'notion' for the single-repository publishing flow, got '${CONTENT_SOURCE}'." >&2
+            exit 1
+          fi
+          if [[ "${PUBLISH_BRANCH}" == -* || "${PUBLISH_BRANCH}" == *..* || "${PUBLISH_BRANCH}" == *//* || ! "${PUBLISH_BRANCH}" =~ ^[A-Za-z0-9._/-]+$ ]]; then
+            echo "PUBLISH_BRANCH contains unsupported characters: ${PUBLISH_BRANCH}" >&2
+            exit 1
+          fi
+          if [[ -z "${NOTION_DATABASE_ID:-}" ]]; then
+            echo "NOTION_DATABASE_ID repository variable is required for Notion content." >&2
+            exit 1
+          fi
+          if [[ -z "${NOTION_TOKEN:-}" ]]; then
+            echo "NOTION_TOKEN repository secret is required for Notion content." >&2
+            exit 1
+          fi
 
           echo "Selected content source: ${CONTENT_SOURCE}"
+          echo "Notion status filter: ${NOTION_STATUS}"
+          echo "Production branch: ${PUBLISH_BRANCH}"
 
-          if [[ "${CONTENT_SOURCE}" == "notion" ]]; then
-            if [[ -z "${NOTION_DATABASE_ID:-}" ]]; then
-              echo "NOTION_DATABASE_ID repository variable is required for Notion content." >&2
-              exit 1
-            fi
-            if [[ -z "${NOTION_TOKEN:-}" ]]; then
-              echo "NOTION_TOKEN repository secret is required for Notion content." >&2
-              exit 1
-            fi
-            echo "Notion status filter: ${NOTION_STATUS}"
-          fi
-
-      - name: Read content repository config
-        id: content_repo
-        if: env.CONTENT_SOURCE != 'notion'
-        shell: bash
-        run: |
-          set -euo pipefail
-          owner="NAMUORI00"
-          name="yskim-blog-private"
-          ref="main"
-          if [[ -f hugo.yaml ]]; then
-            block="$(awk '
-              /^[[:space:]]*contentRepo:[[:space:]]*$/ { capture=1; next }
-              capture && /^[[:space:]]*[A-Za-z0-9_]+:/ && $0 !~ /^[[:space:]]*(owner|name|ref|paths):/ { exit }
-              capture { print }
-            ' hugo.yaml | tr -d '\r')"
-            parsed_owner="$(grep -E '^[[:space:]]*owner:' <<<"$block" | head -n1 | awk '{print $2}' | tr -d '\r')"
-            parsed_name="$(grep -E '^[[:space:]]*name:' <<<"$block" | head -n1 | awk '{print $2}' | tr -d '\r')"
-            parsed_ref="$(grep -E '^[[:space:]]*ref:' <<<"$block" | head -n1 | awk '{print $2}' | tr -d '\r')"
-            [[ -n "$parsed_owner" ]] && owner="$parsed_owner"
-            [[ -n "$parsed_name" ]] && name="$parsed_name"
-            [[ -n "$parsed_ref" ]] && ref="$parsed_ref"
-          fi
-          echo "owner=$owner" >> "$GITHUB_OUTPUT"
-          echo "name=$name" >> "$GITHUB_OUTPUT"
-          echo "ref=$ref" >> "$GITHUB_OUTPUT"
-          echo "slug=${owner}/${name}" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout private content repository
-        if: env.CONTENT_SOURCE != 'notion'
-        uses: actions/checkout@v6
-        with:
-          repository: ${{ steps.content_repo.outputs.slug }}
-          token: ${{ secrets.CONTENT_REPO_TOKEN }}
-          path: ${{ env.PRIVATE_CONTENT_DIR }}
-          ref: ${{ steps.content_repo.outputs.ref }}
-
-      - name: Fetch content
+      - name: Fetch Notion content
         env:
           NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         shell: bash
@@ -138,7 +103,7 @@ jobs:
         run: bash .github/scripts/validate-content.sh
 
       - name: Markdown lint
-        run: npx markdownlint-cli2 "content/**/*.md"
+        run: npx markdownlint-cli2 "README.md" "docs/**/*.md"
 
       - name: Build Pages Functions
         run: npx wrangler pages functions build functions --outdir "$RUNNER_TEMP/pages-functions-build"
@@ -177,20 +142,82 @@ jobs:
           path: public
           if-no-files-found: error
 
-  deploy:
+      - name: Upload generated source content
+        uses: actions/upload-artifact@v7
+        with:
+          name: generated-content
+          path: |
+            content
+            static/images
+            static/files
+            data/content-source.yaml
+            data/github.yaml
+          if-no-files-found: error
+
+  publish-production:
     runs-on: ubuntu-latest
     needs: build
     if: >
+      github.event_name == 'schedule' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'repository_dispatch' ||
-      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy != 'false') ||
-      github.event_name == 'schedule'
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy != 'false')
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    outputs:
+      sha: ${{ steps.commit.outputs.sha }}
+    steps:
+      - name: Checkout project source
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 0
+
+      - name: Download generated content
+        uses: actions/download-artifact@v8
+        with:
+          name: generated-content
+          path: .
+
+      - name: Commit generated production content
+        id: commit
+        env:
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || github.event_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git fetch origin "${PUBLISH_BRANCH}:refs/remotes/origin/${PUBLISH_BRANCH}" || true
+          git checkout -B "${PUBLISH_BRANCH}" "${GITHUB_SHA}"
+          git add -f content static/images static/files data/content-source.yaml data/github.yaml
+
+          if git diff --cached --quiet; then
+            echo "No generated content changes to commit."
+          else
+            git commit -m "Publish generated blog content" -m "Source: ${COMMIT_MESSAGE}"
+          fi
+
+          production_sha="$(git rev-parse HEAD)"
+          git push origin "HEAD:${PUBLISH_BRANCH}" --force-with-lease
+          echo "sha=${production_sha}" >> "$GITHUB_OUTPUT"
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - publish-production
+    if: >
+      github.event_name == 'schedule' ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy != 'false')
     timeout-minutes: 10
     permissions:
       contents: read
       deployments: write
     steps:
-      - name: Checkout site repository
+      - name: Checkout project repository
         uses: actions/checkout@v6
 
       - name: Setup Node
@@ -213,11 +240,12 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           COMMIT_MESSAGE: ${{ github.event.head_commit.message || github.event_name }}
+          PRODUCTION_SHA: ${{ needs.publish-production.outputs.sha }}
         shell: bash
         run: |
           set -euo pipefail
           npx wrangler pages deploy public \
             --project-name yskim-blog \
-            --branch "${GITHUB_REF_NAME:-main}" \
-            --commit-hash "$GITHUB_SHA" \
-            --commit-message "$COMMIT_MESSAGE"
+            --branch "${PUBLISH_BRANCH}" \
+            --commit-hash "${PRODUCTION_SHA}" \
+            --commit-message "${COMMIT_MESSAGE}"

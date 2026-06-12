@@ -1,24 +1,26 @@
 # Notion Publishing Workflow
 
-This is the lightweight migration target for moving blog content management from Obsidian/private GitHub content to a private Notion database.
+This is the lightweight production target for managing blog content in a private Notion database while keeping Hugo and Cloudflare Pages in the public `yskim-blog` repository.
 
 ## Goal
 
-Keep `yskim-blog` as the public Hugo and Cloudflare Pages repository. Replace only the content fetch layer so Notion-managed content becomes Hugo-ready Markdown before the existing validation, category path organization, Hugo build, comments, reactions, and deployment steps run.
+Keep `yskim-blog` as the only active publishing repository. Notion-managed content becomes Hugo-ready Markdown before validation, category path organization, Hugo build, comments, reactions, and deployment run.
 
 Notion is the CMS and editorial workspace. Hugo remains the owned static rendering layer. Do not embed Notion pages or scrape Notion public HTML.
 
-## Repository roles
+## Branch roles
 
-- `yskim-blog`: public site source, theme, build scripts, validation, Cloudflare Functions, deployment.
-- `yskim-blog-private`: legacy Obsidian content source during migration. After cutover, keep it only as an archive or temporary fallback.
-- `obsidian-ide-ai-agent`: separate Obsidian AI workflow. It is not part of the Notion blog publishing path.
+- `main`: public project source, theme, build scripts, validation, Cloudflare Functions, docs, and tests.
+- `production`: generated public content branch. GitHub Actions force-adds generated `content/`, `static/images/`, and generated data here before deploying.
+- Legacy blog repositories such as `yskim-blog-private` and `blog_renew` should be renamed with an `-archive` suffix after production deploy is verified.
 
 ## Source of truth
 
 Notion is the single source of truth for post content.
 
 Generated Markdown and images under `content/posts` and `static/images/notion` are build artifacts. Do not edit generated Markdown by hand; the next Notion fetch will overwrite it. Avoid two-way sync between Notion and repo Markdown.
+
+On `main`, generated `content/` and `static/images/` stay ignored. On `production`, GitHub Actions force-adds them so the exact deployed state is auditable in Git.
 
 ## Preferred Notion shape
 
@@ -51,7 +53,8 @@ Optional properties such as `Series`, `Priority`, or `Featured` can be added lat
 8. Write `data/content-source.yaml` with `provider: notion`, database id, exported page count, and fetch time.
 9. Run the existing category path organizer so posts become `content/posts/<category-slug>/<slug>.md`.
 10. Run the existing content validation.
-11. Build and deploy Hugo as before.
+11. Commit generated source artifacts to the `production` branch.
+12. Deploy the built `public/` artifact to Cloudflare Pages as the `production` branch.
 
 Public URLs should stay slug-based, for example `/posts/my-note/`.
 
@@ -67,7 +70,7 @@ During the fetch step:
 - rewrite Markdown references to `/images/notion/<slug>/<file>`;
 - fail validation if an image or file cannot be downloaded.
 
-The current Hugo pipeline should generate these files during build and include them in the Cloudflare Pages artifact. Cloudflare R2 can be added later if the image set becomes too large or should be shared across builds.
+The current Hugo pipeline generates these files during build, stores them on the `production` branch, and includes them in the Cloudflare Pages artifact. Cloudflare R2 can be added later if the image set becomes too large or should be shared across builds.
 
 ## Block conversion
 
@@ -109,12 +112,13 @@ Do not do partial updates at first. Full rebuild keeps unpublished, deleted, or 
 ## Rollout
 
 1. Create a private Notion blog database and share it with a read-only integration.
-2. Add a Notion fetcher behind a content source config while keeping the current private repo fetcher as fallback.
+2. Add a Notion fetcher behind the content source config.
 3. Test with one Notion smoke post that includes a normal image and an equation.
 4. Add KaTeX or MathJax support to Hugo and verify rendered math.
 5. Switch GitHub Actions to the Notion source with manual dispatch and cron polling.
-6. Verify production home, category page, post page, reactions, Giscus comments, images, and equations in the browser.
-7. Mark `yskim-blog-private` as archive or fallback-only once Notion is stable.
+6. Publish generated artifacts to `production` and deploy that branch to Cloudflare Pages.
+7. Verify production home, category page, post page, reactions, Giscus comments, images, and equations in the browser.
+8. Rename legacy repositories with an `-archive` suffix once Notion is stable.
 
 ## Needed before implementation
 
@@ -130,8 +134,9 @@ GitHub Actions expects these values:
 
 - repository variable `NOTION_DATABASE_ID`;
 - repository secret `NOTION_TOKEN`;
-- repository variable `CONTENT_SOURCE=notion` when the Notion source is ready to become active.
+- repository variable `CONTENT_SOURCE=notion`;
 - optional repository variable `NOTION_STATUS=Published` if the default should be explicit.
+- optional repository variable `PUBLISH_BRANCH=production` if the default should be explicit.
 
 Do not commit the Notion token. Keep generated Markdown and images out of source control.
 
@@ -143,12 +148,12 @@ Run this helper to check the current GitHub-side setup and print the next comman
 npm run check:notion
 ```
 
-The existing Notion page titled `Markdown` from the old publishing notes has been duplicated into the new CMS as a `Ready` post. It is intentionally not `Published` until the Notion fetcher, image rewriting, math rendering, and unsupported-block checks are verified end to end.
+The existing Notion page titled `Markdown` from the old publishing notes has been duplicated into the new CMS and moved to `Published` after the Notion fetcher, image/file rewriting, math rendering, and unsupported-block checks passed end to end.
 
 Use the GitHub Actions manual workflow inputs to test the Notion source before cutover:
 
 - `content_source=notion`
-- `notion_status=Ready` for the duplicated `Markdown` validation run, or `Published` for production content.
+- `notion_status=Ready` for pre-publication validation rows, or `Published` for production content.
 - `deploy=false` for a dry run.
 
-After the Notion source passes with real data, set `CONTENT_SOURCE=notion`, keep the production status filter at `Published`, and use the scheduled workflow as the polling deploy path.
+After the Notion source passes with real data, keep `CONTENT_SOURCE=notion`, keep the production status filter at `Published`, and use the scheduled workflow as the polling deploy path.

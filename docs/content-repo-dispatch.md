@@ -1,62 +1,19 @@
-# Private content repo dispatch
+# Legacy Private Content Dispatch
 
-Published Markdown and images live in the private repository `NAMUORI00/yskim-blog-private`. The public site repository `NAMUORI00/yskim-blog` fetches `content/` and `static/images/` at build time through GitHub Actions.
+This document is retained only as migration history.
 
-## Secrets
+The old publishing flow used a private repository to store generated Markdown
+and images, then triggered `NAMUORI00/yskim-blog` through
+`repository_dispatch`. That path is no longer active.
 
-### Public repo (`yskim-blog`)
+Current production publishing uses only the public `NAMUORI00/yskim-blog`
+repository:
 
-| Secret                  | Purpose                                                                      |
-| ----------------------- | ---------------------------------------------------------------------------- |
-| `CONTENT_REPO_TOKEN`    | Read access to `yskim-blog-private` for GitHub Actions content checkout      |
-| `CLOUDFLARE_API_TOKEN`  | Deploy the built site to Cloudflare Pages                                    |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account id for Pages deploy                                       |
+1. Notion is the content source of truth.
+2. GitHub Actions fetches Notion content.
+3. Generated `content/` and `static/images/` are committed to the `production`
+   branch in this repository.
+4. Cloudflare Pages deploys that generated `production` state.
 
-Create a fine-grained PAT or classic PAT with **Contents: Read** on `yskim-blog-private`.
-
-Register `CONTENT_REPO_TOKEN`, `CLOUDFLARE_API_TOKEN`, and `CLOUDFLARE_ACCOUNT_ID` in GitHub → `yskim-blog` → Settings → Secrets and variables → Actions.
-
-Cloudflare Pages project environment variables for build-time content fetch are no longer required.
-
-### Private repo (`yskim-blog-private`)
-
-| Secret                       | Purpose                                                     |
-| ---------------------------- | ----------------------------------------------------------- |
-| `PUBLIC_REPO_DISPATCH_TOKEN` | Trigger a rebuild of the public site after content changes  |
-
-Create a PAT with permission to call `repository_dispatch` on `yskim-blog`.
-
-Register it in GitHub → `yskim-blog-private` → Settings → Secrets and variables → Actions.
-
-## Private repo workflow
-
-Add this file to `yskim-blog-private`:
-
-`.github/workflows/trigger-public-build.yml`
-
-```yaml
-name: Trigger public site build
-
-on:
-  push:
-    branches:
-      - main
-    paths:
-      - content/**
-      - static/images/**
-
-jobs:
-  dispatch:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger public site rebuild
-        env:
-          GH_TOKEN: ${{ secrets.PUBLIC_REPO_DISPATCH_TOKEN }}
-        run: |
-          gh api repos/NAMUORI00/yskim-blog/dispatches \
-            -f event_type=content-updated
-```
-
-When content is pushed to `main`, the public repository workflow runs with the `repository_dispatch` trigger, rebuilds the site with the latest fetched content, and deploys to Cloudflare Pages.
-
-During the Notion migration, this dispatch path remains the legacy private-repo path. The public workflow forces `CONTENT_SOURCE=repo` for `repository_dispatch` events so an old private content push does not accidentally publish a different source. Once Notion is fully active, disable or archive this private-repo dispatch workflow.
+The old private content repository can be renamed with an `-archive` suffix
+after the first Notion-backed production deploy passes.

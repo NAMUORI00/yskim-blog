@@ -24,7 +24,8 @@ export function parseGhList(output) {
 export function summarizeNotionSetup({ repo = DEFAULT_REPO, secrets, variables }) {
   const missing = [];
   const nextSteps = [];
-  const productionSource = variables.get("CONTENT_SOURCE") || "repo";
+  const productionSource = variables.get("CONTENT_SOURCE") || "notion";
+  const publishBranch = variables.get("PUBLISH_BRANCH") || "production";
 
   if (!variables.has("NOTION_DATABASE_ID")) {
     missing.push("NOTION_DATABASE_ID");
@@ -40,12 +41,13 @@ export function summarizeNotionSetup({ repo = DEFAULT_REPO, secrets, variables }
     nextSteps.push(
       `gh workflow run validate-and-build.yml --repo ${repo} -f content_source=notion -f notion_status=Ready -f deploy=false`,
     );
-    nextSteps.push("If the dry run passes, switch CONTENT_SOURCE to notion and run a production deploy.");
+    nextSteps.push(`If the dry run passes, set CONTENT_SOURCE=notion and deploy to the ${publishBranch} branch.`);
   }
 
   return {
     missing,
     productionSource,
+    publishBranch,
     readyForNotionDryRun: missing.length === 0,
     nextSteps,
   };
@@ -62,6 +64,7 @@ function renderSummary(summary) {
   const lines = [
     `Repository: ${summary.repo}`,
     `Production source: ${summary.productionSource}`,
+    `Production branch: ${summary.publishBranch}`,
     "",
   ];
 

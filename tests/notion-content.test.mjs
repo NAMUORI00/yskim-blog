@@ -8,9 +8,12 @@ import { tmpdir } from "node:os";
 import {
   assertNoUnsupportedGeneratedMarkdown,
   buildPostDocument,
+  convertPageToMarkdown,
   hasTemporaryNotionUrl,
   pageToPost,
   prepareGeneratedContent,
+  queryPublishedPages,
+  rewriteMarkdownAssetUrls,
   rewriteMarkdownImageUrls,
 } from "../scripts/notion-content.mjs";
 
@@ -104,21 +107,118 @@ test("rewrites remote Markdown images to generated local paths", () => {
   );
 });
 
+test("rewrites temporary Notion file links to generated local paths", () => {
+  const markdown = [
+    "![diagram](https://secure.notion-static.com/diagram.png?X-Amz-Expires=3600)",
+    "[slides.pdf](https://prod-files-secure.s3.us-west-2.amazonaws.com/slides.pdf?X-Amz-Expires=3600)",
+  ].join("\n");
+
+  const rewritten = rewriteMarkdownAssetUrls(markdown, new Map([
+    [
+      "https://secure.notion-static.com/diagram.png?X-Amz-Expires=3600",
+      "/images/notion/notion-publishing-smoke-test/diagram.png",
+    ],
+    [
+      "https://prod-files-secure.s3.us-west-2.amazonaws.com/slides.pdf?X-Amz-Expires=3600",
+      "/files/notion/notion-publishing-smoke-test/slides.pdf",
+    ],
+  ]));
+
+  assert.equal(
+    rewritten,
+    [
+      "![diagram](/images/notion/notion-publishing-smoke-test/diagram.png)",
+      "[slides.pdf](/files/notion/notion-publishing-smoke-test/slides.pdf)",
+    ].join("\n"),
+  );
+});
+
 test("full rebuild removes generated posts and Notion images only", async () => {
   const root = await mkdtemp(join(tmpdir(), "yskim-blog-notion-"));
   await mkdir(join(root, "content", "posts", "old"), { recursive: true });
   await mkdir(join(root, "content", "pages"), { recursive: true });
   await mkdir(join(root, "static", "images", "notion", "old"), { recursive: true });
+  await mkdir(join(root, "static", "files", "notion", "old"), { recursive: true });
   await mkdir(join(root, "static", "images", "manual"), { recursive: true });
   await writeFile(join(root, "content", "posts", "old", "stale.md"), "stale", "utf8");
   await writeFile(join(root, "content", "pages", "about.md"), "about", "utf8");
   await writeFile(join(root, "static", "images", "notion", "old", "stale.png"), "image", "utf8");
+  await writeFile(join(root, "static", "files", "notion", "old", "stale.pdf"), "file", "utf8");
   await writeFile(join(root, "static", "images", "manual", "keep.png"), "image", "utf8");
 
   await prepareGeneratedContent(root);
 
   assert.equal(existsSync(join(root, "content", "posts", "old", "stale.md")), false);
   assert.equal(existsSync(join(root, "static", "images", "notion", "old", "stale.png")), false);
+  assert.equal(existsSync(join(root, "static", "files", "notion", "old", "stale.pdf")), false);
   assert.equal(await readFile(join(root, "content", "pages", "about.md"), "utf8"), "about");
   assert.equal(await readFile(join(root, "static", "images", "manual", "keep.png"), "utf8"), "image");
+});
+
+test("queries the current Notion data source API after resolving the database id", async () => {
+  const calls = [];
+  const notion = {
+    databases: {
+      retrieve: async (request) => {
+        calls.push({ type: "retrieve", request });
+        return {
+          data_sources: [{ id: "7c47a75e-f37b-4345-a370-7bbbfb19d666" }],
+        };
+      },
+    },
+    dataSources: {
+      query: async (request) => {
+        calls.push({ type: "query", request });
+        return {
+          results: [{ object: "page", id: "page-1" }],
+          has_more: false,
+          next_cursor: null,
+        };
+      },
+    },
+  };
+
+  const pages = await queryPublishedPages(
+    notion,
+    "2e8cf325-d81c-4acd-b302-800e2dcfc4df",
+    { status: "Status", date: "Date" },
+    "Ready",
+  );
+
+  assert.deepEqual(pages, [{ object: "page", id: "page-1" }]);
+  assert.deepEqual(calls, [
+    {
+      type: "retrieve",
+      request: { database_id: "2e8cf325-d81c-4acd-b302-800e2dcfc4df" },
+    },
+    {
+      type: "query",
+      request: {
+        data_source_id: "7c47a75e-f37b-4345-a370-7bbbfb19d666",
+        filter: {
+          property: "Status",
+          select: {
+            equals: "Ready",
+          },
+        },
+        sorts: [
+          {
+            property: "Date",
+            direction: "descending",
+          },
+        ],
+        page_size: 100,
+        start_cursor: undefined,
+      },
+    },
+  ]);
+});
+
+test("converts an empty Notion page to an empty Markdown body", async () => {
+  const n2m = {
+    pageToMarkdown: async () => [],
+    toMarkdownString: () => ({}),
+  };
+
+  assert.equal(await convertPageToMarkdown(n2m, "empty-page"), "");
 });

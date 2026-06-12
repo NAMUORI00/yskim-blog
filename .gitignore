@@ -8,5 +8,7 @@ node_modules/
 .wrangler-functions-build/
 .wrangler-pages-dev-*.log
 content/
+data/content-source.yaml
 static/images/
+static/files/
 .private-content/

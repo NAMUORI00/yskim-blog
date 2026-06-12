@@ -19,6 +19,7 @@ const DEFAULT_PROPERTIES = {
 
 const GENERATED_POSTS_DIR = path.join("content", "posts");
 const GENERATED_NOTION_IMAGES_DIR = path.join("static", "images", "notion");
+const GENERATED_NOTION_FILES_DIR = path.join("static", "files", "notion");
 
 export function pageToPost(page, propertyNames = DEFAULT_PROPERTIES) {
   const properties = page.properties ?? {};
@@ -95,6 +96,16 @@ export function rewriteMarkdownImageUrls(markdown, replacements) {
   });
 }
 
+export function rewriteMarkdownAssetUrls(markdown, replacements) {
+  return markdown.replace(/(!?\[[^\]]*\]\()(https?:\/\/[^)\s]+)(\))/g, (match, prefix, url, suffix) => {
+    const replacement = replacements.get(url);
+    if (!replacement) {
+      return match;
+    }
+    return `${prefix}${replacement}${suffix}`;
+  });
+}
+
 export function assertNoUnsupportedGeneratedMarkdown(markdown, slug) {
   if (/<(unknown|video|audio|pdf|file)\b|file:\/\//i.test(markdown)) {
     throw new Error(`Unsupported Notion artifact remains after conversion for ${slug}.`);
@@ -104,8 +115,10 @@ export function assertNoUnsupportedGeneratedMarkdown(markdown, slug) {
 export async function prepareGeneratedContent(root) {
   await rm(path.join(root, GENERATED_POSTS_DIR), { recursive: true, force: true });
   await rm(path.join(root, GENERATED_NOTION_IMAGES_DIR), { recursive: true, force: true });
+  await rm(path.join(root, GENERATED_NOTION_FILES_DIR), { recursive: true, force: true });
   await mkdir(path.join(root, GENERATED_POSTS_DIR), { recursive: true });
   await mkdir(path.join(root, GENERATED_NOTION_IMAGES_DIR), { recursive: true });
+  await mkdir(path.join(root, GENERATED_NOTION_FILES_DIR), { recursive: true });
 }
 
 export async function fetchNotionContent(options = {}) {
@@ -141,10 +154,10 @@ export async function fetchNotionContent(options = {}) {
   for (const page of pages) {
     const post = pageToPost(page, propertyNames);
     const rawMarkdown = await convertPageToMarkdown(n2m, page.id);
-    const bodyWithImages = await downloadAndRewriteImages(rawMarkdown, post, root);
-    assertNoUnsupportedGeneratedMarkdown(bodyWithImages, post.slug);
+    const bodyWithAssets = await downloadAndRewriteAssets(rawMarkdown, post, root);
+    assertNoUnsupportedGeneratedMarkdown(bodyWithAssets, post.slug);
     const cover = await downloadCover(post, root);
-    const postDocument = buildPostDocument({ ...post, cover: cover || post.cover }, bodyWithImages);
+    const postDocument = buildPostDocument({ ...post, cover: cover || post.cover }, bodyWithAssets);
     const postPath = path.join(root, GENERATED_POSTS_DIR, `${post.slug}.md`);
     await writeFile(postPath, postDocument, "utf8");
     exported.push(post);
@@ -212,13 +225,14 @@ async function writeIfMissing(filePath, content) {
   }
 }
 
-async function queryPublishedPages(notion, databaseId, propertyNames, status) {
+export async function queryPublishedPages(notion, databaseId, propertyNames, status) {
+  const dataSourceId = await resolveDataSourceId(notion, databaseId);
   const results = [];
   let startCursor;
 
   do {
-    const response = await notion.databases.query({
-      database_id: databaseId,
+    const response = await notion.dataSources.query({
+      data_source_id: dataSourceId,
       filter: {
         property: propertyNames.status,
         select: {
@@ -240,6 +254,24 @@ async function queryPublishedPages(notion, databaseId, propertyNames, status) {
   } while (startCursor);
 
   return results;
+}
+
+async function resolveDataSourceId(notion, databaseId) {
+  if (!notion.databases?.retrieve) {
+    return databaseId;
+  }
+
+  try {
+    const database = await notion.databases.retrieve({ database_id: databaseId });
+    const dataSources = database.data_sources ?? database.dataSources ?? [];
+    return dataSources[0]?.id ?? databaseId;
+  } catch (error) {
+    if (!notion.dataSources?.retrieve) {
+      throw error;
+    }
+    await notion.dataSources.retrieve({ data_source_id: databaseId });
+    return databaseId;
+  }
 }
 
 function installCustomTransformers(n2m) {
@@ -264,45 +296,63 @@ function installCustomTransformers(n2m) {
   });
 }
 
-async function convertPageToMarkdown(n2m, pageId) {
+export async function convertPageToMarkdown(n2m, pageId) {
   const markdownBlocks = await n2m.pageToMarkdown(pageId);
   const markdown = n2m.toMarkdownString(markdownBlocks);
-  return typeof markdown === "string" ? markdown : markdown.parent;
+  return typeof markdown === "string" ? markdown : markdown.parent ?? "";
 }
 
-async function downloadAndRewriteImages(markdown, post, root) {
-  const remoteImages = [...markdown.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/g)].map(
-    (match) => match[1],
-  );
-  if (remoteImages.length === 0) {
+async function downloadAndRewriteAssets(markdown, post, root) {
+  const remoteAssets = collectRemoteMarkdownAssets(markdown);
+  if (remoteAssets.length === 0) {
     return markdown;
   }
 
   const replacements = new Map();
-  for (let index = 0; index < remoteImages.length; index += 1) {
-    const url = remoteImages[index];
+  for (let index = 0; index < remoteAssets.length; index += 1) {
+    const { url, kind } = remoteAssets[index];
     if (replacements.has(url)) {
       continue;
     }
-    const localPath = await downloadAsset(url, root, post.slug, `image-${index + 1}`);
+    const localPath = await downloadAsset(url, root, post.slug, `${kind}-${index + 1}`, kind);
     replacements.set(url, localPath);
   }
 
-  const rewritten = rewriteMarkdownImageUrls(markdown, replacements);
+  const rewritten = rewriteMarkdownAssetUrls(markdown, replacements);
   if (hasTemporaryNotionUrl(rewritten)) {
-    throw new Error(`Temporary Notion URL remains after image rewrite for ${post.slug}.`);
+    throw new Error(`Temporary Notion URL remains after asset rewrite for ${post.slug}.`);
   }
   return rewritten;
+}
+
+function collectRemoteMarkdownAssets(markdown) {
+  const assets = [];
+
+  for (const match of markdown.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/g)) {
+    assets.push({ url: match[1], kind: "image" });
+  }
+
+  for (const match of markdown.matchAll(/\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/g)) {
+    if (match.index > 0 && markdown[match.index - 1] === "!") {
+      continue;
+    }
+    const url = match[1];
+    if (hasTemporaryNotionUrl(url)) {
+      assets.push({ url, kind: "file" });
+    }
+  }
+
+  return assets;
 }
 
 async function downloadCover(post, root) {
   if (!post.cover || !/^https?:\/\//i.test(post.cover)) {
     return post.cover;
   }
-  return downloadAsset(post.cover, root, post.slug, "cover");
+  return downloadAsset(post.cover, root, post.slug, "cover", "image");
 }
 
-async function downloadAsset(url, root, slug, basename) {
+async function downloadAsset(url, root, slug, basename, kind) {
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(`Failed to download Notion asset ${url}: HTTP ${response.status}`);
@@ -311,7 +361,7 @@ async function downloadAsset(url, root, slug, basename) {
   const contentType = response.headers.get("content-type") ?? "";
   const extension = extensionForAsset(url, contentType);
   const fileName = `${basename}${extension}`;
-  const relative = path.join("images", "notion", slug, fileName);
+  const relative = path.join(kind === "file" ? "files" : "images", "notion", slug, fileName);
   const destination = path.join(root, "static", relative);
   await mkdir(path.dirname(destination), { recursive: true });
   const buffer = Buffer.from(await response.arrayBuffer());
@@ -354,6 +404,7 @@ async function writeContentSourceMeta(root, meta) {
     "paths:",
     `  - ${yamlString("content/posts")}`,
     `  - ${yamlString("static/images/notion")}`,
+    `  - ${yamlString("static/files/notion")}`,
     "",
   ].join("\n");
   await writeFile(path.join(dataDir, "content-source.yaml"), yaml, "utf8");

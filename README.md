@@ -2,63 +2,87 @@
 
 Public Hugo site source for **나무가든**.
 
-This repository owns the theme, layouts, build scripts, Cloudflare Functions, and deployment configuration. All Hugo content (`content/`, `static/images/`) is managed in the private repository `NAMUORI00/yskim-blog-private` and fetched at build time.
+This repository owns the theme, layouts, build scripts, Cloudflare Functions,
+comment UI, validation, and deployment configuration. It is also the only
+GitHub repository used for production publishing.
 
-Each post is published in the language it was written in. Author name, avatar, and bio come from the GitHub profile at build time.
+## Branch model
+
+- `main`: project source only. Hugo layouts, scripts, tests, docs, functions,
+  and client assets live here.
+- `production`: generated deploy state. GitHub Actions recreates public
+  `content/`, Notion-hosted images, and generated data here before deploying.
+
+Do not edit generated Markdown or Notion images by hand. Notion is the source
+of truth for post content.
 
 ## Publishing flow
 
-1. Write and edit notes in Obsidian.
-2. Export public-ready Markdown and images to `yskim-blog-private`.
-3. Open a pull request in the private content repository.
-4. After merge to `main`, the private repo workflow triggers a public site rebuild.
-5. GitHub Actions fetches content, organizes posts under `content/posts/<category>/<slug>.md`, validates frontmatter, builds Hugo, and deploys to Cloudflare Pages.
-6. Cloudflare Pages serves the production site.
+1. Write and edit posts in the private Notion CMS database.
+2. Mark a post `Published`.
+3. GitHub Actions runs on manual dispatch, schedule, or `main` push.
+4. The workflow fetches Notion content, downloads images, validates Markdown,
+   builds Hugo, and commits generated artifacts to `production`.
+5. Wrangler deploys the built `public/` artifact to Cloudflare Pages as the
+   `production` branch.
 
-See `docs/obsidian-publishing.md` for frontmatter rules and `docs/content-repo-dispatch.md` for token and dispatch setup.
+See `docs/notion-publishing.md` for Notion rules and
+`docs/cloudflare-pages.md` for deployment settings.
 
 ## Local preview
 
-Install Hugo extended `0.162.1`, authenticate with GitHub (`gh auth login`), then run:
+Install Hugo extended `0.162.1`, authenticate with GitHub (`gh auth login`),
+and provide `NOTION_TOKEN` and `NOTION_DATABASE_ID`.
 
 ```powershell
+$env:CONTENT_SOURCE = "notion"
 .\scripts\fetch-content.ps1
 .\scripts\fetch-github-profile.ps1
 hugo server -D
 ```
 
-To preview the Notion-backed source locally, set `CONTENT_SOURCE=notion`, `NOTION_TOKEN`, and `NOTION_DATABASE_ID`, then run the same `fetch-content` command. Generated Markdown and Notion images are build artifacts and should not be edited by hand. In GitHub Actions, use the manual workflow inputs to run either the configured source, the legacy private repo source, or the Notion source.
-
 Production build:
 
 ```powershell
+$env:CONTENT_SOURCE = "notion"
 .\scripts\fetch-content.ps1
 .\scripts\fetch-github-profile.ps1
 .\scripts\validate-content.ps1
 hugo --gc --minify --cleanDestinationDir
 ```
 
-Do not commit fetched `content/` or `static/images/` to this repository. Fetched posts are automatically organized by first category while keeping public post URLs stable.
+Generated `content/` and `static/images/` are ignored on `main`. They are
+force-added only by the production publishing workflow.
 
 ## Comments
 
-Post pages support two comment modes:
+Post pages support:
 
-- GitHub-style comments through Giscus and GitHub Discussions.
-- Anonymous comments through Cloudflare Pages Functions, Turnstile, and D1.
+- GitHub-authenticated comments through Giscus and GitHub Discussions.
+- Optional anonymous comments through Cloudflare Pages Functions, Turnstile,
+  and D1.
 
-GitHub-style comments are enabled through the `General` discussion category. Anonymous comments stay disabled until the Cloudflare D1 and Turnstile settings are configured. See `docs/comments.md`.
+GitHub comments are enabled through the `General` discussion category.
+Anonymous comments stay disabled until the Cloudflare D1 and Turnstile settings
+are configured. See `docs/comments.md`.
 
 ## Cloudflare Pages
 
-Production deploys are handled by GitHub Actions (`.github/workflows/validate-and-build.yml`) using `wrangler pages deploy`.
+Production deploys are handled by GitHub Actions
+(`.github/workflows/validate-and-build.yml`) using `wrangler pages deploy`.
 
 Required GitHub Actions secrets:
 
-- `CONTENT_REPO_TOKEN`
+- `NOTION_TOKEN`
 - `CLOUDFLARE_API_TOKEN`
 - `CLOUDFLARE_ACCOUNT_ID`
 
-Cloudflare Pages should use the **None** framework preset with an empty build command. See `docs/cloudflare-pages.md` for dashboard settings and the deployment flow.
+Required repository variables:
 
-Pull requests run the build and validation jobs only. Production deploy runs on `main` push and `content-updated` repository dispatch.
+- `CONTENT_SOURCE=notion`
+- `NOTION_DATABASE_ID`
+- `NOTION_STATUS=Published`
+- `PUBLISH_BRANCH=production` (optional; workflow default is `production`)
+
+Cloudflare Pages should keep native Git builds disconnected. GitHub Actions is
+the production build path.
