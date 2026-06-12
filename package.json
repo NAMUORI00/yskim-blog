@@ -1,0 +1,17 @@
+{
+  "name": "yskim-blog",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "fetch:notion": "node scripts/notion-content.mjs --root .",
+    "test": "node --test tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@notionhq/client": "5.22.0",
+    "notion-to-md": "3.1.9"
+  },
+  "devDependencies": {
+    "markdownlint-cli2": "0.22.1",
+    "wrangler": "4.100.0"
+  }
+}

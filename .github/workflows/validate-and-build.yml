@@ -1,6 +1,29 @@
 name: Build and deploy Hugo site
 
 on:
+  workflow_dispatch:
+    inputs:
+      content_source:
+        description: Content source for this run.
+        required: false
+        default: configured
+        type: choice
+        options:
+          - configured
+          - repo
+          - notion
+      notion_status:
+        description: Notion status filter when the selected source is notion.
+        required: false
+        default: Published
+        type: string
+      deploy:
+        description: Deploy after a successful manual build.
+        required: false
+        default: true
+        type: boolean
+  schedule:
+    - cron: "17 */6 * * *"
   pull_request:
   push:
     branches:
@@ -9,19 +32,68 @@ on:
     types:
       - content-updated
 
+permissions:
+  contents: read
+
+concurrency:
+  group: yskim-blog-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref_name }}
+  cancel-in-progress: true
+
 env:
   HUGO_VERSION: 0.162.1
+  CONTENT_SOURCE: ${{ github.event_name == 'repository_dispatch' && 'repo' || ((github.event.inputs.content_source == 'repo' || github.event.inputs.content_source == 'notion') && github.event.inputs.content_source || vars.CONTENT_SOURCE || 'repo') }}
+  NOTION_DATABASE_ID: ${{ vars.NOTION_DATABASE_ID }}
+  NOTION_STATUS: ${{ github.event.inputs.notion_status || vars.NOTION_STATUS || 'Published' }}
   PRIVATE_CONTENT_DIR: .private-content
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout site repository
         uses: actions/checkout@v4
 
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
+      - name: Validate build inputs
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          case "${CONTENT_SOURCE}" in
+            repo|notion) ;;
+            *)
+              echo "CONTENT_SOURCE must be 'repo' or 'notion', got '${CONTENT_SOURCE}'." >&2
+              exit 1
+              ;;
+          esac
+
+          echo "Selected content source: ${CONTENT_SOURCE}"
+
+          if [[ "${CONTENT_SOURCE}" == "notion" ]]; then
+            if [[ -z "${NOTION_DATABASE_ID:-}" ]]; then
+              echo "NOTION_DATABASE_ID repository variable is required for Notion content." >&2
+              exit 1
+            fi
+            if [[ -z "${NOTION_TOKEN:-}" ]]; then
+              echo "NOTION_TOKEN repository secret is required for Notion content." >&2
+              exit 1
+            fi
+            echo "Notion status filter: ${NOTION_STATUS}"
+          fi
+
       - name: Read content repository config
         id: content_repo
+        if: env.CONTENT_SOURCE != 'notion'
         shell: bash
         run: |
           set -euo pipefail
@@ -47,6 +119,7 @@ jobs:
           echo "slug=${owner}/${name}" >> "$GITHUB_OUTPUT"
 
       - name: Checkout private content repository
+        if: env.CONTENT_SOURCE != 'notion'
         uses: actions/checkout@v4
         with:
           repository: ${{ steps.content_repo.outputs.slug }}
@@ -55,6 +128,8 @@ jobs:
           ref: ${{ steps.content_repo.outputs.ref }}
 
       - name: Fetch content
+        env:
+          NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
         shell: bash
         run: bash .github/scripts/fetch-content.sh
 
@@ -63,10 +138,10 @@ jobs:
         run: bash .github/scripts/validate-content.sh
 
       - name: Markdown lint
-        run: npx --yes markdownlint-cli2 "content/**/*.md"
+        run: npx markdownlint-cli2 "content/**/*.md"
 
       - name: Build Pages Functions
-        run: npx --yes wrangler pages functions build functions --outdir "$RUNNER_TEMP/pages-functions-build"
+        run: npx wrangler pages functions build functions --outdir "$RUNNER_TEMP/pages-functions-build"
 
       - name: Fetch GitHub profile
         env:
@@ -107,7 +182,10 @@ jobs:
     needs: build
     if: >
       (github.event_name == 'push' && github.ref == 'refs/heads/main') ||
-      github.event_name == 'repository_dispatch'
+      github.event_name == 'repository_dispatch' ||
+      (github.event_name == 'workflow_dispatch' && github.event.inputs.deploy != 'false') ||
+      github.event_name == 'schedule'
+    timeout-minutes: 10
     permissions:
       contents: read
       deployments: write
