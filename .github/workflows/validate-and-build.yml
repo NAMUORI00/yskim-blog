@@ -52,10 +52,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Checkout site repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Setup Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -120,7 +120,7 @@ jobs:
 
       - name: Checkout private content repository
         if: env.CONTENT_SOURCE != 'notion'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: ${{ steps.content_repo.outputs.slug }}
           token: ${{ secrets.CONTENT_REPO_TOKEN }}
@@ -171,7 +171,7 @@ jobs:
           fi
 
       - name: Upload production build
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: public-site
           path: public
@@ -191,10 +191,10 @@ jobs:
       deployments: write
     steps:
       - name: Checkout site repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Download production build
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: public-site
           path: public
