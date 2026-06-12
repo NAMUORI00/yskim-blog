@@ -135,6 +135,14 @@ GitHub Actions expects these values:
 
 Do not commit the Notion token. Keep generated Markdown and images out of source control.
 
+The database page link, such as `https://namuori00.notion.site/2e8cf325d81c4acdb302800e2dcfc4df`, identifies the database for a person. It does not grant API access by itself. For GitHub Actions to read the database, connect the read-only Notion integration from the database page's Share/Connections menu and store that integration token as the GitHub secret `NOTION_TOKEN`.
+
+Run this helper to check the current GitHub-side setup and print the next command:
+
+```powershell
+npm run check:notion
+```
+
 The existing Notion page titled `Markdown` from the old publishing notes has been duplicated into the new CMS as a `Ready` post. It is intentionally not `Published` until the Notion fetcher, image rewriting, math rendering, and unsupported-block checks are verified end to end.
 
 Use the GitHub Actions manual workflow inputs to test the Notion source before cutover:

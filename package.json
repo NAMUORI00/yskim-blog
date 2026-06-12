@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "check:notion": "node scripts/notion-setup.mjs --repo NAMUORI00/yskim-blog",
     "fetch:notion": "node scripts/notion-content.mjs --root .",
     "test": "node --test tests/*.test.mjs"
   },

@@ -1,0 +1,56 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import { parseGhList, summarizeNotionSetup } from "../scripts/notion-setup.mjs";
+
+test("parses GitHub CLI table output into names and values", () => {
+  const rows = parseGhList(`
+CONTENT_SOURCE\trepo\t2026-06-12T06:48:12Z
+NOTION_DATABASE_ID\t2e8cf325d81c4acdb302800e2dcfc4df\t2026-06-12T06:40:34Z
+NOTION_STATUS\tPublished\t2026-06-12T06:48:12Z
+`);
+
+  assert.deepEqual(rows, new Map([
+    ["CONTENT_SOURCE", "repo"],
+    ["NOTION_DATABASE_ID", "2e8cf325d81c4acdb302800e2dcfc4df"],
+    ["NOTION_STATUS", "Published"],
+  ]));
+});
+
+test("reports the exact missing Notion token handoff when the secret is absent", () => {
+  const summary = summarizeNotionSetup({
+    repo: "NAMUORI00/yskim-blog",
+    secrets: new Map([
+      ["CLOUDFLARE_API_TOKEN", "2026-06-09T04:45:25Z"],
+      ["CONTENT_REPO_TOKEN", "2026-06-09T04:24:23Z"],
+    ]),
+    variables: new Map([
+      ["CONTENT_SOURCE", "repo"],
+      ["NOTION_DATABASE_ID", "2e8cf325d81c4acdb302800e2dcfc4df"],
+      ["NOTION_STATUS", "Published"],
+    ]),
+  });
+
+  assert.equal(summary.readyForNotionDryRun, false);
+  assert.deepEqual(summary.missing, ["NOTION_TOKEN"]);
+  assert.match(summary.nextSteps.join("\n"), /gh secret set NOTION_TOKEN --repo NAMUORI00\/yskim-blog/);
+});
+
+test("reports dry-run commands once the Notion token and database id exist", () => {
+  const summary = summarizeNotionSetup({
+    repo: "NAMUORI00/yskim-blog",
+    secrets: new Map([["NOTION_TOKEN", "2026-06-12T07:30:00Z"]]),
+    variables: new Map([
+      ["CONTENT_SOURCE", "repo"],
+      ["NOTION_DATABASE_ID", "2e8cf325d81c4acdb302800e2dcfc4df"],
+      ["NOTION_STATUS", "Published"],
+    ]),
+  });
+
+  assert.equal(summary.readyForNotionDryRun, true);
+  assert.deepEqual(summary.missing, []);
+  assert.match(summary.nextSteps.join("\n"), /gh workflow run validate-and-build\.yml/);
+  assert.match(summary.nextSteps.join("\n"), /content_source=notion/);
+  assert.match(summary.nextSteps.join("\n"), /notion_status=Ready/);
+  assert.equal(summary.productionSource, "repo");
+});
