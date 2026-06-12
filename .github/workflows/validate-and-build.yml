@@ -193,6 +193,15 @@ jobs:
       - name: Checkout site repository
         uses: actions/checkout@v6
 
+      - name: Setup Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install Node dependencies
+        run: npm ci
+
       - name: Download production build
         uses: actions/download-artifact@v8
         with:
@@ -200,10 +209,15 @@ jobs:
           path: public
 
       - name: Deploy to Cloudflare Pages
-        uses: cloudflare/pages-action@v1
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: yskim-blog
-          directory: public
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message || github.event_name }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx wrangler pages deploy public \
+            --project-name yskim-blog \
+            --branch "${GITHUB_REF_NAME:-main}" \
+            --commit-hash "$GITHUB_SHA" \
+            --commit-message "$COMMIT_MESSAGE"

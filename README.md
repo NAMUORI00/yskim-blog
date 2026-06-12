@@ -51,7 +51,7 @@ GitHub-style comments are enabled through the `General` discussion category. Ano
 
 ## Cloudflare Pages
 
-Production deploys are handled by GitHub Actions (`.github/workflows/validate-and-build.yml`) using `cloudflare/pages-action`.
+Production deploys are handled by GitHub Actions (`.github/workflows/validate-and-build.yml`) using `wrangler pages deploy`.
 
 Required GitHub Actions secrets:
 

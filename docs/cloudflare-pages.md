@@ -1,6 +1,6 @@
 # Cloudflare Pages Setup
 
-This public repository deploys to Cloudflare Pages through GitHub Actions. The Cloudflare dashboard hosts the project and custom domain, but **production builds no longer run inside Cloudflare Pages**.
+This public repository deploys to Cloudflare Pages through GitHub Actions and `wrangler pages deploy`. The Cloudflare dashboard hosts the project and custom domain, but **production builds no longer run inside Cloudflare Pages**.
 
 ## Cloudflare dashboard settings
 
@@ -10,7 +10,7 @@ This public repository deploys to Cloudflare Pages through GitHub Actions. The C
 - Production branch: `main`
 - Disable automatic GitHub builds if Cloudflare still offers a native build hook for this project
 
-GitHub Actions builds the site, uploads `public/`, and deploys with `cloudflare/pages-action`.
+GitHub Actions builds the site, uploads `public/`, and deploys with the pinned Wrangler CLI from `package-lock.json`.
 
 ## GitHub Actions secrets
 
@@ -59,7 +59,7 @@ The `repository_dispatch` trigger is reserved for the legacy private content rep
 
 This repository deploys through GitHub Actions, not through Cloudflare's native GitHub build. If a pull request shows a failing `Cloudflare Pages` check while the GitHub Actions `build` job passes, the remaining failing check is from the Cloudflare Workers and Pages GitHub App/native preview build path.
 
-Keep the Pages project's native Git integration disconnected for this repository. GitHub Actions is the only production build and deploy path; `cloudflare/pages-action` still uses the Cloudflare API secrets for production deploys.
+Keep the Pages project's native Git integration disconnected for this repository. GitHub Actions is the only production build and deploy path; `wrangler pages deploy` uses the Cloudflare API secrets for production deploys.
 
 ## Custom domain checklist
 
