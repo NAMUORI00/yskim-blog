@@ -1,4 +1,4 @@
-name: Build and deploy Hugo site
+name: Build and deploy site
 
 on:
   workflow_dispatch:
@@ -41,7 +41,6 @@ concurrency:
   cancel-in-progress: true
 
 env:
-  HUGO_VERSION: 0.162.1
   CONTENT_SOURCE: notion
   NOTION_DATABASE_ID: ${{ vars.NOTION_DATABASE_ID }}
   NOTION_STATUS: ${{ github.event.inputs.notion_status || vars.NOTION_STATUS || 'Published' }}
@@ -114,32 +113,14 @@ jobs:
         shell: bash
         run: bash .github/scripts/fetch-github-profile.sh
 
-      - name: Install Hugo
-        shell: bash
-        run: |
-          set -euo pipefail
-          curl -L "https://github.com/gohugoio/hugo/releases/download/v${HUGO_VERSION}/hugo_extended_${HUGO_VERSION}_linux-amd64.tar.gz" -o hugo.tar.gz
-          mkdir "$RUNNER_TEMP/hugo-bin"
-          tar -xzf hugo.tar.gz -C "$RUNNER_TEMP/hugo-bin"
-          echo "$RUNNER_TEMP/hugo-bin" >> "$GITHUB_PATH"
-
       - name: Build site
-        run: hugo --gc --minify --cleanDestinationDir
-
-      - name: Guard against development assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          if grep -R "livereload.js\|port=1313" public; then
-            echo "Development-only livereload asset was found in the production build."
-            exit 1
-          fi
+        run: npm run build
 
       - name: Upload production build
         uses: actions/upload-artifact@v7
         with:
           name: public-site
-          path: public
+          path: dist
           if-no-files-found: error
 
       - name: Upload generated source content
@@ -233,7 +214,7 @@ jobs:
         uses: actions/download-artifact@v8
         with:
           name: public-site
-          path: public
+          path: dist
 
       - name: Deploy to Cloudflare Pages
         env:
@@ -244,7 +225,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npx wrangler pages deploy public \
+          npx wrangler pages deploy dist \
             --project-name yskim-blog \
             --branch "${PUBLISH_BRANCH}" \
             --commit-hash "${PRODUCTION_SHA}" \

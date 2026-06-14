@@ -1,0 +1,45 @@
+---
+import Base from "../../layouts/Base.astro";
+import PostCard from "../../components/PostCard.astro";
+import { getPublishedPosts, postUrl, slugifyTerm, type Post } from "../../lib/posts";
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  const map = new Map<string, { name: string; posts: Post[] }>();
+  for (const post of posts) {
+    for (const category of post.data.categories) {
+      const slug = slugifyTerm(category);
+      if (!map.has(slug)) map.set(slug, { name: category, posts: [] });
+      map.get(slug)!.posts.push(post);
+    }
+  }
+  return [...map.entries()].map(([category, { name, posts: list }]) => ({
+    params: { category },
+    props: { name, posts: list },
+  }));
+}
+
+const { name, posts } = Astro.props;
+---
+
+<Base title={name} description={`카테고리: ${name}`}>
+  <header class="page-heading">
+    <h1>{name}</h1>
+    <p>카테고리 · {posts.length}개의 글</p>
+  </header>
+  <section class="post-feed">
+    <div class="post-list">
+      {posts.map((p) => (
+        <PostCard
+          href={postUrl(p.data.slug)}
+          title={p.data.title}
+          date={p.data.date}
+          category={p.data.categories[0]}
+          summary={p.data.summary}
+          cover={p.data.cover || undefined}
+          tags={p.data.tags}
+        />
+      ))}
+    </div>
+  </section>
+</Base>

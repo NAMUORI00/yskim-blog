@@ -1,0 +1,34 @@
+---
+interface Props {
+  href: string;
+  title: string;
+  date: Date;
+  category?: string;
+  summary?: string;
+  cover?: string;
+  tags?: string[];
+}
+const { href, title, date, category, summary, cover, tags = [] } = Astro.props;
+const dateStr = date.toISOString().slice(0, 10);
+---
+
+<a class={`post-card ${cover ? "post-card--with-cover" : "post-card--text-only"}`} href={href}>
+  {cover && (
+    <div class="post-card-thumb-wrap">
+      <img class="post-card-thumb" src={cover} alt="" loading="lazy" decoding="async" />
+    </div>
+  )}
+  <div class="post-card-body">
+    <div class="post-card-meta">
+      <time datetime={dateStr}>{dateStr}</time>
+      {category && <span class="post-card-category">{category}</span>}
+    </div>
+    <h2 class="post-card-title">{title}</h2>
+    {summary && <p class="post-card-summary">{summary}</p>}
+    {tags.length > 0 && (
+      <ul class="tags post-card-tags" aria-label="Tags">
+        {tags.map((t) => <li>{t}</li>)}
+      </ul>
+    )}
+  </div>
+</a>
