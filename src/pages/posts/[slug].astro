@@ -4,6 +4,7 @@ import Base from "../../layouts/Base.astro";
 import ReadingProgress from "../../components/ReadingProgress.svelte";
 import Reactions from "../../components/Reactions.astro";
 import Comments from "../../components/Comments.astro";
+import AffiliateDisclosure from "../../components/AffiliateDisclosure.astro";
 import { SITE } from "../../config";
 import { getPublishedPosts } from "../../lib/posts";
 
@@ -16,6 +17,7 @@ const { entry } = Astro.props;
 const { Content } = await render(entry);
 const d = entry.data;
 const dateStr = d.date.toISOString().slice(0, 10);
+const isAffiliate = d.tags.some((t) => ["affiliate", "제휴"].includes(t.toLowerCase()));
 const breadcrumb = [
   { name: "홈", item: SITE.url + "/" },
   { name: "글", item: SITE.url + "/posts/" },
@@ -53,6 +55,7 @@ const breadcrumb = [
         )}
       </header>
       <div class="content">
+        {isAffiliate && <AffiliateDisclosure />}
         <Content />
       </div>
       {d.comments && (

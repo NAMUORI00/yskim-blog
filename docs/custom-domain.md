@@ -6,9 +6,12 @@
 `namuori.net` 루트는 포트폴리오가 사용하므로, 블로그는 **`blog.namuori.net`**
 서브도메인을 사용합니다.
 
-> ⚠️ 순서 주의: **도메인을 먼저 연결해 정상 동작을 확인한 뒤** `hugo.yaml`의
-> `baseURL`을 바꾸세요. baseURL을 먼저 바꾸면 아직 연결 안 된 도메인으로
-> canonical·sitemap이 가리켜 검색에 잘못 등록됩니다.
+> ⚠️ 순서 주의: **도메인을 먼저 연결해 정상 동작을 확인한 뒤** `astro.config.mjs`의
+> `site`를 바꾸세요. 먼저 바꾸면 아직 연결 안 된 도메인으로 canonical·sitemap이
+> 가리켜 검색에 잘못 등록됩니다.
+>
+> (현재 `blog.namuori.net`은 이미 연결·설정 완료된 상태입니다. 이 문서는 향후
+> 도메인 변경 시 참고용입니다.)
 
 ---
 
@@ -26,12 +29,15 @@
 6. 상태가 **Active**가 되고 HTTPS 인증서가 발급될 때까지 대기(보통 수 분).
 7. 브라우저에서 `https://blog.namuori.net/` 접속 확인.
 
-## 2. baseURL 변경 (도메인 활성화 확인 후)
+## 2. site URL 변경 (도메인 활성화 확인 후)
 
-`hugo.yaml`:
+`astro.config.mjs`:
 
-```yaml
-baseURL: https://blog.namuori.net/
+```js
+export default defineConfig({
+  site: "https://blog.namuori.net",
+  // ...
+});
 ```
 
 커밋 → `main` push → GitHub Actions 재배포. 이후 sitemap·canonical·OG·RSS의
