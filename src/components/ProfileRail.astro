@@ -1,0 +1,40 @@
+---
+import { SITE, UI } from "../config";
+import { getGithubProfile } from "../lib/site-data";
+import { getCategories, categoryUrl } from "../lib/posts";
+
+const gh = getGithubProfile();
+const categories = await getCategories();
+const path = Astro.url.pathname;
+---
+
+<aside class="profile-rail" aria-label="Profile">
+  <a class="avatar" href={gh.html_url} target="_blank" rel="noopener noreferrer" aria-label={`${gh.name} GitHub`}>
+    <img src={gh.avatar_url} alt={gh.name} width="56" height="56" loading="lazy" decoding="async" />
+  </a>
+  <div class="profile-block">
+    <a class="brand" href="/">{SITE.title}</a>
+    {gh.name && <p class="profile-name">{gh.name}</p>}
+    {gh.bio && <p class="profile-bio">{gh.bio}</p>}
+  </div>
+
+  <section class="rail-section" aria-label={UI.categories}>
+    <p class="rail-section-title">{UI.categories}</p>
+    <nav class="rail-category-list">
+      {categories.length > 0 ? (
+        categories.map((c) => {
+          const href = categoryUrl(c.name);
+          const active = path === href;
+          return (
+            <a href={href} class={active ? "is-active" : ""} aria-current={active ? "page" : undefined}>
+              <span>{c.name}</span>
+              <strong>{c.count}</strong>
+            </a>
+          );
+        })
+      ) : (
+        <span class="rail-empty">{UI.noCategories}</span>
+      )}
+    </nav>
+  </section>
+</aside>

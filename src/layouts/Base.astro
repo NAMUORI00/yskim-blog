@@ -1,0 +1,99 @@
+---
+import { SITE, UI } from "../config";
+import Seo from "../components/Seo.astro";
+import TopBar from "../components/TopBar.astro";
+import ProfileRail from "../components/ProfileRail.astro";
+import Sidebar from "../components/Sidebar.astro";
+import BackToTop from "../components/BackToTop.svelte";
+import "../styles/enhance.css";
+
+export interface Props {
+  title?: string;
+  description?: string;
+  type?: "website" | "article";
+  image?: string;
+  canonical?: string;
+  publishedTime?: Date;
+  modifiedTime?: Date;
+  tags?: string[];
+  isHome?: boolean;
+  breadcrumb?: { name: string; item: string }[];
+  math?: boolean;
+}
+
+const { math = false, ...seo } = Astro.props;
+const rss = new URL("/index.xml", SITE.url).href;
+---
+
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      (() => {
+        try {
+          const saved = localStorage.getItem("yskim-theme");
+          const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+          const theme = saved === "light" || saved === "dark" ? saved : preferred;
+          document.documentElement.dataset.theme = theme;
+          document.documentElement.classList.add("theme-" + theme);
+        } catch {
+          document.documentElement.dataset.theme = "light";
+          document.documentElement.classList.add("theme-light");
+        }
+      })();
+    </script>
+    <link rel="stylesheet" href="/css/site.css" />
+    <link rel="alternate" type="application/rss+xml" title={SITE.title} href={rss} />
+    <Seo {...seo} />
+    {math && (
+      <link
+        rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+        integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV"
+        crossorigin="anonymous"
+      />
+    )}
+    <script src="/js/theme.js" defer></script>
+    {SITE.adsensePublisherId && (
+      <script
+        async
+        src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${SITE.adsensePublisherId}`}
+        crossorigin="anonymous"
+      ></script>
+    )}
+  </head>
+  <body>
+    <script is:inline>
+      (() => {
+        const theme = document.documentElement.dataset.theme || "light";
+        document.body.classList.add("theme-" + theme);
+      })();
+    </script>
+    <TopBar />
+    <div class="site-shell">
+      <ProfileRail />
+      <div class="content-column">
+        <main>
+          <slot />
+        </main>
+        <footer class="site-footer">
+          <p>
+            {UI.footerCopyright} ·
+            <a href={SITE.portfolio} target="_blank" rel="noopener noreferrer">{UI.navPortfolio}</a> ·
+            <a href="/index.xml">RSS</a>
+          </p>
+          <nav class="footer-legal" aria-label="사이트 정보">
+            <a href="/pages/about/">소개</a> ·
+            <a href="/pages/privacy/">개인정보처리방침</a> ·
+            <a href="/pages/disclaimer/">면책조항</a> ·
+            <a href="/pages/contact/">연락처</a>
+          </nav>
+        </footer>
+      </div>
+      <Sidebar />
+    </div>
+    <BackToTop client:idle />
+  </body>
+</html>

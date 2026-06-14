@@ -1,0 +1,34 @@
+---
+import Base from "../../layouts/Base.astro";
+import PostCard from "../../components/PostCard.astro";
+import { UI } from "../../config";
+import { getPublishedPosts, postUrl } from "../../lib/posts";
+
+const posts = await getPublishedPosts();
+---
+
+<Base title={UI.allPosts} description="공개 발행된 노트와 글.">
+  <header class="page-heading">
+    <h1>{UI.allPosts}</h1>
+    <p>공개 발행된 노트와 글.</p>
+  </header>
+  <section class="post-feed">
+    {posts.length > 0 ? (
+      <div class="post-list">
+        {posts.map((p) => (
+          <PostCard
+            href={postUrl(p.data.slug)}
+            title={p.data.title}
+            date={p.data.date}
+            category={p.data.categories[0]}
+            summary={p.data.summary}
+            cover={p.data.cover || undefined}
+            tags={p.data.tags}
+          />
+        ))}
+      </div>
+    ) : (
+      <p class="empty-state">{UI.noPostsYet}</p>
+    )}
+  </section>
+</Base>
