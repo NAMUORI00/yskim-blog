@@ -1,0 +1,35 @@
+---
+import { getCollection, render } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { getGithubProfile } from "../../lib/site-data";
+
+export async function getStaticPaths() {
+  const pages = await getCollection("pages", (p) => !p.data.draft);
+  return pages.map((entry) => ({ params: { slug: entry.data.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const gh = getGithubProfile();
+const isAbout = d.slug === "about";
+---
+
+<Base title={d.title} description={d.summary} type="website">
+  <article class="readme-card post">
+    <div class="filebar">
+      <span></span><span></span><span></span>
+      <strong>pages/{d.slug}.md</strong>
+    </div>
+    <div class="post-inner">
+      <header class="post-header">
+        <h1>{d.title}</h1>
+        {d.summary && <p class="summary">{d.summary}</p>}
+        {isAbout && gh.bio && <p class="profile-bio profile-bio--about">{gh.bio}</p>}
+      </header>
+      <div class="content">
+        <Content />
+      </div>
+    </div>
+  </article>
+</Base>

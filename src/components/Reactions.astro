@@ -1,0 +1,31 @@
+---
+interface Props {
+  path: string;
+}
+const { path } = Astro.props;
+---
+
+<section
+  class="post-reactions"
+  aria-labelledby="post-reactions-title"
+  data-post-reactions
+  data-path={path}
+  data-storage-key={`yskim-reaction:${path}`}
+>
+  <div class="post-reactions-heading">
+    <p class="eyebrow" id="post-reactions-title">반응</p>
+    <p class="post-reactions-status" data-reaction-status aria-live="polite"></p>
+  </div>
+  <div class="post-reaction-buttons" role="group" aria-label="반응">
+    <button type="button" data-reaction-button data-reaction="like">
+      <span>좋아요</span><strong data-reaction-count="like">0</strong>
+    </button>
+    <button type="button" data-reaction-button data-reaction="useful">
+      <span>유용해요</span><strong data-reaction-count="useful">0</strong>
+    </button>
+    <button type="button" data-reaction-button data-reaction="reread">
+      <span>다시 읽기</span><strong data-reaction-count="reread">0</strong>
+    </button>
+  </div>
+</section>
+<script src="/js/reactions.js" is:inline defer></script>

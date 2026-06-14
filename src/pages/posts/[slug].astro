@@ -1,0 +1,66 @@
+---
+import { render } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import ReadingProgress from "../../components/ReadingProgress.svelte";
+import Reactions from "../../components/Reactions.astro";
+import Comments from "../../components/Comments.astro";
+import { SITE } from "../../config";
+import { getPublishedPosts } from "../../lib/posts";
+
+export async function getStaticPaths() {
+  const posts = await getPublishedPosts();
+  return posts.map((entry) => ({ params: { slug: entry.data.slug }, props: { entry } }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await render(entry);
+const d = entry.data;
+const dateStr = d.date.toISOString().slice(0, 10);
+const breadcrumb = [
+  { name: "홈", item: SITE.url + "/" },
+  { name: "글", item: SITE.url + "/posts/" },
+  { name: d.title, item: new URL(`/posts/${d.slug}/`, SITE.url).href },
+];
+---
+
+<Base
+  title={d.title}
+  description={d.summary}
+  type="article"
+  image={d.cover || undefined}
+  canonical={d.canonical || undefined}
+  publishedTime={d.date}
+  modifiedTime={d.date}
+  tags={d.tags}
+  breadcrumb={breadcrumb}
+  math={d.math}
+>
+  <ReadingProgress client:idle />
+  <article class="readme-card post">
+    <div class="filebar">
+      <span></span><span></span><span></span>
+      <strong>posts/{d.slug}.md</strong>
+    </div>
+    <div class="post-inner">
+      <header class="post-header">
+        <p class="eyebrow">{dateStr}</p>
+        <h1>{d.title}</h1>
+        {d.summary && <p class="summary">{d.summary}</p>}
+        {d.tags.length > 0 && (
+          <ul class="tags" aria-label="Tags">
+            {d.tags.map((t) => <li>{t}</li>)}
+          </ul>
+        )}
+      </header>
+      <div class="content">
+        <Content />
+      </div>
+      {d.comments && (
+        <>
+          <Reactions path={`/posts/${d.slug}/`} />
+          <Comments />
+        </>
+      )}
+    </div>
+  </article>
+</Base>

@@ -1,0 +1,45 @@
+---
+import { UI } from "../config";
+import { getPublishedPosts, getTags, postUrl, tagUrl } from "../lib/posts";
+import KnowledgeGraph from "./KnowledgeGraph.astro";
+
+const posts = await getPublishedPosts();
+const recent = posts.slice(0, 5);
+const tags = await getTags();
+---
+
+<aside class="blog-sidebar" aria-label="Blog sidebar">
+  <KnowledgeGraph />
+  <section class="sidebar-card">
+    <div class="sidebar-heading-row">
+      <p class="sidebar-title">{UI.recent}</p>
+      <a href="/posts/">{UI.allPosts}</a>
+    </div>
+    <div class="sidebar-post-list">
+      {recent.length > 0 ? (
+        recent.map((p) => {
+          const dateStr = p.data.date.toISOString().slice(0, 10);
+          return (
+            <a class="sidebar-post" href={postUrl(p.data.slug)}>
+              <span>{p.data.title}</span>
+              <time datetime={dateStr}>{dateStr}</time>
+            </a>
+          );
+        })
+      ) : (
+        <p class="sidebar-empty">{UI.noPostsYet}</p>
+      )}
+    </div>
+  </section>
+
+  <section class="sidebar-card">
+    <p class="sidebar-title">{UI.tags}</p>
+    <div class="sidebar-tags">
+      {tags.length > 0 ? (
+        tags.map((t) => <a href={tagUrl(t)}>#{t}</a>)
+      ) : (
+        <span>아직 태그가 없습니다</span>
+      )}
+    </div>
+  </section>
+</aside>

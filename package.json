@@ -3,13 +3,24 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
     "check:notion": "node scripts/notion-setup.mjs --repo NAMUORI00/yskim-blog",
     "fetch:notion": "node scripts/notion-content.mjs --root .",
     "test": "node --test tests/*.test.mjs"
   },
   "dependencies": {
+    "@astrojs/rss": "^4.0.18",
+    "@astrojs/sitemap": "^3.7.3",
+    "@astrojs/svelte": "^8.1.2",
     "@notionhq/client": "5.22.0",
-    "notion-to-md": "3.1.9"
+    "astro": "^6.4.6",
+    "notion-to-md": "3.1.9",
+    "rehype-katex": "^7.0.1",
+    "remark-math": "^6.0.0",
+    "svelte": "^5.56.3"
   },
   "devDependencies": {
     "markdownlint-cli2": "0.22.1",
