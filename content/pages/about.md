@@ -23,7 +23,7 @@ translationKey: "about"
 ## 발행 방식
 
 이 블로그는 **Notion을 콘텐츠의 단일 원본(source of truth)** 으로 사용하고,
-**Hugo** 로 공개 사이트를 렌더링합니다. Notion에서 글을 작성·발행 상태로 바꾸면
+**Astro** 로 공개 사이트를 렌더링합니다. Notion에서 글을 작성·발행 상태로 바꾸면
 GitHub Actions가 콘텐츠를 가져와 Markdown과 정적 이미지로 재생성하고,
 **Cloudflare Pages** 로 자동 배포합니다.
 
