@@ -1380,16 +1380,20 @@ body.theme-dark .chroma .s {
   border: 0;
 }
 
-@media (max-width: 1180px) {
+/* Laptop: rail + content, sidebar becomes a full-width band below. */
+@media (max-width: 1200px) {
   .site-shell {
     grid-template-columns: minmax(180px, var(--rail-width)) minmax(0, 1fr);
+    gap: var(--space-5);
   }
 
   .blog-sidebar {
-    grid-column: 2;
+    grid-column: 1 / -1;
     position: static;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-3);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: var(--space-4);
+    margin-top: var(--space-2);
   }
 
   .hero-readme h1,
@@ -1400,12 +1404,19 @@ body.theme-dark .chroma .s {
   }
 }
 
-@media (max-width: 820px) {
+/* Tablet: single content-first column; profile and sidebar stack below. */
+@media (max-width: 900px) {
   .site-shell {
-    display: block;
-    width: min(100% - var(--space-4), 720px);
-    padding: var(--space-3) var(--space-3) var(--space-7);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    width: min(100% - var(--space-4), 760px);
+    padding: var(--space-4) var(--space-3) var(--space-7);
   }
+
+  .content-column { order: 1; }
+  .profile-rail { order: 2; }
+  .blog-sidebar { order: 3; }
 
   .profile-rail,
   .blog-sidebar {
@@ -1435,7 +1446,18 @@ body.theme-dark .chroma .s {
   }
 
   .rail-category-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  .rail-category-list a {
+    flex: 0 0 auto;
+  }
+
+  .blog-sidebar {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--space-3);
   }
 
   .top-bar-inner {
@@ -1533,9 +1555,51 @@ body.theme-dark .chroma .s {
     padding: var(--space-3);
   }
 
+  .hero-readme h1,
+  .page-heading h1,
+  .page-header h1,
+  .post-header h1 {
+    font-size: 1.7rem;
+  }
+}
+
+/* Phone: tighten spacing, drop the decorative graph, single-column cards. */
+@media (max-width: 600px) {
+  .site-shell {
+    width: 100%;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-3) var(--space-7);
+  }
+
+  /* Knowledge graph is decorative — hide it to keep the phone layout clean. */
+  .sidebar-graph-card {
+    display: none;
+  }
+
   .blog-sidebar {
-    display: grid;
     grid-template-columns: 1fr;
-    margin-top: var(--space-4);
+  }
+
+  .rail-category-list {
+    gap: var(--space-1) var(--space-2);
+  }
+
+  .post-card--with-cover {
+    grid-template-columns: 1fr;
+  }
+
+  .post-reaction-buttons {
+    grid-template-columns: 1fr;
+  }
+
+  .hero-readme h1,
+  .page-heading h1,
+  .page-header h1,
+  .post-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .content pre {
+    padding: var(--space-3);
   }
 }
