@@ -8,7 +8,10 @@ export const SITE = {
   github: "NAMUORI00",
   portfolio: "https://namuori.net/",
   // Public Notion reader page (Publish to web URL). Empty hides the link.
-  notionPublicUrl: "https://namuori00.notion.site/37fdcd44779f81e3a025f6356f268287",
+  // The standalone "Namu Garden Blog CMS" database is now the single source of
+  // truth; the old reader page was removed. Publish the database to web and
+  // paste its URL here to restore the footer "노션으로 보기" link.
+  notionPublicUrl: "",
   locale: "ko-KR",
   giscus: {
     repo: "NAMUORI00/yskim-blog",
