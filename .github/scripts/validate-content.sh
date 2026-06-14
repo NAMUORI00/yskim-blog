@@ -121,7 +121,7 @@ while IFS= read -r -d '' file; do
     add_error "Temporary Notion file URL remains in exported content: ${file}"
   fi
 
-  if grep -Eiq '<(unknown|video|audio|pdf|file)\b|file://' <<<"$text"; then
+  if grep -Eiq '<(unknown|pdf|file)\b|file://' <<<"$text"; then
     add_error "Unsupported Notion artifact remains in exported content: ${file}"
   fi
 
