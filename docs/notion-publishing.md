@@ -83,7 +83,9 @@ Use `notion-to-md` or another maintained Notion block converter as the base. Do 
 - `toggle` blocks should become a details/summary shortcode or fail if unsupported.
 - `column_list` and `column` blocks should degrade to normal sequential content unless a custom shortcode is added.
 - `synced_block` should resolve to the synced content when available or fail visibly.
-- `embed` blocks should become explicit links unless the site has a safe render hook for that provider.
+- `embed` blocks render as a responsive `<iframe>` for YouTube/Vimeo, and fall back to explicit links for other providers.
+- `video` blocks render as a responsive `<iframe>` player for YouTube/Vimeo, or a native `<video>` player for Notion-hosted uploads and direct file URLs (the file is downloaded to `static/files/notion/<slug>/` and self-hosted).
+- `audio` blocks render as a native `<audio>` player with the file self-hosted the same way.
 
 Hugo must include KaTeX or MathJax support before ML/math-heavy Notion posts are considered production-ready.
 

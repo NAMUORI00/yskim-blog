@@ -15,6 +15,9 @@ import {
   queryPublishedPages,
   rewriteMarkdownAssetUrls,
   rewriteMarkdownImageUrls,
+  toPlayerEmbedUrl,
+  videoEmbedTag,
+  videoFileTag,
 } from "../scripts/notion-content.mjs";
 
 const notionPage = {
@@ -90,6 +93,61 @@ test("rejects unsupported generated Notion artifacts", () => {
     () => assertNoUnsupportedGeneratedMarkdown("<video src=\"file://attachment\"></video>", "markdown"),
     /Unsupported Notion artifact remains/,
   );
+});
+
+test("allows supported media HTML but still rejects file:// artifacts", () => {
+  assert.doesNotThrow(() =>
+    assertNoUnsupportedGeneratedMarkdown(
+      '<video controls src="/files/notion/post/file-1.mp4"></video>',
+      "markdown",
+    ),
+  );
+  assert.doesNotThrow(() =>
+    assertNoUnsupportedGeneratedMarkdown(
+      '<iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ"></iframe>',
+      "markdown",
+    ),
+  );
+  assert.throws(
+    () => assertNoUnsupportedGeneratedMarkdown('<audio src="file://clip"></audio>', "markdown"),
+    /Unsupported Notion artifact remains/,
+  );
+});
+
+test("converts video provider URLs to embeddable player URLs", () => {
+  assert.equal(
+    toPlayerEmbedUrl("https://www.youtube.com/watch?v=dQw4w9WgXcQ"),
+    "https://www.youtube.com/embed/dQw4w9WgXcQ",
+  );
+  assert.equal(
+    toPlayerEmbedUrl("https://youtu.be/dQw4w9WgXcQ"),
+    "https://www.youtube.com/embed/dQw4w9WgXcQ",
+  );
+  assert.equal(
+    toPlayerEmbedUrl("https://www.youtube.com/shorts/dQw4w9WgXcQ"),
+    "https://www.youtube.com/embed/dQw4w9WgXcQ",
+  );
+  assert.equal(
+    toPlayerEmbedUrl("https://vimeo.com/76979871"),
+    "https://player.vimeo.com/video/76979871",
+  );
+  assert.equal(toPlayerEmbedUrl("https://example.com/clip.mp4"), null);
+});
+
+test("renders YouTube/Vimeo embeds as responsive iframes", () => {
+  const html = videoEmbedTag("https://www.youtube.com/embed/dQw4w9WgXcQ", "데모 영상");
+  assert.match(html, /class="video-embed"/);
+  assert.match(html, /<iframe src="https:\/\/www\.youtube\.com\/embed\/dQw4w9WgXcQ"/);
+  assert.match(html, /allowfullscreen/);
+  assert.match(html, /<figcaption>데모 영상<\/figcaption>/);
+});
+
+test("renders Notion-hosted uploads as native video players with the raw url", () => {
+  const url = "https://prod-files-secure.s3.us-west-2.amazonaws.com/clip.mp4?X-Amz-Expires=3600";
+  const html = videoFileTag(url, "");
+  assert.match(html, /class="video-file"/);
+  assert.ok(html.includes(`src="${url}"`));
+  assert.ok(!html.includes("<figcaption>"));
 });
 
 test("rewrites remote Markdown images to generated local paths", () => {

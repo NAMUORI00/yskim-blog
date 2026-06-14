@@ -938,6 +938,49 @@ body.theme-dark .theme-icon-moon {
   border-radius: var(--radius-sm);
 }
 
+.content figure.video-embed,
+.content figure.video-file,
+.content figure.audio-file {
+  margin: var(--space-4) 0;
+}
+
+.content figure.video-embed {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+.content figure.video-embed iframe {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.content figure.video-file video {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #000;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+}
+
+.content figure.audio-file audio {
+  width: 100%;
+}
+
+.content figure.video-embed figcaption,
+.content figure.video-file figcaption,
+.content figure.audio-file figcaption {
+  margin-top: var(--space-2);
+  color: var(--muted);
+  font-size: var(--font-sm);
+  text-align: center;
+}
+
 .content .highlight {
   margin: var(--space-4) 0;
   border-radius: var(--radius-md);
