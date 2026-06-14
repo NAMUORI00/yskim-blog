@@ -2,7 +2,6 @@
 set -euo pipefail
 
 ROOT="${ROOT:-$(cd "$(dirname "$0")/../.." && pwd)}"
-HUGO_YAML="${ROOT}/hugo.yaml"
 DATA_DIR="${ROOT}/data"
 OUTPUT_PATH="${DATA_DIR}/github.yaml"
 
@@ -16,34 +15,16 @@ yaml_quote() {
 }
 
 read_github_username() {
-  local username
-  username="$(grep -E '^[[:space:]]*username:' "$HUGO_YAML" | head -n1 | awk '{print $2}' | tr -d '\r')"
-  if [[ -n "$username" ]]; then
-    echo "$username"
-  else
-    echo "NAMUORI00"
-  fi
+  echo "${GITHUB_PROFILE_USERNAME:-NAMUORI00}"
 }
 
 read_profile_fallback() {
-  local block
-  block="$(awk '
-    /^[[:space:]]*profileFallback:[[:space:]]*$/ { capture=1; next }
-    capture && /^[[:space:]]*[A-Za-z0-9_]+:/ && $0 !~ /^[[:space:]]*(login|name|bio|avatar_url|html_url):/ { exit }
-    capture { print }
-  ' "$HUGO_YAML" | tr -d '\r')"
-
-  FALLBACK_LOGIN="$(grep -E '^[[:space:]]*login:' <<<"$block" | head -n1 | awk '{print $2}')"
-  FALLBACK_NAME="$(grep -E '^[[:space:]]*name:' <<<"$block" | head -n1 | sed -E 's/^[[:space:]]*name:[[:space:]]*//; s/^"//; s/"$//')"
-  FALLBACK_BIO="$(grep -E '^[[:space:]]*bio:' <<<"$block" | head -n1 | sed -E 's/^[[:space:]]*bio:[[:space:]]*//; s/^"//; s/"$//')"
-  FALLBACK_AVATAR="$(grep -E '^[[:space:]]*avatar_url:' <<<"$block" | head -n1 | awk '{print $2}')"
-  FALLBACK_HTML="$(grep -E '^[[:space:]]*html_url:' <<<"$block" | head -n1 | awk '{print $2}')"
-
-  FALLBACK_LOGIN="${FALLBACK_LOGIN:-NAMUORI00}"
-  FALLBACK_NAME="${FALLBACK_NAME:-NAMUORI00}"
-  FALLBACK_BIO="${FALLBACK_BIO:-}"
-  FALLBACK_AVATAR="${FALLBACK_AVATAR:-https://github.com/NAMUORI00.png}"
-  FALLBACK_HTML="${FALLBACK_HTML:-https://github.com/NAMUORI00}"
+  # Used only if the GitHub API call fails. The live values come from the API.
+  FALLBACK_LOGIN="${GITHUB_PROFILE_USERNAME:-NAMUORI00}"
+  FALLBACK_NAME="${GITHUB_PROFILE_USERNAME:-NAMUORI00}"
+  FALLBACK_BIO=""
+  FALLBACK_AVATAR="https://github.com/${GITHUB_PROFILE_USERNAME:-NAMUORI00}.png"
+  FALLBACK_HTML="https://github.com/${GITHUB_PROFILE_USERNAME:-NAMUORI00}"
 }
 
 write_github_data() {

@@ -1,3 +1,7 @@
+# Astro build output and cache
+dist/
+.astro/
+# Hugo legacy output
 public/
 resources/_gen/
 .hugo_build.lock

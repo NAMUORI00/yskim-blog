@@ -1,0 +1,33 @@
+---
+import { SITE } from "../config";
+const g = SITE.giscus;
+const giscusReady = Boolean(g.repo && g.repoId && g.category && g.categoryId);
+---
+
+{giscusReady && (
+  <section class="post-comments" id="comments" aria-labelledby="comments-title">
+    <div class="comments-heading">
+      <p class="eyebrow" id="comments-title">댓글</p>
+    </div>
+    <div class="comment-provider">
+      <h2>GitHub 댓글</h2>
+      <script
+        is:inline
+        src="https://giscus.app/client.js"
+        data-repo={g.repo}
+        data-repo-id={g.repoId}
+        data-category={g.category}
+        data-category-id={g.categoryId}
+        data-mapping={g.mapping}
+        data-strict="0"
+        data-reactions-enabled="0"
+        data-emit-metadata="0"
+        data-input-position="bottom"
+        data-theme="preferred_color_scheme"
+        data-lang="ko"
+        crossorigin="anonymous"
+        async
+      ></script>
+    </div>
+  </section>
+)}

@@ -1,0 +1,113 @@
+---
+import { SITE } from "../config";
+
+export interface Props {
+  title?: string;
+  description?: string;
+  type?: "website" | "article";
+  image?: string;
+  canonical?: string;
+  publishedTime?: Date;
+  modifiedTime?: Date;
+  tags?: string[];
+  isHome?: boolean;
+  breadcrumb?: { name: string; item: string }[];
+}
+
+const {
+  title,
+  description = SITE.description,
+  type = "website",
+  image,
+  canonical,
+  publishedTime,
+  modifiedTime,
+  tags = [],
+  isHome = false,
+  breadcrumb,
+} = Astro.props;
+
+const pageTitle = isHome ? SITE.title : `${title} | ${SITE.title}`;
+const ogTitle = isHome ? SITE.title : title ?? SITE.title;
+const canonicalUrl = canonical || new URL(Astro.url.pathname, SITE.url).href;
+const ogImage = image
+  ? new URL(image, SITE.url).href
+  : `https://github.com/${SITE.github}.png`;
+const iso = (d?: Date) => (d ? d.toISOString() : undefined);
+
+const website = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: SITE.title,
+  url: SITE.url + "/",
+  description: SITE.description,
+  inLanguage: SITE.locale,
+  author: { "@type": "Person", name: SITE.author, url: `https://github.com/${SITE.github}` },
+};
+
+const article = {
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  headline: title,
+  datePublished: iso(publishedTime),
+  dateModified: iso(modifiedTime ?? publishedTime),
+  description,
+  url: canonicalUrl,
+  image: ogImage,
+  inLanguage: SITE.locale,
+  author: { "@type": "Person", name: SITE.author, url: `https://github.com/${SITE.github}` },
+  publisher: { "@type": "Organization", name: SITE.title },
+};
+
+const breadcrumbLd = breadcrumb && {
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  itemListElement: breadcrumb.map((b, i) => ({
+    "@type": "ListItem",
+    position: i + 1,
+    name: b.name,
+    item: b.item,
+  })),
+};
+---
+
+<title>{pageTitle}</title>
+<meta name="description" content={description} />
+<link rel="canonical" href={canonicalUrl} />
+
+{SITE.googleSiteVerification && (
+  <meta name="google-site-verification" content={SITE.googleSiteVerification} />
+)}
+{SITE.naverSiteVerification && (
+  <meta name="naver-site-verification" content={SITE.naverSiteVerification} />
+)}
+
+<meta property="og:site_name" content={SITE.title} />
+<meta property="og:title" content={ogTitle} />
+<meta property="og:description" content={description} />
+<meta property="og:type" content={type} />
+<meta property="og:url" content={canonicalUrl} />
+<meta property="og:locale" content="ko_KR" />
+<meta property="og:image" content={ogImage} />
+{type === "article" && publishedTime && (
+  <meta property="article:published_time" content={iso(publishedTime)} />
+)}
+{type === "article" && (modifiedTime || publishedTime) && (
+  <meta property="article:modified_time" content={iso(modifiedTime ?? publishedTime)} />
+)}
+{tags.map((t) => <meta property="article:tag" content={t} />)}
+
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={ogTitle} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+{isHome && (
+  <script type="application/ld+json" set:html={JSON.stringify(website)} />
+)}
+{type === "article" && !isHome && (
+  <script type="application/ld+json" set:html={JSON.stringify(article)} />
+)}
+{breadcrumbLd && (
+  <script type="application/ld+json" set:html={JSON.stringify(breadcrumbLd)} />
+)}
