@@ -147,7 +147,9 @@ export async function fetchNotionContent(options = {}) {
   ]);
   const notion = new Client({ auth: token });
   const n2m = new NotionToMarkdown({ notionClient: notion });
-  installCustomTransformers(n2m);
+  const mediaMode =
+    (options.mediaMode ?? process.env.NOTION_MEDIA_MODE) === "proxy" ? "proxy" : "download";
+  installCustomTransformers(n2m, mediaMode);
 
   await prepareGeneratedContent(root);
   await ensureBaseContent(root);
@@ -157,7 +159,7 @@ export async function fetchNotionContent(options = {}) {
   for (const page of pages) {
     const post = pageToPost(page, propertyNames);
     const rawMarkdown = await convertPageToMarkdown(n2m, page.id);
-    const bodyWithAssets = await downloadAndRewriteAssets(rawMarkdown, post, root);
+    const bodyWithAssets = await downloadAndRewriteAssets(rawMarkdown, post, root, mediaMode);
     assertNoUnsupportedGeneratedMarkdown(bodyWithAssets, post.slug);
     const cover = await downloadCover(post, root);
     const postDocument = buildPostDocument({ ...post, cover: cover || post.cover }, bodyWithAssets);
@@ -277,7 +279,7 @@ async function resolveDataSourceId(notion, databaseId) {
   }
 }
 
-function installCustomTransformers(n2m) {
+function installCustomTransformers(n2m, mediaMode = "download") {
   n2m.setCustomTransformer("equation", async (block) => {
     const expression = block?.equation?.expression?.trim();
     return expression ? `$$\n${expression}\n$$` : "";
@@ -297,28 +299,45 @@ function installCustomTransformers(n2m) {
   });
 
   n2m.setCustomTransformer("video", async (block) => {
-    const url = readObjectFileUrl(block?.video);
+    const node = block?.video;
+    const url = readObjectFileUrl(node);
     if (!url) {
       return "";
     }
-    const caption = richTextToPlain(block.video?.caption);
+    const caption = richTextToPlain(node?.caption);
     const playerUrl = toPlayerEmbedUrl(url);
     if (playerUrl) {
       return videoEmbedTag(playerUrl, caption);
     }
-    // Notion-hosted upload or a direct video file: render a native player.
-    // The (temporary) URL is downloaded and rewritten to a local path later.
-    return videoFileTag(url, caption);
+    return videoFileTag(mediaSrc(block, node, mediaMode), caption);
   });
 
   n2m.setCustomTransformer("audio", async (block) => {
-    const url = readObjectFileUrl(block?.audio);
+    const node = block?.audio;
+    const url = readObjectFileUrl(node);
     if (!url) {
       return "";
     }
-    const caption = richTextToPlain(block.audio?.caption);
-    return audioFileTag(url, caption);
+    const caption = richTextToPlain(node?.caption);
+    return audioFileTag(mediaSrc(block, node, mediaMode), caption);
   });
+
+  // File and PDF attachments: in proxy mode, serve Notion-uploaded files through
+  // the /media/<id> redirect Function. Otherwise fall back to the default
+  // notion-to-md handling (the download pipeline self-hosts them).
+  const attachmentTransformer = (type) => async (block) => {
+    const node = block?.[type];
+    if (!readObjectFileUrl(node)) {
+      return "";
+    }
+    if (!(mediaMode === "proxy" && node?.type === "file" && block?.id)) {
+      return false;
+    }
+    const label = richTextToPlain(node?.caption) || node?.name || "첨부파일 다운로드";
+    return fileLinkTag(`/media/${block.id}`, label);
+  };
+  n2m.setCustomTransformer("file", attachmentTransformer("file"));
+  n2m.setCustomTransformer("pdf", attachmentTransformer("pdf"));
 
   n2m.setCustomTransformer("callout", async (block) => {
     const text = richTextToPlain(block.callout?.rich_text);
@@ -386,8 +405,22 @@ export function audioFileTag(url, caption) {
   return `<figure class="audio-file">\n  <audio controls preload="metadata" src="${url}"></audio>${captionHtml(caption)}\n</figure>`;
 }
 
-async function downloadAndRewriteAssets(markdown, post, root) {
-  const remoteAssets = collectRemoteMarkdownAssets(markdown);
+export function fileLinkTag(href, label) {
+  return `<a class="file-attachment" href="${href}" download>${escapeHtmlAttribute(label)}</a>`;
+}
+
+// Choose the src for a media file. Notion-uploaded files have expiring URLs, so
+// in proxy mode they are served through /media/<block-id> (resolved at request
+// time by a Cloudflare Function). External URLs and download mode use the URL as-is.
+export function mediaSrc(block, node, mode = "download") {
+  if (mode === "proxy" && node?.type === "file" && block?.id) {
+    return `/media/${block.id}`;
+  }
+  return readObjectFileUrl(node);
+}
+
+async function downloadAndRewriteAssets(markdown, post, root, mediaMode = "download") {
+  const remoteAssets = collectRemoteMarkdownAssets(markdown, mediaMode);
   if (remoteAssets.length === 0) {
     return markdown;
   }
@@ -416,11 +449,18 @@ async function downloadAndRewriteAssets(markdown, post, root) {
   return rewritten;
 }
 
-function collectRemoteMarkdownAssets(markdown) {
+function collectRemoteMarkdownAssets(markdown, mediaMode = "download") {
   const assets = [];
 
+  // Images are always self-hosted (small, and best for performance/SEO).
   for (const match of markdown.matchAll(/!\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/g)) {
     assets.push({ url: match[1], kind: "image" });
+  }
+
+  // In proxy mode, heavy media/attachments are served from Notion via /media/<id>
+  // (uploaded) or kept as their direct external URL — never downloaded here.
+  if (mediaMode === "proxy") {
+    return assets;
   }
 
   for (const match of markdown.matchAll(/\[[^\]]*\]\((https?:\/\/[^)\s]+)\)/g)) {
