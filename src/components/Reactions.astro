@@ -1,4 +1,6 @@
 ---
+import { ASSET_VERSION } from "../config";
+
 interface Props {
   path: string;
 }
@@ -28,4 +30,4 @@ const { path } = Astro.props;
     </button>
   </div>
 </section>
-<script src="/js/reactions.js" is:inline defer></script>
+<script src={`/js/reactions.js?v=${ASSET_VERSION}`} is:inline defer></script>
