@@ -18,6 +18,8 @@ import {
   toPlayerEmbedUrl,
   videoEmbedTag,
   videoFileTag,
+  mediaSrc,
+  fileLinkTag,
 } from "../scripts/notion-content.mjs";
 
 const notionPage = {
@@ -148,6 +150,26 @@ test("renders Notion-hosted uploads as native video players with the raw url", (
   assert.match(html, /class="video-file"/);
   assert.ok(html.includes(`src="${url}"`));
   assert.ok(!html.includes("<figcaption>"));
+});
+
+test("mediaSrc proxies uploaded files but passes external URLs through", () => {
+  const uploaded = {
+    type: "file",
+    file: { url: "https://prod-files-secure.s3.amazonaws.com/v.mp4?X-Amz-Expires=3600" },
+  };
+  const external = { type: "external", external: { url: "https://example.com/v.mp4" } };
+
+  assert.equal(mediaSrc({ id: "11112222-3333-4444-5555-666677778888" }, uploaded, "proxy"), "/media/11112222-3333-4444-5555-666677778888");
+  assert.equal(mediaSrc({ id: "x" }, external, "proxy"), "https://example.com/v.mp4");
+  // Download mode keeps the real (temporary) URL so the asset can be downloaded.
+  assert.match(mediaSrc({ id: "x" }, uploaded, "download"), /amazonaws\.com/);
+});
+
+test("fileLinkTag renders a download link", () => {
+  assert.equal(
+    fileLinkTag("/media/abc", "slides.pdf"),
+    '<a class="file-attachment" href="/media/abc" download>slides.pdf</a>',
+  );
 });
 
 test("rewrites remote Markdown images to generated local paths", () => {
