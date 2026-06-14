@@ -1,5 +1,5 @@
 ---
-import { SITE, UI } from "../config";
+import { SITE, UI, ASSET_VERSION } from "../config";
 import Seo from "../components/Seo.astro";
 import TopBar from "../components/TopBar.astro";
 import ProfileRail from "../components/ProfileRail.astro";
@@ -44,7 +44,7 @@ const rss = new URL("/index.xml", SITE.url).href;
         }
       })();
     </script>
-    <link rel="stylesheet" href="/css/site.css" />
+    <link rel="stylesheet" href={`/css/site.css?v=${ASSET_VERSION}`} />
     <link rel="alternate" type="application/rss+xml" title={SITE.title} href={rss} />
     <Seo {...seo} />
     {math && (
@@ -55,7 +55,7 @@ const rss = new URL("/index.xml", SITE.url).href;
         crossorigin="anonymous"
       />
     )}
-    <script src="/js/theme.js" defer></script>
+    <script src={`/js/theme.js?v=${ASSET_VERSION}`} defer></script>
     {SITE.adsensePublisherId && (
       <script
         async
