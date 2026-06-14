@@ -83,6 +83,12 @@ const rss = new URL("/index.xml", SITE.url).href;
             {UI.footerCopyright} ·
             <a href={SITE.portfolio} target="_blank" rel="noopener noreferrer">{UI.navPortfolio}</a> ·
             <a href="/index.xml">RSS</a>
+            {SITE.notionPublicUrl && (
+              <>
+                {" · "}
+                <a href={SITE.notionPublicUrl} target="_blank" rel="noopener noreferrer">노션으로 보기</a>
+              </>
+            )}
           </p>
           <nav class="footer-legal" aria-label="사이트 정보">
             <a href="/pages/about/">소개</a> ·
