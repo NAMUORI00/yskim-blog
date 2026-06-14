@@ -18,6 +18,19 @@ Notion 업로드 파일의 URL은 **약 1시간 뒤 만료되는 S3 임시 URL**
 URL을 그대로 박아둘 수 없고, `proxy` 모드는 요청 시점에 `functions/media/[id].js`가
 Notion API(`GET /v1/blocks/{id}`)로 새 URL을 받아 리다이렉트합니다.
 
+미디어 바이트는 Cloudflare를 거치지 않고 **방문자 ↔ Notion(S3)** 으로 직접
+전송되므로 대역폭 비용이 없습니다(Function은 작은 302 리다이렉트만 수행).
+
+### KV 캐시 (Notion API 호출 최소화)
+
+매 요청마다 Notion을 부르지 않도록 **KV(`MEDIA_CACHE`)에 resolve된 URL을 TTL
+45분으로 캐시**합니다. 결과적으로 한 미디어 블록당 Notion API는 약 45분에 한 번만
+호출됩니다(전 방문자 공유). TTL(45분) < Notion 만료(1시간)라 캐시된 URL은 항상
+유효합니다. 무료 티어(읽기 10만/일, 쓰기 1천/일)로 블로그엔 충분합니다.
+
+- KV 네임스페이스: `yskim_blog_media_cache`, 바인딩 `MEDIA_CACHE`(`wrangler.toml`).
+- KV 바인딩이 없어도 Function은 동작합니다(매번 Notion resolve로 폴백).
+
 ## proxy 모드 켜기
 
 1. **Cloudflare Pages에 `NOTION_TOKEN` 추가** (필수):
