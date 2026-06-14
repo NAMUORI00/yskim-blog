@@ -1,3 +1,31 @@
+/* Layout & sizing tokens — theme-independent. These MUST live in a plain
+   :root block (not the themed selectors below) so the responsive @media
+   overrides apply identically in both light and dark mode. Pinning them to
+   html.theme-light raised their specificity above the media queries and made
+   light mode ignore the responsive sizing. */
+:root {
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 32px;
+  --space-8: 40px;
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --font-xs: 0.75rem;
+  --font-sm: 0.875rem;
+  --font-base: 1rem;
+  --font-lg: 1.125rem;
+  --font-xl: 1.5rem;
+  --font-2xl: 2rem;
+  --content-width: 42rem;
+  --rail-width: 220px;
+  --sidebar-width: 280px;
+  --shell-max: 1280px;
+}
+
 :root,
 html.theme-light,
 body.theme-light {
@@ -30,26 +58,6 @@ body.theme-light {
   --code-block-border: #dedede;
   --grid-line: rgba(31, 36, 31, 0.012);
   --grid-line-soft: rgba(31, 36, 31, 0.009);
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-7: 32px;
-  --space-8: 40px;
-  --radius-sm: 4px;
-  --radius-md: 6px;
-  --font-xs: 0.75rem;
-  --font-sm: 0.875rem;
-  --font-base: 1rem;
-  --font-lg: 1.125rem;
-  --font-xl: 1.5rem;
-  --font-2xl: 2rem;
-  --content-width: 42rem;
-  --rail-width: 220px;
-  --sidebar-width: 280px;
-  --shell-max: 1280px;
 }
 
 :root[data-theme="dark"],
