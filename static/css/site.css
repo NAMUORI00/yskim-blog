@@ -216,6 +216,53 @@ code {
   background: var(--panel);
 }
 
+/* Hamburger menu button — hidden on desktop, shown at the mobile breakpoint. */
+.nav-toggle {
+  display: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  color: var(--accent-strong);
+  background: var(--panel-soft);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.nav-toggle:hover {
+  border-color: var(--line-strong);
+  background: var(--panel);
+}
+
+.nav-toggle-box {
+  display: grid;
+  gap: 4px;
+  width: 18px;
+}
+
+.nav-toggle-bar {
+  display: block;
+  height: 2px;
+  width: 100%;
+  background: currentColor;
+  border-radius: 2px;
+  transition: transform 0.2s ease, opacity 0.15s ease;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(2) {
+  opacity: 0;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle-bar:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
 .theme-icon {
   grid-area: 1 / 1;
 }
@@ -1425,6 +1472,54 @@ body.theme-dark .chroma .s {
   }
 }
 
+/* Desktop (>1200px): pin the profile rail to the left edge and the sidebar to
+   the right edge, both fixed in place while the page scrolls, with the main
+   content centered in the band between them. */
+@media (min-width: 1201px) {
+  :root {
+    /* Top bar height (min-height 50px + 1px border) used to offset the rails. */
+    --topbar-h: 51px;
+    --rail-edge: var(--space-6);
+    --rail-content-gap: var(--space-6);
+  }
+
+  .site-shell {
+    display: block;
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: var(--space-7) 0 var(--space-8);
+  }
+
+  .profile-rail,
+  .blog-sidebar {
+    position: fixed;
+    top: calc(var(--topbar-h) + var(--space-5));
+    max-height: calc(100dvh - var(--topbar-h) - var(--space-7));
+    margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    z-index: 20;
+  }
+
+  .profile-rail {
+    left: var(--rail-edge);
+    width: var(--rail-width);
+  }
+
+  .blog-sidebar {
+    right: var(--rail-edge);
+    width: var(--sidebar-width);
+  }
+
+  /* Reserve room for each fixed rail so the content never slides under it. */
+  .content-column {
+    margin-left: calc(var(--rail-edge) + var(--rail-width) + var(--rail-content-gap));
+    margin-right: calc(var(--rail-edge) + var(--sidebar-width) + var(--rail-content-gap));
+  }
+}
+
 /* Laptop: rail + content, sidebar becomes a full-width band below. */
 @media (max-width: 1200px) {
   .site-shell {
@@ -1508,22 +1603,15 @@ body.theme-dark .chroma .s {
   .top-bar-inner {
     flex-wrap: nowrap;
     gap: var(--space-2);
-    min-height: auto;
+    min-height: 52px;
     width: 100%;
     padding: var(--space-2) var(--space-3);
   }
 
   .top-bar-nav {
     flex: 1 1 auto;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 2px;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none;
-  }
-
-  .top-bar-nav::-webkit-scrollbar {
-    display: none;
   }
 
   .top-bar-nav a {
@@ -1605,6 +1693,77 @@ body.theme-dark .chroma .s {
   .page-header h1,
   .post-header h1 {
     font-size: 1.7rem;
+  }
+}
+
+/* Mobile nav: collapse the inline links into a hamburger dropdown so the
+   top bar never overflows or tangles on narrow screens. */
+@media (max-width: 720px) {
+  .nav-toggle {
+    display: inline-grid;
+  }
+
+  .top-bar-inner {
+    flex-wrap: nowrap;
+    gap: var(--space-2);
+  }
+
+  .top-bar-brand {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* The nav becomes a panel anchored under the sticky top bar. */
+  .top-bar-nav {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-1);
+    width: 100%;
+    max-height: calc(100dvh - 52px);
+    overflow-y: auto;
+    margin: 0;
+    padding: var(--space-2) var(--space-3) var(--space-3);
+    background: var(--panel);
+    border-bottom: 1px solid var(--line);
+    box-shadow: 0 12px 28px -16px rgba(0, 0, 0, 0.45);
+  }
+
+  .top-bar-nav.is-open {
+    display: flex;
+    animation: nav-drop 0.16s ease both;
+  }
+
+  @keyframes nav-drop {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .top-bar-nav a {
+    display: flex;
+    align-items: center;
+    min-height: 42px;
+    padding: var(--space-2) var(--space-3);
+    font-size: var(--font-base);
+    border-radius: var(--radius-sm);
+  }
+
+  .top-bar-external {
+    margin-top: var(--space-1);
+    border-top: 1px solid var(--line-soft);
+    border-radius: 0;
+  }
+
+  /* Lock background scroll while the menu is open. */
+  body.nav-open {
+    overflow: hidden;
   }
 }
 

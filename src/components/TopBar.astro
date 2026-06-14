@@ -12,7 +12,7 @@ const isActive = (href: string) => path === href || path.startsWith(href);
 <header class="top-bar">
   <div class="top-bar-inner">
     <a class="top-bar-brand" href="/">{SITE.title}</a>
-    <nav class="top-bar-nav" aria-label="Main navigation">
+    <nav id="primary-nav" class="top-bar-nav" aria-label="Main navigation">
       <a href="/" class={isHome ? "is-active" : ""} aria-current={isHome ? "page" : undefined}>
         {UI.navHome}
       </a>
@@ -30,6 +30,20 @@ const isActive = (href: string) => path === href || path.startsWith(href);
       </a>
     </nav>
     <div class="top-bar-utils">
+      <button
+        class="nav-toggle"
+        type="button"
+        data-nav-toggle
+        aria-controls="primary-nav"
+        aria-expanded="false"
+        aria-label="메뉴 열기"
+      >
+        <span class="nav-toggle-box" aria-hidden="true">
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+          <span class="nav-toggle-bar"></span>
+        </span>
+      </button>
       <button
         class="theme-toggle"
         type="button"
@@ -51,3 +65,55 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     </div>
   </div>
 </header>
+
+<script is:inline>
+  (() => {
+    const toggle = document.querySelector("[data-nav-toggle]");
+    const nav = document.getElementById("primary-nav");
+    if (!toggle || !nav) return;
+
+    const QUERY = "(max-width: 720px)";
+    const mq = window.matchMedia(QUERY);
+
+    const setOpen = (open) => {
+      nav.classList.toggle("is-open", open);
+      document.body.classList.toggle("nav-open", open);
+      toggle.setAttribute("aria-expanded", open ? "true" : "false");
+      toggle.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
+    };
+
+    toggle.addEventListener("click", (e) => {
+      e.stopPropagation();
+      setOpen(!nav.classList.contains("is-open"));
+    });
+
+    // Close after navigating from the menu.
+    nav.addEventListener("click", (e) => {
+      if (e.target instanceof Element && e.target.closest("a")) setOpen(false);
+    });
+
+    // Close on Escape.
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && nav.classList.contains("is-open")) {
+        setOpen(false);
+        toggle.focus();
+      }
+    });
+
+    // Close when clicking outside the menu.
+    document.addEventListener("click", (e) => {
+      if (!nav.classList.contains("is-open")) return;
+      const t = e.target;
+      if (t instanceof Node && !nav.contains(t) && t !== toggle && !toggle.contains(t)) {
+        setOpen(false);
+      }
+    });
+
+    // Reset state when leaving the mobile breakpoint.
+    const onChange = () => {
+      if (!mq.matches) setOpen(false);
+    };
+    if (mq.addEventListener) mq.addEventListener("change", onChange);
+    else mq.addListener(onChange);
+  })();
+</script>
