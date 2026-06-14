@@ -1153,6 +1153,39 @@ body.theme-dark .theme-icon-moon {
   font-size: var(--font-sm);
 }
 
+/* Embedded tweets (Notion embed/bookmark of a twitter.com/x.com status). */
+.content figure.tweet-embed {
+  margin: var(--space-4) 0;
+}
+
+.content figure.tweet-embed .twitter-tweet {
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+/* Mermaid diagrams (Notion `mermaid` code block). The base .content pre code
+   styling is reset so the rendered SVG sits on a clean, centered surface. */
+.content pre.mermaid {
+  margin: var(--space-4) 0;
+  padding: var(--space-4);
+  color: var(--muted);
+  background: var(--panel-soft);
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-md);
+  text-align: center;
+  overflow-x: auto;
+  line-height: normal;
+}
+
+.content pre.mermaid[data-processed] {
+  padding: var(--space-2);
+}
+
+.content pre.mermaid svg {
+  max-width: 100%;
+  height: auto;
+}
+
 .content .highlight {
   margin: var(--space-4) 0;
   border-radius: var(--radius-md);
