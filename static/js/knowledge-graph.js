@@ -1,9 +1,13 @@
 (() => {
   // Knowledge graph rendered the way namuori.net (the portfolio) does it:
-  // a STATIC, deterministic radial layout (user → posts → tags). There is no
-  // physics simulation — nodes never drift. Hovering only gently scales the
-  // nodes near the cursor and lights up the connected sub-graph, so it stays
-  // calm instead of jittering around.
+  // a STATIC, deterministic radial layout (user → posts → tags). Nodes never
+  // drift — only their glow gently twinkles and the focused sub-graph lights up,
+  // matching the portfolio's "neural" pulse. A continuous animation loop drives
+  // the twinkle AND guarantees the canvas paints as soon as it has a size (the
+  // old event-only draw could leave it blank until a hover/resize/refresh).
+
+  const TAU = Math.PI * 2;
+  const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   function readCssVar(name, fallback) {
     const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -86,7 +90,16 @@
       return 3.8 + Math.min(3.6, w * 0.9); // shared tags grow a little
     };
 
-    const nodes = rawNodes.map((n) => ({ ...n, level: levelOf(n.type), r: radiusFor(n), x: 0, y: 0 }));
+    const nodes = rawNodes.map((n) => ({
+      ...n,
+      level: levelOf(n.type),
+      r: radiusFor(n),
+      x: 0,
+      y: 0,
+      // per-node twinkle phase/speed so glows shimmer out of sync (calm, starlike)
+      phase: hashFraction(n.id, "twinkle") * TAU,
+      twspeed: 0.6 + hashFraction(n.id, "speed") * 0.7,
+    }));
     const nodeById = new Map(nodes.map((n) => [n.id, n]));
     const links = (data.links || [])
       .map((l) => ({ source: nodeById.get(l.source), target: nodeById.get(l.target), w: 1 }))
@@ -102,24 +115,38 @@
       incident.get(l.target.id).push(l);
     });
 
-    const mainNode = nodes.find((n) => n.type === "main") || null;
     const activeNode = nodes.find((n) => n.active) || null;
 
-    const state = { width: 0, height: 0, dpr: 1, pointer: null, hover: activeNode || null };
-    let rafPending = false;
+    const state = { width: 0, height: 0, dpr: 1, pointer: null, hover: activeNode || null, laidOut: false };
+
+    // Cache theme colors / font so the continuous loop never forces a style
+    // recalc per frame; refreshed on init and on the theme-change event.
+    let colors = getColors();
+    let fontFamily = getFontFamily();
+    const refreshTheme = () => {
+      colors = getColors();
+      fontFamily = getFontFamily();
+    };
 
     // bend amount per edge — deterministic, gives the soft "neural" curve
     const bendFor = (l) => (hashFraction(`${l.source.id}-${l.target.id}`, "bend") - 0.5);
 
     const resize = () => {
       const rect = root.getBoundingClientRect();
-      state.width = Math.max(rect.width, 1);
-      state.height = Math.max(rect.height, 1);
-      state.dpr = window.devicePixelRatio || 1;
-      canvas.width = Math.floor(state.width * state.dpr);
-      canvas.height = Math.floor(state.height * state.dpr);
-      canvas.style.width = `${state.width}px`;
-      canvas.style.height = `${state.height}px`;
+      const w = Math.max(rect.width, 1);
+      const h = Math.max(rect.height, 1);
+      const dpr = window.devicePixelRatio || 1;
+      const changed = w !== state.width || h !== state.height || dpr !== state.dpr;
+      state.width = w;
+      state.height = h;
+      state.dpr = dpr;
+      if (changed) {
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = `${w}px`;
+        canvas.style.height = `${h}px`;
+      }
+      return changed;
     };
 
     // --- static radial layout (ported from the portfolio) --------------------
@@ -181,6 +208,7 @@
           });
         });
       }
+      state.laidOut = true;
     };
 
     // pointer proximity → gentle per-node scale (the calm "breathing" effect)
@@ -191,9 +219,9 @@
       return clamp(1 - dist / reach, 0, 1);
     };
 
-    const draw = () => {
-      const colors = getColors();
-      const fontFamily = getFontFamily();
+    const draw = (now) => {
+      if (!state.laidOut) return;
+      const t = prefersReduced ? 0 : now / 1000; // seconds
       const focus = state.hover;
       const connected = adj.get(focus?.id) || null;
 
@@ -215,23 +243,25 @@
       for (let gy = 9; gy < state.height; gy += 18) {
         for (let gx = 9; gx < state.width; gx += 18) {
           ctx.beginPath();
-          ctx.arc(gx, gy, 0.75, 0, Math.PI * 2);
+          ctx.arc(gx, gy, 0.75, 0, TAU);
           ctx.fill();
         }
       }
       ctx.globalAlpha = 1;
 
-      // faint orbit rings
+      // faint orbit rings — dash slowly flows around (portfolio's neuralDrift)
       ctx.strokeStyle = colors.orbit;
       ctx.setLineDash([2, 8]);
       [0.27, 0.43].forEach((f, i) => {
         ctx.beginPath();
         ctx.globalAlpha = i === 0 ? 0.16 : 0.12;
         ctx.lineWidth = 0.8;
-        ctx.arc(cx, cy, Math.min(state.width, state.height) * f, 0, Math.PI * 2);
+        ctx.lineDashOffset = i === 0 ? -t * 6 : t * 4;
+        ctx.arc(cx, cy, Math.min(state.width, state.height) * f, 0, TAU);
         ctx.stroke();
       });
       ctx.setLineDash([]);
+      ctx.lineDashOffset = 0;
       ctx.globalAlpha = 1;
 
       // curved links
@@ -262,6 +292,19 @@
       });
       ctx.globalAlpha = 1;
 
+      // focus ripple — an expanding ring on the focused node (neuralPulse)
+      if (focus && !prefersReduced) {
+        const cycle = (now % 2400) / 2400; // 0..1
+        const baseR = focus.r * (1 + influenceOf(focus) * 0.16);
+        ctx.beginPath();
+        ctx.arc(focus.x, focus.y, baseR + 3 + cycle * 14, 0, TAU);
+        ctx.strokeStyle = colors.glow;
+        ctx.globalAlpha = (1 - cycle) * 0.3;
+        ctx.lineWidth = 1.1;
+        ctx.stroke();
+        ctx.globalAlpha = 1;
+      }
+
       // nodes
       nodes.forEach((node) => {
         const influence = influenceOf(node);
@@ -269,24 +312,27 @@
         const r = node.r * scale;
         const lit = !focus || connected.has(node.id);
         const isFocus = focus?.id === node.id;
+        // twinkle: 0..1 glow shimmer, calm amplitude, out of sync per node
+        const twinkle = prefersReduced ? 0 : 0.5 + 0.5 * Math.sin(t * node.twspeed + node.phase);
         let fill = colors.post;
         if (node.type === "main") fill = colors.profile;
         else if (node.type === "tag") fill = colors.tag;
 
-        // glow halo (grows softly near the cursor / when focused)
-        const haloAlpha = Math.max(isFocus ? 0.2 : 0.05, influence * 0.16);
+        // glow halo — breathes near the cursor / when focused, and softly twinkles
+        const haloAlpha = Math.max(isFocus ? 0.2 : 0.05, influence * 0.16) + twinkle * 0.06 * (lit ? 1 : 0.4);
         if (haloAlpha > 0.02) {
           ctx.beginPath();
-          ctx.arc(node.x, node.y, r + (isFocus ? 8 : 4), 0, Math.PI * 2);
+          ctx.arc(node.x, node.y, r + (isFocus ? 8 : 4) + twinkle * 1.6, 0, TAU);
           ctx.fillStyle = colors.glow;
           ctx.globalAlpha = haloAlpha;
           ctx.fill();
         }
 
         ctx.beginPath();
-        ctx.arc(node.x, node.y, r, 0, Math.PI * 2);
+        ctx.arc(node.x, node.y, r, 0, TAU);
         ctx.fillStyle = fill;
-        ctx.globalAlpha = lit ? Math.min(0.96, 0.74 + influence * 0.12) : Math.max(0.2, influence * 0.4);
+        const baseAlpha = lit ? Math.min(0.96, 0.74 + influence * 0.12) : Math.max(0.2, influence * 0.4);
+        ctx.globalAlpha = clamp(baseAlpha + (lit ? twinkle * 0.05 : 0), 0, 1);
         ctx.fill();
         ctx.lineWidth = isFocus ? 1.5 : 0.85;
         ctx.strokeStyle = isFocus ? colors.edgeLit : colors.bg;
@@ -318,14 +364,28 @@
       });
     };
 
-    const requestDraw = () => {
-      if (rafPending) return;
-      rafPending = true;
-      requestAnimationFrame(() => {
-        rafPending = false;
-        draw();
-      });
+    // --- animation loop ------------------------------------------------------
+    let rafId = 0;
+    let running = false;
+    let onScreen = false;
+
+    const frame = (now) => {
+      if (!running) return;
+      draw(now);
+      rafId = requestAnimationFrame(frame);
     };
+    const startLoop = () => {
+      if (running || prefersReduced || document.hidden || !onScreen) return;
+      running = true;
+      rafId = requestAnimationFrame(frame);
+    };
+    const stopLoop = () => {
+      running = false;
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = 0;
+    };
+    // Single paint for the static / reduced-motion path (and as a safety net).
+    const paintOnce = () => requestAnimationFrame((now) => draw(now));
 
     const toLocal = (clientX, clientY) => {
       const rect = canvas.getBoundingClientRect();
@@ -351,13 +411,13 @@
       const hit = pickNode(p.x, p.y);
       state.hover = hit || activeNode || null;
       canvas.style.cursor = hit && hit.url ? "pointer" : "default";
-      requestDraw();
+      if (!running) paintOnce();
     };
 
     const onPointerLeave = () => {
       state.pointer = null;
       state.hover = activeNode || null;
-      requestDraw();
+      if (!running) paintOnce();
     };
 
     const onClick = (event) => {
@@ -366,29 +426,61 @@
       if (hit && hit.url) window.location.href = hit.url;
     };
 
-    const rebuild = () => {
-      resize();
-      layout();
-      draw();
+    const ensureLayout = () => {
+      const changed = resize();
+      if (changed || !state.laidOut) layout();
+      return changed;
     };
 
-    rebuild();
+    // Initial build + paint. The loop (or paintOnce) guarantees the first paint
+    // happens once the element actually has a size — no hover/refresh needed.
+    ensureLayout();
+    paintOnce();
+
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerleave", onPointerLeave);
     canvas.addEventListener("click", onClick);
 
-    const observer = new ResizeObserver(() => {
-      const prevW = state.width;
-      const prevH = state.height;
-      resize();
-      if (state.width !== prevW || state.height !== prevH) {
-        layout();
-        draw();
-      }
+    const resizeObserver = new ResizeObserver(() => {
+      if (ensureLayout() && !running) paintOnce();
     });
-    observer.observe(root);
+    resizeObserver.observe(root);
 
-    window.addEventListener("yskim:theme-change", () => draw());
+    // Run the loop only while the graph is on screen (saves CPU/battery).
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          onScreen = entry.isIntersecting;
+          if (onScreen) {
+            ensureLayout();
+            startLoop();
+            if (!running) paintOnce();
+          } else {
+            stopLoop();
+          }
+        }
+      },
+      { threshold: 0 },
+    );
+    io.observe(root);
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) stopLoop();
+      else startLoop();
+    });
+
+    // Re-resolve theme colors and repaint when the user toggles light/dark.
+    window.addEventListener("yskim:theme-change", () => {
+      refreshTheme();
+      if (!running) paintOnce();
+    });
+
+    // Cold-load safety net: fonts/CSS may settle after the deferred script runs.
+    window.addEventListener("load", () => {
+      refreshTheme();
+      ensureLayout();
+      if (!running) paintOnce();
+    });
   }
 
   function boot() {
