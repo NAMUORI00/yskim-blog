@@ -1,0 +1,11 @@
+name = "yskim-blog"
+compatibility_date = "2026-06-08"
+pages_build_output_dir = "dist"
+
+# KV cache for the Notion media proxy (functions/media/[id].js). Stores resolved
+# fresh file URLs with a short TTL so the Notion API is queried at most once per
+# media block per ~45 minutes, shared across all visitors. Free tier covers a
+# blog easily. NOTION_TOKEN is provided separately as a Pages secret.
+[[kv_namespaces]]
+binding = "MEDIA_CACHE"
+id = "e0843527aa4d44ecac42e4084b7b5285"
