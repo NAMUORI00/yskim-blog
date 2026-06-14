@@ -1230,7 +1230,7 @@ body.theme-dark .chroma .s {
   position: relative;
   width: 100%;
   aspect-ratio: 1 / 1;
-  max-height: 240px;
+  max-height: 300px;
   background: var(--panel-soft);
   border: 1px solid var(--line-soft);
   border-radius: var(--radius-sm);
@@ -1378,6 +1378,51 @@ body.theme-dark .chroma .s {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Large desktop (16:9 ~1080p and up): widen the shell and scale type/spacing
+   so the main content fills the viewport instead of floating in a narrow column. */
+@media (min-width: 1281px) {
+  :root {
+    --shell-max: 1500px;
+    --content-width: 48rem;
+    --sidebar-width: 300px;
+  }
+
+  html {
+    font-size: 17px;
+  }
+
+  .site-shell {
+    gap: var(--space-7);
+    padding: var(--space-7) var(--space-5) var(--space-8);
+  }
+}
+
+/* Wide / QHD (16:9 1440p and up): more room and a larger reading column. */
+@media (min-width: 1700px) {
+  :root {
+    --shell-max: 1660px;
+    --content-width: 52rem;
+    --rail-width: 240px;
+    --sidebar-width: 320px;
+  }
+
+  html {
+    font-size: 18px;
+  }
+
+  .site-shell {
+    gap: var(--space-8);
+  }
+}
+
+/* Ultra-wide: cap the shell so lines never get uncomfortably long. */
+@media (min-width: 2100px) {
+  :root {
+    --shell-max: 1820px;
+    --content-width: 56rem;
+  }
 }
 
 /* Laptop: rail + content, sidebar becomes a full-width band below. */

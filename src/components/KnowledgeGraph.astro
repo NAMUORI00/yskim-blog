@@ -1,8 +1,8 @@
 ---
-import { SITE, UI } from "../config";
+import { SITE } from "../config";
 import { getPublishedPosts, postUrl, tagUrl, slugifyTerm } from "../lib/posts";
 
-type Node = { id: string; label: string; type: string; url: string };
+type Node = { id: string; label: string; type: string; url: string; active?: boolean };
 type Link = { source: string; target: string };
 
 const nodes: Node[] = [];
@@ -16,31 +16,29 @@ const addNode = (n: Node) => {
 };
 
 const allPosts = await getPublishedPosts();
-const match = Astro.url.pathname.match(/^\/posts\/([^/]+)\/?$/);
-const current = match
-  ? allPosts.find((p) => p.data.slug === decodeURIComponent(match[1]))
-  : undefined;
 
-if (current) {
-  const mainId = `post:${current.data.slug}`;
-  addNode({ id: mainId, label: current.data.title, type: "main", url: postUrl(current.data.slug) });
-  for (const tag of current.data.tags) {
+// 현재 보고 있는 글(있으면 그래프에서 강조)
+const match = Astro.url.pathname.match(/^\/posts\/([^/]+)\/?$/);
+const currentSlug = match ? decodeURIComponent(match[1]) : undefined;
+
+// 항상 동일한 3단 구조: 닉네임 → 블로그글 → 글의 태그
+const rootId = `profile:${slugifyTerm(SITE.handle)}`;
+addNode({ id: rootId, label: SITE.handle, type: "main", url: "/" });
+
+for (const post of allPosts) {
+  const postId = `post:${post.data.slug}`;
+  addNode({
+    id: postId,
+    label: post.data.title,
+    type: "post",
+    url: postUrl(post.data.slug),
+    active: post.data.slug === currentSlug,
+  });
+  links.push({ source: rootId, target: postId });
+  for (const tag of post.data.tags) {
     const tagId = `tag:${slugifyTerm(tag)}`;
     addNode({ id: tagId, label: tag, type: "tag", url: tagUrl(tag) });
-    links.push({ source: mainId, target: tagId });
-  }
-} else {
-  const rootId = `profile:${slugifyTerm(SITE.handle)}`;
-  addNode({ id: rootId, label: SITE.handle, type: "main", url: "/" });
-  for (const post of allPosts.slice(0, 6)) {
-    const postId = `post:${post.data.slug}`;
-    addNode({ id: postId, label: post.data.title, type: "post", url: postUrl(post.data.slug) });
-    links.push({ source: rootId, target: postId });
-    for (const tag of post.data.tags) {
-      const tagId = `tag:${slugifyTerm(tag)}`;
-      addNode({ id: tagId, label: tag, type: "tag", url: tagUrl(tag) });
-      links.push({ source: postId, target: tagId });
-    }
+    links.push({ source: postId, target: tagId });
   }
 }
 
