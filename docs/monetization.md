@@ -20,11 +20,13 @@
 ### 연결 방법
 
 1. <https://adsense.google.com> 가입 → 사이트 `blog.namuori.net` 추가.
-2. 발급된 게시자 ID(`ca-pub-XXXXXXXXXXXXXXXX`)를 `hugo.yaml`에 입력:
+2. 발급된 게시자 ID(`ca-pub-XXXXXXXXXXXXXXXX`)를 `src/config.ts`에 입력:
 
-   ```yaml
-   params:
-     adsensePublisherId: "ca-pub-XXXXXXXXXXXXXXXX"
+   ```ts
+   export const SITE = {
+     // ...
+     adsensePublisherId: "ca-pub-XXXXXXXXXXXXXXXX",
+   };
    ```
 
    → ID를 넣으면 `<head>`에 AdSense 로더가 자동 삽입됩니다(비우면 광고 OFF).
@@ -36,11 +38,18 @@
      google.com, pub-XXXXXXXXXXXXXXXX, DIRECT, f08c47fec0942fa0
      ```
 
-4. 자동 광고를 쓰거나, 글 중간에 수동 광고를 넣으려면 본문에 숏코드 사용:
+4. 광고 노출 방식:
+   - **자동 광고(권장)**: 위 게시자 ID만 넣으면 AdSense 자동 광고가 동작합니다.
+     글 본문은 Notion에서 작성하므로 자동 광고가 가장 실용적입니다.
+   - **고정 슬롯**: 특정 위치에 광고를 고정하려면 레이아웃(`.astro`)에서
+     `AdSlot` 컴포넌트를 사용합니다(예: 글 본문 아래).
 
-   ```text
-   {{</* adsense slot="1234567890" */>}}
-   ```
+     ```astro
+     ---
+     import AdSlot from "../components/AdSlot.astro";
+     ---
+     <AdSlot slot="1234567890" />
+     ```
 
    (`slot`은 AdSense에서 만든 광고 단위 ID)
 
@@ -50,19 +59,10 @@
 
 1. <https://partners.coupang.com> 가입·승인.
 2. 장비·도서·도구 리뷰 글에 제휴 링크 삽입.
-3. **고지 의무**: 제휴 링크가 있는 글 상단에 고지 숏코드를 넣습니다:
-
-   ```text
-   {{</* affiliate */>}}
-   ```
-
-   기본 문구가 출력되며, 커스텀 문구도 가능:
-
-   ```text
-   {{</* affiliate "이 글은 쿠팡 파트너스 활동으로 수수료를 받을 수 있습니다." */>}}
-   ```
-
-   (사이트 전역 고지는 이미 `면책조항` 페이지에 포함되어 있습니다.)
+3. **고지 의무**: Notion 글에 **`affiliate`(또는 `제휴`) 태그**를 추가하면 글 상단에
+   제휴 고지가 **자동으로 노출**됩니다. Notion에서 태그만 달면 되므로 별도 편집이
+   필요 없습니다(`src/components/AffiliateDisclosure.astro`, 문구는 거기서 수정 가능).
+   - 사이트 전역 고지는 이미 `면책조항` 페이지에 포함되어 있습니다.
 
 ### 글로벌 제휴 (개발자 친화)
 
