@@ -1,0 +1,16 @@
+{{- /*
+  In-article AdSense unit.
+  Usage in a post: {{< adsense slot="1234567890" >}}
+  Requires params.adsensePublisherId in hugo.yaml. Renders nothing if unset.
+*/ -}}
+{{- with site.Params.adsensePublisherId -}}
+<div class="ad-slot" aria-label="광고">
+  <ins class="adsbygoogle"
+       style="display:block"
+       data-ad-client="{{ . }}"
+       data-ad-slot="{{ $.Get "slot" }}"
+       data-ad-format="{{ $.Get "format" | default "auto" }}"
+       data-full-width-responsive="true"></ins>
+  <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+</div>
+{{- end -}}
