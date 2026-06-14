@@ -4,9 +4,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-$hugoYamlPath = Join-Path $Root "hugo.yaml"
 $dataDir = Join-Path $Root "data"
 $outputPath = Join-Path $dataDir "github.yaml"
+$githubUsername = if ($env:GITHUB_PROFILE_USERNAME) { $env:GITHUB_PROFILE_USERNAME } else { "NAMUORI00" }
 
 function Get-YamlQuotedString([string]$Value) {
   if ($null -eq $Value) {
@@ -16,31 +16,15 @@ function Get-YamlQuotedString([string]$Value) {
   return """$escaped"""
 }
 
-function Read-GithubUsername([string]$Path) {
-  $content = Get-Content -LiteralPath $Path -Raw
-  if ($content -match "(?m)^\s+username:\s*(\S+)\s*$") {
-    return $Matches[1]
-  }
-  return "NAMUORI00"
-}
-
-function Read-ProfileFallback([string]$Path) {
-  $content = Get-Content -LiteralPath $Path -Raw
-  $fallback = @{
-    login = "NAMUORI00"
-    name = "NAMUORI00"
+function Read-ProfileFallback([string]$Username) {
+  # Used only if the GitHub API call fails. Live values come from the API.
+  return @{
+    login = $Username
+    name = $Username
     bio = ""
-    avatar_url = "https://github.com/NAMUORI00.png"
-    html_url = "https://github.com/NAMUORI00"
+    avatar_url = "https://github.com/$Username.png"
+    html_url = "https://github.com/$Username"
   }
-
-  if ($content -match "(?m)^\s+login:\s*(\S+)\s*$") { $fallback.login = $Matches[1] }
-  if ($content -match "(?m)^\s+name:\s*(.+?)\s*$") { $fallback.name = $Matches[1].Trim().Trim('"') }
-  if ($content -match "(?m)^\s+bio:\s*(.+?)\s*$") { $fallback.bio = $Matches[1].Trim().Trim('"') }
-  if ($content -match "(?m)^\s+avatar_url:\s*(\S+)\s*$") { $fallback.avatar_url = $Matches[1] }
-  if ($content -match "(?m)^\s+html_url:\s*(\S+)\s*$") { $fallback.html_url = $Matches[1] }
-
-  return $fallback
 }
 
 function Write-GithubData([hashtable]$Profile) {
@@ -60,8 +44,8 @@ function Write-GithubData([hashtable]$Profile) {
   [System.IO.File]::WriteAllText($outputPath, $yaml, [System.Text.UTF8Encoding]::new($false))
 }
 
-$username = Read-GithubUsername $hugoYamlPath
-$fallback = Read-ProfileFallback $hugoYamlPath
+$username = $githubUsername
+$fallback = Read-ProfileFallback $githubUsername
 
 $headers = @{
   Accept = "application/vnd.github+json"
