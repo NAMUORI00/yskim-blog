@@ -14,15 +14,26 @@
       nodeStroke: readCssVar("--muted", "#71786f"),
       mainFill: readCssVar("--accent", "#305c47"),
       mainStroke: readCssVar("--accent-strong", "#162f25"),
+      postFill: readCssVar("--panel", "#ffffff"),
+      postStroke: readCssVar("--muted", "#71786f"),
+      activeFill: readCssVar("--accent-strong", "#162f25"),
       tagFill: readCssVar("--accent-soft", "#edf3ed"),
       tagStroke: readCssVar("--accent-border", "#d9e0d4"),
+      text: readCssVar("--text", "#23271f"),
+      textMuted: readCssVar("--muted", "#71786f"),
+      labelBg: readCssVar("--panel", "#ffffff"),
     };
   }
 
-  function radiusForType(type) {
-    if (type === "main") return 10;
-    if (type === "tag") return 6;
-    return 7;
+  function getFontFamily() {
+    const value = getComputedStyle(document.body).fontFamily;
+    return value || "system-ui, sans-serif";
+  }
+
+  function radiusForType(node) {
+    if (node.type === "main") return 11;
+    if (node.type === "tag") return 5.5;
+    return node.active ? 9 : 7;
   }
 
   function parseData(root) {
@@ -41,6 +52,11 @@
     }
   }
 
+  function truncate(label, max) {
+    if (!label) return "";
+    return label.length > max ? `${label.slice(0, max - 1)}…` : label;
+  }
+
   function initGraph(root) {
     const canvas = root.querySelector(".knowledge-graph-canvas");
     if (!canvas) return;
@@ -54,7 +70,7 @@
       vy: 0,
       fx: null,
       fy: null,
-      r: radiusForType(node.type),
+      r: radiusForType(node),
       index,
     }));
     const nodeById = new Map(nodes.map((node) => [node.id, node]));
@@ -67,11 +83,19 @@
 
     if (nodes.length === 0) return;
 
+    // 각 노드의 이웃(호버 강조 + 라벨용)
+    const neighbors = new Map(nodes.map((node) => [node.id, new Set([node.id])]));
+    links.forEach((link) => {
+      neighbors.get(link.source.id).add(link.target.id);
+      neighbors.get(link.target.id).add(link.source.id);
+    });
+
     const mainNode = nodes.find((node) => node.type === "main");
     if (mainNode) {
       mainNode.fx = 0;
       mainNode.fy = 0;
     }
+    const activeNode = nodes.find((node) => node.active);
 
     const state = {
       width: 0,
@@ -79,7 +103,7 @@
       dpr: 1,
       alpha: 1,
       dragging: null,
-      hover: null,
+      hover: activeNode || null,
       pointer: { x: 0, y: 0, active: false },
       moved: false,
     };
@@ -97,52 +121,54 @@
       ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
     };
 
+    // 동심원 배치: 닉네임(중앙) → 글(안쪽 링) → 태그(바깥 링)
     const placeInitial = () => {
       const size = Math.min(state.width, state.height);
-      const children = nodes.filter((node) => node.type !== "main");
+      const posts = nodes.filter((node) => node.type === "post");
+      const tags = nodes.filter((node) => node.type === "tag");
+      const others = nodes.filter(
+        (node) => node.type !== "post" && node.type !== "tag" && node.type !== "main",
+      );
 
       if (mainNode) {
         mainNode.x = 0;
         mainNode.y = 0;
-        const posts = children.filter((node) => node.type === "post");
-        const tags = children.filter((node) => node.type === "tag");
-        const others = children.filter((node) => node.type !== "post" && node.type !== "tag");
-        const placeRing = (items, ring, offset = -Math.PI / 2) => {
-          items.forEach((node, index) => {
-            const angle = (index / Math.max(items.length, 1)) * Math.PI * 2 + offset;
-            node.x = Math.cos(angle) * ring;
-            node.y = Math.sin(angle) * ring;
-          });
-        };
-
-        placeRing(posts, size * 0.27);
-        placeRing(tags, posts.length ? size * 0.45 : size * 0.36, -Math.PI / 2 + Math.PI / Math.max(tags.length, 2));
-        placeRing(others, size * 0.4);
-        children.forEach((node, index) => {
-          if (node.x !== 0 || node.y !== 0) return;
-          const angle = (index / Math.max(children.length, 1)) * Math.PI * 2 - Math.PI / 2;
-          node.x = Math.cos(angle) * size * 0.42;
-          node.y = Math.sin(angle) * size * 0.42;
-        });
-        return;
       }
 
-      const spread = size * 0.4;
-      nodes.forEach((node, index) => {
-        const angle = (index / nodes.length) * Math.PI * 2;
-        node.x = Math.cos(angle) * spread;
-        node.y = Math.sin(angle) * spread;
+      const placeRing = (items, ring, offset = -Math.PI / 2) => {
+        const count = Math.max(items.length, 1);
+        items.forEach((node, index) => {
+          const angle = (index / count) * Math.PI * 2 + offset;
+          node.x = Math.cos(angle) * ring;
+          node.y = Math.sin(angle) * ring;
+        });
+      };
+
+      placeRing(posts, size * 0.26);
+      // 태그는 연결된 글 근처에서 출발하도록 글 각도를 따라 배치
+      const postAngle = new Map();
+      posts.forEach((node, index) => {
+        postAngle.set(node.id, (index / Math.max(posts.length, 1)) * Math.PI * 2 - Math.PI / 2);
       });
+      tags.forEach((node, index) => {
+        const link = links.find((l) => l.target.id === node.id && l.source.type === "post");
+        const base = link ? postAngle.get(link.source.id) : (index / Math.max(tags.length, 1)) * Math.PI * 2;
+        const jitter = ((index % 3) - 1) * 0.18;
+        const angle = (base ?? 0) + jitter;
+        node.x = Math.cos(angle) * size * 0.44;
+        node.y = Math.sin(angle) * size * 0.44;
+      });
+      placeRing(others, size * 0.4);
     };
 
     const simulate = () => {
       const size = Math.min(state.width, state.height);
       const centerStrength = mainNode ? 0.008 : 0.02;
-      const chargeStrength = -780;
-      const hubLinkDistance = size * 0.4;
-      const peerLinkDistance = size * 0.28;
-      const linkStrength = 0.08;
-      const collisionPad = 10;
+      const chargeStrength = -640;
+      const hubLinkDistance = size * 0.3;
+      const tagLinkDistance = size * 0.2;
+      const linkStrength = 0.085;
+      const collisionPad = 9;
       const pointerStrength = 0.018;
 
       for (let i = 0; i < nodes.length; i += 1) {
@@ -172,8 +198,7 @@
         let dy = target.y - source.y;
         let dist = Math.hypot(dx, dy) || 0.01;
         const touchesHub = source.type === "main" || target.type === "main";
-        const connectsTag = source.type === "tag" || target.type === "tag";
-        const linkDistance = touchesHub ? hubLinkDistance : connectsTag ? peerLinkDistance : size * 0.22;
+        const linkDistance = touchesHub ? hubLinkDistance : tagLinkDistance;
         const force = (dist - linkDistance) * linkStrength;
         dx = (dx / dist) * force;
         dy = (dy / dist) * force;
@@ -245,18 +270,11 @@
     const draw = () => {
       const ctx = canvas.getContext("2d");
       const colors = getColors();
+      const fontFamily = getFontFamily();
       const cx = state.width / 2;
       const cy = state.height / 2;
       const hoverId = state.hover?.id;
-      const linked = new Set();
-
-      if (hoverId) {
-        linked.add(hoverId);
-        links.forEach((link) => {
-          if (link.source.id === hoverId) linked.add(link.target.id);
-          if (link.target.id === hoverId) linked.add(link.source.id);
-        });
-      }
+      const linked = hoverId ? neighbors.get(hoverId) : null;
 
       ctx.clearRect(0, 0, state.width, state.height);
       ctx.save();
@@ -268,14 +286,14 @@
         ctx.moveTo(link.source.x, link.source.y);
         ctx.lineTo(link.target.x, link.target.y);
         ctx.strokeStyle = active ? colors.edgeHover : colors.edge;
-        ctx.globalAlpha = active ? 1 : 0.75;
-        ctx.lineWidth = active ? 1.6 : 1.2;
+        ctx.globalAlpha = hoverId ? (active ? 0.95 : 0.18) : 0.7;
+        ctx.lineWidth = active ? 1.7 : 1.1;
         ctx.stroke();
       });
 
       ctx.globalAlpha = 1;
       nodes.forEach((node) => {
-        const active = !hoverId || linked.has(node.id);
+        const isLinked = !hoverId || linked.has(node.id);
         let fill = colors.nodeFill;
         let stroke = colors.nodeStroke;
         if (node.type === "main") {
@@ -284,15 +302,47 @@
         } else if (node.type === "tag") {
           fill = colors.tagFill;
           stroke = colors.tagStroke;
+        } else if (node.active) {
+          fill = colors.activeFill;
+          stroke = colors.mainStroke;
+        } else {
+          fill = colors.postFill;
+          stroke = colors.postStroke;
         }
         ctx.beginPath();
         ctx.arc(node.x, node.y, node.r, 0, Math.PI * 2);
         ctx.fillStyle = fill;
-        ctx.globalAlpha = active ? 1 : 0.28;
+        ctx.globalAlpha = isLinked ? 1 : 0.22;
         ctx.fill();
         ctx.strokeStyle = stroke;
-        ctx.lineWidth = active && node.id === hoverId ? 2 : 1.4;
+        ctx.lineWidth = node.id === hoverId ? 2.4 : node.active ? 2 : 1.4;
         ctx.stroke();
+      });
+
+      // 라벨: 닉네임/현재 글은 항상, 그 외엔 호버한 노드와 그 이웃만 (옵시디언 스타일)
+      ctx.globalAlpha = 1;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      nodes.forEach((node) => {
+        const showAlways = node.type === "main" || node.active;
+        const showOnHover = hoverId && linked.has(node.id);
+        if (!showAlways && !showOnHover) return;
+
+        const emphasized = node.id === hoverId || node.type === "main" || node.active;
+        const fontSize = node.type === "main" ? 12 : 10.5;
+        ctx.font = `${emphasized ? "600" : "500"} ${fontSize}px ${fontFamily}`;
+        const text = truncate(node.label, node.type === "tag" ? 12 : 18);
+        const ty = node.y + node.r + 3;
+
+        // 가독성용 외곽선
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = colors.labelBg;
+        ctx.globalAlpha = 0.85;
+        ctx.strokeText(text, node.x, ty);
+
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = emphasized ? colors.text : colors.textMuted;
+        ctx.fillText(text, node.x, ty);
       });
 
       ctx.restore();
@@ -330,7 +380,7 @@
         return;
       }
 
-      state.hover = pickNode(point.x, point.y);
+      state.hover = pickNode(point.x, point.y) || activeNode || null;
       canvas.style.cursor = state.hover?.url ? "pointer" : "grab";
     };
 
@@ -370,7 +420,7 @@
 
     const onPointerLeave = () => {
       state.pointer.active = false;
-      if (!state.dragging) state.hover = null;
+      if (!state.dragging) state.hover = activeNode || null;
     };
 
     const tick = () => {
@@ -381,7 +431,7 @@
 
     resize();
     placeInitial();
-    for (let i = 0; i < (reducedMotion ? 1 : 200); i += 1) simulate();
+    for (let i = 0; i < (reducedMotion ? 1 : 240); i += 1) simulate();
     draw();
 
     canvas.addEventListener("pointermove", onPointerMove);
