@@ -1,6 +1,16 @@
+# Example bindings reference. The active config is wrangler.toml (committed),
+# which already defines the MEDIA_CACHE KV binding for the media proxy.
+#
+# To enable anonymous comments, add the D1 binding below to wrangler.toml
+# (database IDs are not secrets and may be committed).
+
 name = "yskim-blog"
 compatibility_date = "2026-06-08"
-pages_build_output_dir = "public"
+pages_build_output_dir = "dist"
+
+[[kv_namespaces]]
+binding = "MEDIA_CACHE"
+id = "replace-with-real-kv-namespace-id"
 
 [[d1_databases]]
 binding = "COMMENTS_DB"

@@ -7,7 +7,7 @@ pipeline.
 
 ## Branch contract
 
-- `main`: source branch for the Hugo project, tests, scripts, functions, and
+- `main`: source branch for the Astro project, tests, scripts, functions, and
   docs.
 - `production`: generated branch containing public Notion-derived content and
   generated images. GitHub Actions updates this branch before each production
@@ -18,14 +18,14 @@ The workflow deploys with `--branch "${PUBLISH_BRANCH}"`, which defaults to
 
 ## Cloudflare dashboard settings
 
-- Framework preset: **None**
+- Framework preset: **None** (build runs in GitHub Actions, not Cloudflare)
 - Build command: leave empty
-- Build output directory: leave empty or `public` (ignored when deploying from
+- Build output directory: leave empty or `dist` (ignored when deploying from
   Actions)
 - Production branch: `production`
 - Native GitHub builds: disconnected or disabled
 
-GitHub Actions builds the site, uploads `public/`, commits generated source
+GitHub Actions builds the Astro site, uploads `dist/`, commits generated source
 content to `production`, and deploys with the pinned Wrangler CLI from
 `package-lock.json`.
 
@@ -52,6 +52,10 @@ Register these repository variables in the same settings area:
 | `NOTION_STATUS`      | Optional Notion status filter. Defaults to `Published`    |
 | `PUBLISH_BRANCH`     | Optional deploy branch. Defaults to `production`          |
 
+`NOTION_MEDIA_MODE` is an optional variable: `download` (default) self-hosts
+media, while `proxy` serves heavy media from Notion via the media Function.
+See `docs/media-hosting.md`.
+
 ## Deployment flow
 
 1. Push project changes to `main`, wait for the scheduled run, or start the
@@ -59,11 +63,11 @@ Register these repository variables in the same settings area:
 2. GitHub Actions fetches `Status=Published` Notion rows and regenerates
    content from scratch.
 3. The build validates generated Markdown, checks Pages Functions, fetches the
-   GitHub profile, and builds Hugo.
+   GitHub profile, and builds the Astro site.
 4. The `publish-production` job commits generated `content/`, `static/images/`,
    `static/files/`, `data/content-source.yaml`, and `data/github.yaml` to
    `production`.
-5. The `deploy` job deploys the built `public/` artifact to Cloudflare Pages as
+5. The `deploy` job deploys the built `dist/` artifact to Cloudflare Pages as
    the `production` branch.
 
 Pull requests run the build and validation jobs only. They do not update
@@ -87,7 +91,7 @@ The workflow can be started from GitHub Actions with these inputs:
 
 - Add the custom domain in Cloudflare Pages.
 - Point DNS to the Pages project as instructed by Cloudflare.
-- Update `baseURL` in `hugo.yaml` from `https://yskim-blog.pages.dev/` if the
+- Update `site` in `astro.config.mjs` from `https://blog.namuori.net` if the
   final domain changes.
 - Check canonical URLs, redirects, and the 404 page after the first production
   deploy.
@@ -103,7 +107,8 @@ Anonymous comments require Pages Functions bindings after the code is deployed:
 - `COMMENTS_AUTO_APPROVE`: optional plain variable. Keep unset or `false` for
   review-before-publish.
 
-Configure the D1 binding with `scripts/setup-cloudflare-comments.ps1`, or add
-it manually in the Cloudflare dashboard under the Pages project settings. A
-generated `wrangler.toml` may be committed because the D1 database ID is not a
-secret; do not commit Turnstile secrets or moderation tokens.
+The project already commits a `wrangler.toml` (with the `MEDIA_CACHE` KV binding
+for the media proxy). Add the `COMMENTS_DB` D1 binding there, or in the
+Cloudflare dashboard under the Pages project settings. Database IDs are not
+secrets and may be committed; do not commit Turnstile secrets or moderation
+tokens.
