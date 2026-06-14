@@ -1,5 +1,5 @@
 ---
-import { SITE } from "../config";
+import { SITE, ASSET_VERSION } from "../config";
 import { getPublishedPosts, postUrl, tagUrl, slugifyTerm } from "../lib/posts";
 
 type Node = { id: string; label: string; type: string; url: string; active?: boolean };
@@ -54,5 +54,5 @@ const hasGraph = nodes.length > 1;
       <canvas class="knowledge-graph-canvas" aria-hidden="true"></canvas>
     </div>
   </section>
-  <script src="/js/knowledge-graph.js" is:inline defer></script>
+  <script src={`/js/knowledge-graph.js?v=${ASSET_VERSION}`} is:inline defer></script>
 )}
