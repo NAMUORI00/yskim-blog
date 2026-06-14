@@ -107,7 +107,10 @@ export function rewriteMarkdownAssetUrls(markdown, replacements) {
 }
 
 export function assertNoUnsupportedGeneratedMarkdown(markdown, slug) {
-  if (/<(unknown|video|audio|pdf|file)\b|file:\/\//i.test(markdown)) {
+  // Video/audio/iframe embeds are supported and rendered as HTML. Genuinely
+  // unsupported artifacts (`<unknown>`, raw `<pdf>`/`<file>` tags) and any
+  // `file://` URL must never reach the published output.
+  if (/<(unknown|pdf|file)\b|file:\/\//i.test(markdown)) {
     throw new Error(`Unsupported Notion artifact remains after conversion for ${slug}.`);
   }
 }
@@ -286,7 +289,35 @@ function installCustomTransformers(n2m) {
       return "";
     }
     const caption = richTextToPlain(block.embed.caption);
+    const playerUrl = toPlayerEmbedUrl(url);
+    if (playerUrl) {
+      return videoEmbedTag(playerUrl, caption);
+    }
     return caption ? `[${caption}](${url})` : `<${url}>`;
+  });
+
+  n2m.setCustomTransformer("video", async (block) => {
+    const url = readObjectFileUrl(block?.video);
+    if (!url) {
+      return "";
+    }
+    const caption = richTextToPlain(block.video?.caption);
+    const playerUrl = toPlayerEmbedUrl(url);
+    if (playerUrl) {
+      return videoEmbedTag(playerUrl, caption);
+    }
+    // Notion-hosted upload or a direct video file: render a native player.
+    // The (temporary) URL is downloaded and rewritten to a local path later.
+    return videoFileTag(url, caption);
+  });
+
+  n2m.setCustomTransformer("audio", async (block) => {
+    const url = readObjectFileUrl(block?.audio);
+    if (!url) {
+      return "";
+    }
+    const caption = richTextToPlain(block.audio?.caption);
+    return audioFileTag(url, caption);
   });
 
   n2m.setCustomTransformer("callout", async (block) => {
@@ -300,6 +331,59 @@ export async function convertPageToMarkdown(n2m, pageId) {
   const markdownBlocks = await n2m.pageToMarkdown(pageId);
   const markdown = n2m.toMarkdownString(markdownBlocks);
   return typeof markdown === "string" ? markdown : markdown.parent ?? "";
+}
+
+const VIDEO_PROVIDERS = [
+  {
+    test: /(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/,
+    embed: (id) => `https://www.youtube.com/embed/${id}`,
+  },
+  {
+    test: /(?:player\.)?vimeo\.com\/(?:video\/)?(\d+)/,
+    embed: (id) => `https://player.vimeo.com/video/${id}`,
+  },
+];
+
+export function toPlayerEmbedUrl(url) {
+  if (typeof url !== "string") {
+    return null;
+  }
+  for (const provider of VIDEO_PROVIDERS) {
+    const match = url.match(provider.test);
+    if (match) {
+      return provider.embed(match[1]);
+    }
+  }
+  return null;
+}
+
+function escapeHtmlAttribute(value) {
+  return String(value ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/"/g, "&quot;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function captionHtml(caption) {
+  const text = String(caption ?? "").trim();
+  return text ? `\n  <figcaption>${escapeHtmlAttribute(text)}</figcaption>` : "";
+}
+
+// Player embeds (YouTube/Vimeo). The src is a clean provider URL with no
+// ampersands, so it is safe to leave unescaped for later URL matching.
+export function videoEmbedTag(playerUrl, caption) {
+  return `<figure class="video-embed">\n  <iframe src="${playerUrl}" title="${escapeHtmlAttribute(caption || "video")}" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>${captionHtml(caption)}\n</figure>`;
+}
+
+// Native media players. The raw (possibly temporary) URL is kept verbatim so the
+// asset downloader can match and rewrite it to a local path.
+export function videoFileTag(url, caption) {
+  return `<figure class="video-file">\n  <video controls preload="metadata" src="${url}"></video>${captionHtml(caption)}\n</figure>`;
+}
+
+export function audioFileTag(url, caption) {
+  return `<figure class="audio-file">\n  <audio controls preload="metadata" src="${url}"></audio>${captionHtml(caption)}\n</figure>`;
 }
 
 async function downloadAndRewriteAssets(markdown, post, root) {
@@ -318,7 +402,14 @@ async function downloadAndRewriteAssets(markdown, post, root) {
     replacements.set(url, localPath);
   }
 
-  const rewritten = rewriteMarkdownAssetUrls(markdown, replacements);
+  let rewritten = rewriteMarkdownAssetUrls(markdown, replacements);
+  // The Markdown rewriter only covers `![]()`/`[]()` syntax. Media players use
+  // HTML `src="..."` attributes, so rewrite any remaining mapped URLs directly.
+  for (const [url, localPath] of replacements) {
+    if (rewritten.includes(url)) {
+      rewritten = rewritten.split(url).join(localPath);
+    }
+  }
   if (hasTemporaryNotionUrl(rewritten)) {
     throw new Error(`Temporary Notion URL remains after asset rewrite for ${post.slug}.`);
   }
@@ -340,6 +431,12 @@ function collectRemoteMarkdownAssets(markdown) {
     if (hasTemporaryNotionUrl(url)) {
       assets.push({ url, kind: "file" });
     }
+  }
+
+  // Native media players emitted by the video/audio transformers. Download the
+  // referenced file (Notion-hosted uploads or direct media URLs) and self-host it.
+  for (const match of markdown.matchAll(/<(?:video|audio|source)\b[^>]*?\ssrc="(https?:\/\/[^"]+)"/gi)) {
+    assets.push({ url: match[1], kind: "file" });
   }
 
   return assets;
@@ -376,6 +473,14 @@ function extensionForAsset(url, contentType) {
     "image/gif": ".gif",
     "image/webp": ".webp",
     "image/svg+xml": ".svg",
+    "video/mp4": ".mp4",
+    "video/webm": ".webm",
+    "video/ogg": ".ogv",
+    "video/quicktime": ".mov",
+    "audio/mpeg": ".mp3",
+    "audio/ogg": ".oga",
+    "audio/wav": ".wav",
+    "audio/webm": ".weba",
   }[contentType.split(";")[0].trim().toLowerCase()];
   if (contentTypeExtension) {
     return contentTypeExtension;
