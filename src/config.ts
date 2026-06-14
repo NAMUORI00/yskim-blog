@@ -24,6 +24,11 @@ export const SITE = {
   adsensePublisherId: "",
 } as const;
 
+// Cache-busting token for static assets served from stable paths
+// (/css/*.css, /js/*.js). Recomputed on each build so returning visitors
+// always pick up fresh CSS/JS instead of a stale 4h-cached copy.
+export const ASSET_VERSION = String(Date.now());
+
 export const UI = {
   navHome: "홈",
   navPosts: "글",
