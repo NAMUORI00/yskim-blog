@@ -20,6 +20,9 @@ import {
   videoFileTag,
   mediaSrc,
   fileLinkTag,
+  fileAttachmentTag,
+  pdfEmbedTag,
+  collectRemoteMarkdownAssets,
 } from "../scripts/notion-content.mjs";
 
 const notionPage = {
@@ -170,6 +173,37 @@ test("fileLinkTag renders a download link", () => {
     fileLinkTag("/media/abc", "slides.pdf"),
     '<a class="file-attachment" href="/media/abc" download>slides.pdf</a>',
   );
+});
+
+test("fileAttachmentTag renders a download card with an extension badge", () => {
+  const html = fileAttachmentTag("/files/notion/post/report.xlsx", "report.xlsx", "분기 보고서");
+  assert.match(html, /class="file-figure"/);
+  assert.match(html, /class="file-attachment"/);
+  assert.ok(html.includes('href="/files/notion/post/report.xlsx"'));
+  assert.match(html, /<span class="file-attachment-icon"[^>]*>XLSX<\/span>/);
+  assert.match(html, /<span class="file-attachment-label">report\.xlsx<\/span>/);
+  assert.match(html, /<figcaption>분기 보고서<\/figcaption>/);
+});
+
+test("pdfEmbedTag renders an inline preview plus a download fallback", () => {
+  const url = "https://prod-files-secure.s3.us-west-2.amazonaws.com/slides.pdf?X-Amz-Expires=3600";
+  const html = pdfEmbedTag(url, "발표 자료", "slides.pdf");
+  assert.match(html, /class="pdf-embed"/);
+  assert.match(html, /<object class="pdf-frame" data="[^"]+" type="application\/pdf">/);
+  // Raw url is kept verbatim (in every occurrence) so the downloader can rewrite it.
+  assert.ok(html.includes(`data="${url}"`));
+  assert.ok(html.includes(`href="${url}"`));
+  assert.match(html, /class="file-attachment file-attachment--pdf"/);
+  assert.match(html, /<figcaption>발표 자료<\/figcaption>/);
+});
+
+test("collectRemoteMarkdownAssets self-hosts pdf/file attachment urls in download mode", () => {
+  const url = "https://prod-files-secure.s3.us-west-2.amazonaws.com/slides.pdf?X-Amz-Expires=3600";
+  const markdown = pdfEmbedTag(url, "", "slides.pdf");
+  const assets = collectRemoteMarkdownAssets(markdown, "download");
+  assert.ok(assets.some((a) => a.url === url && a.kind === "file"));
+  // Proxy mode emits /media/<id> links and must not try to download anything here.
+  assert.deepEqual(collectRemoteMarkdownAssets(markdown, "proxy"), []);
 });
 
 test("rewrites remote Markdown images to generated local paths", () => {

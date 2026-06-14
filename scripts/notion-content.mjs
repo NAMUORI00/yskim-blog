@@ -322,22 +322,31 @@ function installCustomTransformers(n2m, mediaMode = "download") {
     return audioFileTag(mediaSrc(block, node, mediaMode), caption);
   });
 
-  // File and PDF attachments: in proxy mode, serve Notion-uploaded files through
-  // the /media/<id> redirect Function. Otherwise fall back to the default
-  // notion-to-md handling (the download pipeline self-hosts them).
-  const attachmentTransformer = (type) => async (block) => {
-    const node = block?.[type];
-    if (!readObjectFileUrl(node)) {
+  // PDF blocks render as an inline preview with a download fallback; other file
+  // attachments render as a labelled download card. Both media modes emit clean
+  // HTML: proxy mode points at the /media/<id> redirect Function, download mode
+  // keeps the raw URL so the asset pipeline can self-host it.
+  n2m.setCustomTransformer("pdf", async (block) => {
+    const node = block?.pdf;
+    const url = readObjectFileUrl(node);
+    if (!url) {
       return "";
     }
-    if (!(mediaMode === "proxy" && node?.type === "file" && block?.id)) {
-      return false;
+    const caption = richTextToPlain(node?.caption);
+    const name = node?.name || fileNameFromUrl(url) || caption || "PDF 문서";
+    return pdfEmbedTag(mediaSrc(block, node, mediaMode), caption, name);
+  });
+
+  n2m.setCustomTransformer("file", async (block) => {
+    const node = block?.file;
+    const url = readObjectFileUrl(node);
+    if (!url) {
+      return "";
     }
-    const label = richTextToPlain(node?.caption) || node?.name || "첨부파일 다운로드";
-    return fileLinkTag(`/media/${block.id}`, label);
-  };
-  n2m.setCustomTransformer("file", attachmentTransformer("file"));
-  n2m.setCustomTransformer("pdf", attachmentTransformer("pdf"));
+    const caption = richTextToPlain(node?.caption);
+    const name = node?.name || fileNameFromUrl(url) || caption || "첨부파일";
+    return fileAttachmentTag(mediaSrc(block, node, mediaMode), name, caption);
+  });
 
   n2m.setCustomTransformer("callout", async (block) => {
     const text = richTextToPlain(block.callout?.rich_text);
@@ -409,6 +418,53 @@ export function fileLinkTag(href, label) {
   return `<a class="file-attachment" href="${href}" download>${escapeHtmlAttribute(label)}</a>`;
 }
 
+// A labelled download card for a generic file attachment. The raw url is kept
+// verbatim in download mode so the asset downloader can match and self-host it.
+export function fileAttachmentTag(src, name, caption) {
+  const label = String(name || "첨부파일");
+  const badge = fileExtensionLabel(name) || fileExtensionLabel(src) || "FILE";
+  return `<figure class="file-figure">
+  <a class="file-attachment" href="${src}" target="_blank" rel="noopener" download>
+    <span class="file-attachment-icon" aria-hidden="true">${escapeHtmlAttribute(badge)}</span>
+    <span class="file-attachment-label">${escapeHtmlAttribute(label)}</span>
+    <span class="file-attachment-action" aria-hidden="true">내려받기 ↗</span>
+  </a>${captionHtml(caption)}
+</figure>`;
+}
+
+// An inline PDF preview backed by <object>, with a labelled download link as the
+// fallback for browsers that cannot render PDFs inline.
+export function pdfEmbedTag(src, caption, name) {
+  const label = String(name || "PDF 문서");
+  return `<figure class="pdf-embed">
+  <object class="pdf-frame" data="${src}" type="application/pdf">
+    <p class="pdf-fallback">PDF 미리보기를 표시할 수 없습니다. <a href="${src}" target="_blank" rel="noopener" download>${escapeHtmlAttribute(label)} 내려받기</a></p>
+  </object>
+  <a class="file-attachment file-attachment--pdf" href="${src}" target="_blank" rel="noopener" download>
+    <span class="file-attachment-icon" aria-hidden="true">PDF</span>
+    <span class="file-attachment-label">${escapeHtmlAttribute(label)}</span>
+    <span class="file-attachment-action" aria-hidden="true">열기 ↗</span>
+  </a>${captionHtml(caption)}
+</figure>`;
+}
+
+function fileNameFromUrl(url) {
+  try {
+    const pathname = new URL(url).pathname;
+    return decodeURIComponent(pathname.split("/").pop() || "");
+  } catch {
+    return "";
+  }
+}
+
+function fileExtensionLabel(value) {
+  if (!value) {
+    return "";
+  }
+  const match = String(value).match(/\.([A-Za-z0-9]{1,5})(?:\?|#|$)/);
+  return match ? match[1].toUpperCase() : "";
+}
+
 // Choose the src for a media file. Notion-uploaded files have expiring URLs, so
 // in proxy mode they are served through /media/<block-id> (resolved at request
 // time by a Cloudflare Function). External URLs and download mode use the URL as-is.
@@ -449,7 +505,7 @@ async function downloadAndRewriteAssets(markdown, post, root, mediaMode = "downl
   return rewritten;
 }
 
-function collectRemoteMarkdownAssets(markdown, mediaMode = "download") {
+export function collectRemoteMarkdownAssets(markdown, mediaMode = "download") {
   const assets = [];
 
   // Images are always self-hosted (small, and best for performance/SEO).
@@ -476,6 +532,16 @@ function collectRemoteMarkdownAssets(markdown, mediaMode = "download") {
   // Native media players emitted by the video/audio transformers. Download the
   // referenced file (Notion-hosted uploads or direct media URLs) and self-host it.
   for (const match of markdown.matchAll(/<(?:video|audio|source)\b[^>]*?\ssrc="(https?:\/\/[^"]+)"/gi)) {
+    assets.push({ url: match[1], kind: "file" });
+  }
+
+  // PDF previews (<object data>) and attachment download cards (<a class=
+  // "file-attachment">) emitted by the pdf/file transformers. Self-host the
+  // referenced file so the published page carries no expiring Notion URLs.
+  for (const match of markdown.matchAll(/<object\b[^>]*?\sdata="(https?:\/\/[^"]+)"/gi)) {
+    assets.push({ url: match[1], kind: "file" });
+  }
+  for (const match of markdown.matchAll(/<a\b[^>]*?\sclass="[^"]*file-attachment[^"]*"[^>]*?\shref="(https?:\/\/[^"]+)"/gi)) {
     assets.push({ url: match[1], kind: "file" });
   }
 
@@ -521,6 +587,8 @@ function extensionForAsset(url, contentType) {
     "audio/ogg": ".oga",
     "audio/wav": ".wav",
     "audio/webm": ".weba",
+    "application/pdf": ".pdf",
+    "application/zip": ".zip",
   }[contentType.split(";")[0].trim().toLowerCase()];
   if (contentTypeExtension) {
     return contentTypeExtension;
