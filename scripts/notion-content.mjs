@@ -291,11 +291,26 @@ function installCustomTransformers(n2m, mediaMode = "download") {
       return "";
     }
     const caption = richTextToPlain(block.embed.caption);
+    if (isTweetUrl(url)) {
+      return tweetTag(url, caption);
+    }
     const playerUrl = toPlayerEmbedUrl(url);
     if (playerUrl) {
       return videoEmbedTag(playerUrl, caption);
     }
     return caption ? `[${caption}](${url})` : `<${url}>`;
+  });
+
+  // Mermaid code blocks render as live diagrams (like Notion). Every other
+  // language falls back to notion-to-md's default fenced-code handling.
+  n2m.setCustomTransformer("code", async (block) => {
+    const node = block?.code;
+    const language = String(node?.language || "").toLowerCase();
+    if (language !== "mermaid") {
+      return false;
+    }
+    const code = (node?.rich_text || []).map((t) => t.plain_text).join("");
+    return code.trim() ? mermaidTag(code) : "";
   });
 
   n2m.setCustomTransformer("video", async (block) => {
@@ -361,7 +376,11 @@ function installCustomTransformers(n2m, mediaMode = "download") {
     if (!url) {
       return "";
     }
-    return bookmarkTag(url, richTextToPlain(node?.caption));
+    const caption = richTextToPlain(node?.caption);
+    if (isTweetUrl(url)) {
+      return tweetTag(url, caption);
+    }
+    return bookmarkTag(url, caption);
   };
   n2m.setCustomTransformer("bookmark", linkCardTransformer("bookmark"));
   n2m.setCustomTransformer("link_preview", linkCardTransformer("link_preview"));
@@ -463,6 +482,30 @@ export function pdfEmbedTag(src, caption, name) {
     <span class="file-attachment-action" aria-hidden="true">열기 ↗</span>
   </a>${captionHtml(caption)}
 </figure>`;
+}
+
+// Twitter / X status URLs (twitter.com/<user>/status/<id> or x.com/...).
+export function isTweetUrl(url) {
+  return /^https?:\/\/(?:www\.)?(?:twitter\.com|x\.com|mobile\.twitter\.com)\/[^/]+\/status(?:es)?\/\d+/i.test(
+    String(url || ""),
+  );
+}
+
+// An embedded tweet. platform.twitter.com/widgets.js (loaded by js/embeds.js)
+// upgrades the blockquote into the rendered tweet — the same approach Notion uses.
+export function tweetTag(url, caption) {
+  const tweetUrl = String(url).replace(/^http:/i, "https:");
+  return `<figure class="tweet-embed">
+  <blockquote class="twitter-tweet"><a href="${escapeHtmlAttribute(tweetUrl)}"></a></blockquote>${captionHtml(caption)}
+</figure>`;
+}
+
+// A Mermaid diagram source block. js/embeds.js loads mermaid on demand and
+// renders any <pre class="mermaid"> into an SVG. Blank lines are collapsed so the
+// raw HTML block survives Markdown parsing intact.
+export function mermaidTag(code) {
+  const source = escapeHtmlAttribute(String(code)).replace(/\n{2,}/g, "\n").replace(/^\n+|\n+$/g, "");
+  return `<pre class="mermaid">${source}</pre>`;
 }
 
 // A compact link card for bookmark / link_preview / link_to_page blocks. URLs

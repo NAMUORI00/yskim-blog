@@ -31,7 +31,9 @@ Notion 페이지를 발행하면 `scripts/notion-content.mjs`가 각 블록을 M
 | 오디오(audio) | `<audio>` 플레이어 |
 | PDF(pdf) | `<object>` 인라인 미리보기 + 다운로드 링크 |
 | 파일(file) | 파일명·확장자 배지가 있는 다운로드 카드 |
-| 임베드(embed) | 동영상이면 `<iframe>`, 아니면 링크 |
+| 임베드(embed) | 동영상이면 `<iframe>`, 트윗이면 임베드 트윗, 아니면 링크 |
+| 트위터/X 임베드 | 트윗 URL(embed·bookmark) → `platform.twitter.com/widgets.js`로 렌더된 트윗 |
+| 다이어그램(`mermaid` 코드 블록) | mermaid(CDN)로 클라이언트 렌더된 SVG 다이어그램. 라이트/다크 테마 반영 |
 | 북마크/링크 미리보기(bookmark, link_preview, link_to_page) | 제목·도메인을 보여주는 링크 카드 |
 
 자세한 미디어 호스팅 방식(`download` vs `proxy`)은 [media-hosting.md](media-hosting.md)를 참고하세요.

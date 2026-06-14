@@ -23,6 +23,9 @@ import {
   fileAttachmentTag,
   pdfEmbedTag,
   bookmarkTag,
+  tweetTag,
+  isTweetUrl,
+  mermaidTag,
   collectRemoteMarkdownAssets,
 } from "../scripts/notion-content.mjs";
 
@@ -207,6 +210,32 @@ test("bookmarkTag renders a link card with caption and hostname", () => {
   // Falls back to the hostname as the title when there is no caption.
   const noCaption = bookmarkTag("https://blog.namuori.net/posts/x", "");
   assert.match(noCaption, /<span class="bookmark-title">blog\.namuori\.net<\/span>/);
+});
+
+test("isTweetUrl matches twitter.com and x.com status links only", () => {
+  assert.ok(isTweetUrl("https://twitter.com/jack/status/20"));
+  assert.ok(isTweetUrl("https://x.com/Interior/status/1234567890123456789"));
+  assert.ok(isTweetUrl("http://mobile.twitter.com/a/status/42"));
+  assert.ok(!isTweetUrl("https://twitter.com/jack"));
+  assert.ok(!isTweetUrl("https://example.com/x/status/1"));
+  assert.ok(!isTweetUrl(""));
+});
+
+test("tweetTag renders a twitter-tweet blockquote, normalizing http→https and x.com", () => {
+  const html = tweetTag("http://x.com/Interior/status/463440424141459456", "백악관 트윗");
+  assert.match(html, /class="tweet-embed"/);
+  assert.match(html, /<blockquote class="twitter-tweet">/);
+  assert.ok(html.includes('href="https://x.com/Interior/status/463440424141459456"'));
+  assert.match(html, /<figcaption>백악관 트윗<\/figcaption>/);
+});
+
+test("mermaidTag wraps the diagram source in a pre.mermaid block", () => {
+  const html = mermaidTag("graph TD\n  A[Start] --> B{OK?}\n\n  B --> C[Done]");
+  assert.match(html, /^<pre class="mermaid">/);
+  // Angle brackets escaped for valid HTML; blank lines collapsed.
+  assert.ok(html.includes("B{OK?}"));
+  assert.ok(!html.includes("\n\n"));
+  assert.ok(html.includes("--&gt;"));
 });
 
 test("collectRemoteMarkdownAssets self-hosts pdf/file attachment urls in download mode", () => {
