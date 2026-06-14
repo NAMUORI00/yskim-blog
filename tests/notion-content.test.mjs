@@ -22,6 +22,7 @@ import {
   fileLinkTag,
   fileAttachmentTag,
   pdfEmbedTag,
+  bookmarkTag,
   collectRemoteMarkdownAssets,
 } from "../scripts/notion-content.mjs";
 
@@ -195,6 +196,17 @@ test("pdfEmbedTag renders an inline preview plus a download fallback", () => {
   assert.ok(html.includes(`href="${url}"`));
   assert.match(html, /class="file-attachment file-attachment--pdf"/);
   assert.match(html, /<figcaption>발표 자료<\/figcaption>/);
+});
+
+test("bookmarkTag renders a link card with caption and hostname", () => {
+  const withCaption = bookmarkTag("https://www.example.com/article?ref=1", "좋은 글");
+  assert.match(withCaption, /class="bookmark-card"/);
+  assert.ok(withCaption.includes('href="https://www.example.com/article?ref=1"'));
+  assert.match(withCaption, /<span class="bookmark-title">좋은 글<\/span>/);
+  assert.match(withCaption, /<span class="bookmark-host">example\.com<\/span>/);
+  // Falls back to the hostname as the title when there is no caption.
+  const noCaption = bookmarkTag("https://blog.namuori.net/posts/x", "");
+  assert.match(noCaption, /<span class="bookmark-title">blog\.namuori\.net<\/span>/);
 });
 
 test("collectRemoteMarkdownAssets self-hosts pdf/file attachment urls in download mode", () => {

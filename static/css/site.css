@@ -1121,6 +1121,38 @@ body.theme-dark .theme-icon-moon {
   font-weight: 700;
 }
 
+/* Bookmark / link-preview cards (Notion bookmark, link_preview, link_to_page). */
+.content .bookmark-card {
+  display: grid;
+  gap: 2px;
+  margin: var(--space-4) 0;
+  padding: var(--space-3) var(--space-4);
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.content .bookmark-card:hover {
+  background: var(--panel-soft);
+  border-color: var(--line-strong);
+}
+
+.content .bookmark-title {
+  overflow: hidden;
+  color: var(--heading);
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content .bookmark-host {
+  color: var(--faint);
+  font-size: var(--font-sm);
+}
+
 .content .highlight {
   margin: var(--space-4) 0;
   border-radius: var(--radius-md);

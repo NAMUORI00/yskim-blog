@@ -348,11 +348,28 @@ function installCustomTransformers(n2m, mediaMode = "download") {
     return fileAttachmentTag(mediaSrc(block, node, mediaMode), name, caption);
   });
 
-  n2m.setCustomTransformer("callout", async (block) => {
-    const text = richTextToPlain(block.callout?.rich_text);
-    const icon = block.callout?.icon?.emoji ? `${block.callout.icon.emoji} ` : "";
-    return `> ${icon}${String(text).replace(/\n/g, "\n> ")}`;
-  });
+  // Bookmarks, link previews, and link-to-page blocks: render a tidy link card.
+  // The default notion-to-md output prints the literal block type ("bookmark")
+  // as the link text, which looks broken; show the caption or hostname instead.
+  const linkCardTransformer = (type) => async (block) => {
+    const node = block?.[type];
+    let url = node?.url;
+    if (type === "link_to_page") {
+      const pageId = block?.link_to_page?.page_id || block?.link_to_page?.database_id;
+      url = pageId ? `https://www.notion.so/${String(pageId).replace(/-/g, "")}` : "";
+    }
+    if (!url) {
+      return "";
+    }
+    return bookmarkTag(url, richTextToPlain(node?.caption));
+  };
+  n2m.setCustomTransformer("bookmark", linkCardTransformer("bookmark"));
+  n2m.setCustomTransformer("link_preview", linkCardTransformer("link_preview"));
+  n2m.setCustomTransformer("link_to_page", linkCardTransformer("link_to_page"));
+
+  // Callout intentionally has NO custom transformer: notion-to-md's built-in
+  // handler renders the icon AND recurses into nested children (a custom
+  // transformer that returns a string would drop the callout's child blocks).
 }
 
 export async function convertPageToMarkdown(n2m, pageId) {
@@ -446,6 +463,23 @@ export function pdfEmbedTag(src, caption, name) {
     <span class="file-attachment-action" aria-hidden="true">열기 ↗</span>
   </a>${captionHtml(caption)}
 </figure>`;
+}
+
+// A compact link card for bookmark / link_preview / link_to_page blocks. URLs
+// here are ordinary public links (never expiring Notion URLs), so they are
+// HTML-escaped normally and left untouched by the asset downloader.
+export function bookmarkTag(url, caption) {
+  let host = url;
+  try {
+    host = new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    host = String(url);
+  }
+  const title = String(caption ?? "").trim() || host;
+  return `<a class="bookmark-card" href="${escapeHtmlAttribute(url)}" target="_blank" rel="noopener noreferrer">
+  <span class="bookmark-title">${escapeHtmlAttribute(title)}</span>
+  <span class="bookmark-host">${escapeHtmlAttribute(host)}</span>
+</a>`;
 }
 
 function fileNameFromUrl(url) {
