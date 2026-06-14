@@ -8,7 +8,7 @@ export const SITE = {
   github: "NAMUORI00",
   portfolio: "https://namuori.net/",
   // Public Notion reader page (Publish to web URL). Empty hides the link.
-  notionPublicUrl: "",
+  notionPublicUrl: "https://namuori00.notion.site/37fdcd44779f81e3a025f6356f268287",
   locale: "ko-KR",
   giscus: {
     repo: "NAMUORI00/yskim-blog",
