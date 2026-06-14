@@ -1,4 +1,4 @@
-baseURL: https://yskim-blog.pages.dev/
+baseURL: https://blog.namuori.net/
 
 defaultContentLanguage: ko
 
@@ -51,6 +51,14 @@ params:
   handle: namuori
 
   location: Seoul, Korea
+
+  # 검색엔진 소유확인 코드 (Search Console / 네이버 서치어드바이저에서 발급받아 입력)
+  googleSiteVerification: ""
+
+  naverSiteVerification: ""
+
+  # 수익화: Google AdSense 게시자 ID (예: ca-pub-1234567890123456). 비우면 광고 비활성화.
+  adsensePublisherId: ""
 
   github:
 
