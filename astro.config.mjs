@@ -1,5 +1,6 @@
 // @ts-check
 import { defineConfig } from "astro/config";
+import { unified } from "@astrojs/markdown-remark";
 import svelte from "@astrojs/svelte";
 import sitemap from "@astrojs/sitemap";
 import remarkMath from "remark-math";
@@ -20,8 +21,10 @@ export default defineConfig({
   markdown: {
     // Notion video/audio/iframe blocks are emitted as raw HTML and must render.
     // Astro preserves raw HTML in Markdown by default.
-    smartypants: false,
-    remarkPlugins: [remarkMath],
-    rehypePlugins: [rehypeKatex],
+    processor: unified({
+      smartypants: false,
+      remarkPlugins: [remarkMath],
+      rehypePlugins: [rehypeKatex],
+    }),
   },
 });

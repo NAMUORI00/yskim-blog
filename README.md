@@ -1,15 +1,22 @@
 # yskim-blog
 
-Public Hugo site source for **나무가든**.
+Public Astro site source for **나무가든**.
 
-This repository owns the theme, layouts, build scripts, Cloudflare Functions,
-comment UI, validation, and deployment configuration. It is also the only
+This repository owns the layouts, components, build scripts, Cloudflare
+Functions, comment UI, validation, and deployment configuration. It is the only
 GitHub repository used for production publishing.
+
+## Stack
+
+- **Astro 6** static site (`src/`) with **Svelte 5** islands for interactivity.
+- **Notion** as the CMS (single source of truth for post content).
+- **Cloudflare Pages** hosting + Pages Functions (`functions/`) for reactions,
+  comments, and the optional media proxy.
 
 ## Branch model
 
-- `main`: project source only. Hugo layouts, scripts, tests, docs, functions,
-  and client assets live here.
+- `main`: project source only. Astro layouts/components, scripts, tests, docs,
+  functions, and client assets live here.
 - `production`: generated deploy state. GitHub Actions recreates public
   `content/`, Notion-hosted images, and generated data here before deploying.
 
@@ -21,24 +28,25 @@ of truth for post content.
 1. Write and edit posts in the private Notion CMS database.
 2. Mark a post `Published`.
 3. GitHub Actions runs on manual dispatch, schedule, or `main` push.
-4. The workflow fetches Notion content, downloads images, validates Markdown,
-   builds Hugo, and commits generated artifacts to `production`.
-5. Wrangler deploys the built `public/` artifact to Cloudflare Pages as the
+4. The workflow fetches Notion content, validates Markdown, builds the Astro
+   site, and commits generated artifacts to `production`.
+5. Wrangler deploys the built `dist/` artifact to Cloudflare Pages as the
    `production` branch.
 
 See `docs/notion-publishing.md` for Notion rules and
 `docs/cloudflare-pages.md` for deployment settings.
 
-## Local preview
+## Local development
 
-Install Hugo extended `0.162.1`, authenticate with GitHub (`gh auth login`),
-and provide `NOTION_TOKEN` and `NOTION_DATABASE_ID`.
+Authenticate with GitHub (`gh auth login`) and provide `NOTION_TOKEN` and
+`NOTION_DATABASE_ID` to fetch content.
 
 ```powershell
+npm install
 $env:CONTENT_SOURCE = "notion"
 .\scripts\fetch-content.ps1
 .\scripts\fetch-github-profile.ps1
-hugo server -D
+npm run dev      # local preview at http://localhost:4321
 ```
 
 Production build:
@@ -48,28 +56,41 @@ $env:CONTENT_SOURCE = "notion"
 .\scripts\fetch-content.ps1
 .\scripts\fetch-github-profile.ps1
 .\scripts\validate-content.ps1
-hugo --gc --minify --cleanDestinationDir
+npm run build    # outputs to dist/
 ```
 
 Generated `content/` and `static/images/` are ignored on `main`. They are
-force-added only by the production publishing workflow.
+force-added only by the production publishing workflow. `content/pages/`
+(소개·개인정보처리방침·연락처·면책조항) is committed source.
 
-## Comments
+Site configuration (title, author, giscus, search-engine verification codes,
+AdSense publisher id) lives in `src/config.ts`. The deployment URL is set as
+`site` in `astro.config.mjs`.
+
+## Comments and reactions
 
 Post pages support:
 
 - GitHub-authenticated comments through Giscus and GitHub Discussions.
 - Optional anonymous comments through Cloudflare Pages Functions, Turnstile,
   and D1.
+- Post reactions (좋아요 / 유용해요 / 다시 읽기) via a Pages Function.
 
-GitHub comments are enabled through the `General` discussion category.
-Anonymous comments stay disabled until the Cloudflare D1 and Turnstile settings
-are configured. See `docs/comments.md`.
+Giscus is enabled through the `General` discussion category (configured in
+`src/config.ts`). Anonymous comments stay disabled until the Cloudflare D1 and
+Turnstile settings are configured. See `docs/comments.md`.
+
+## Media hosting
+
+Heavy media (video, audio, attachments) can either be self-hosted in the build
+(`download`, default) or served directly from Notion via a redirect Function
+backed by KV (`proxy`). Toggle with the `NOTION_MEDIA_MODE` variable. See
+`docs/media-hosting.md`.
 
 ## Cloudflare Pages
 
 Production deploys are handled by GitHub Actions
-(`.github/workflows/validate-and-build.yml`) using `wrangler pages deploy`.
+(`.github/workflows/validate-and-build.yml`) using `wrangler pages deploy dist`.
 
 Required GitHub Actions secrets:
 
@@ -83,6 +104,10 @@ Required repository variables:
 - `NOTION_DATABASE_ID`
 - `NOTION_STATUS=Published`
 - `PUBLISH_BRANCH=production` (optional; workflow default is `production`)
+- `NOTION_MEDIA_MODE` (`download` default, or `proxy`)
+
+For the media `proxy` mode, the Pages project also needs a runtime
+`NOTION_TOKEN` secret and the `MEDIA_CACHE` KV binding (see `wrangler.toml`).
 
 Cloudflare Pages should keep native Git builds disconnected. GitHub Actions is
 the production build path.
