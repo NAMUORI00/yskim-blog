@@ -22,7 +22,9 @@
     <link rel="stylesheet" href="/css/site.css">
     {{ partial "math.html" . }}
     <script src="/js/theme.js" defer></script>
-    {{ with .Params.canonical }}<link rel="canonical" href="{{ . }}">{{ end }}
+    {{ partial "seo.html" . }}
+    {{ with .OutputFormats.Get "rss" }}<link rel="alternate" type="application/rss+xml" title="{{ site.Title }}" href="{{ .Permalink }}">{{ end }}
+    {{ with site.Params.adsensePublisherId }}<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client={{ . }}" crossorigin="anonymous"></script>{{ end }}
   </head>
   <body>
     <script>
@@ -61,6 +63,12 @@
         </main>
         <footer class="site-footer">
           <p>{{ site.Params.ui.footerCopyright }} · <a href="https://namuori.net/" target="_blank" rel="noopener noreferrer">{{ site.Params.ui.navPortfolio }}</a> · <a href="{{ "/index.xml" | relLangURL }}">RSS</a></p>
+          <nav class="footer-legal" aria-label="사이트 정보">
+            <a href="{{ "/pages/about/" | relLangURL }}">소개</a> ·
+            <a href="{{ "/pages/privacy/" | relLangURL }}">개인정보처리방침</a> ·
+            <a href="{{ "/pages/disclaimer/" | relLangURL }}">면책조항</a> ·
+            <a href="{{ "/pages/contact/" | relLangURL }}">연락처</a>
+          </nav>
         </footer>
       </div>
 
