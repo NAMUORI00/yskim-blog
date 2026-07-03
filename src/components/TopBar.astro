@@ -1,12 +1,18 @@
 ---
 import { SITE, UI } from "../config";
+import { getCategories, categoryUrl } from "../lib/posts";
+
 const path = Astro.url.pathname;
+const decodedPath = decodeURI(path);
 const isHome = path === "/";
+const categories = await getCategories();
 // 소개는 홈에 통합되어 별도 메뉴를 두지 않는다.
 const nav = [
   { name: UI.navPosts, href: "/posts/" },
 ];
-const isActive = (href: string) => path === href || path.startsWith(href);
+const isActive = (href: string) => decodedPath === href || decodedPath.startsWith(href);
+const activeCategory = categories.find((category) => isActive(categoryUrl(category.name)));
+const isCategoryActive = Boolean(activeCategory);
 ---
 
 <header class="top-bar">
@@ -25,6 +31,25 @@ const isActive = (href: string) => path === href || path.startsWith(href);
           {item.name}
         </a>
       ))}
+      {categories.length > 0 && (
+        <details class="top-bar-categories">
+          <summary class={isCategoryActive ? "is-active" : ""}>
+            {activeCategory ? activeCategory.name : UI.categories}
+          </summary>
+          <div class="top-bar-category-menu">
+            {categories.map((category) => {
+              const href = categoryUrl(category.name);
+              const active = isActive(href);
+              return (
+                <a href={href} class={active ? "is-active" : ""} aria-current={active ? "page" : undefined}>
+                  <span>{category.name}</span>
+                  <strong>{category.count}</strong>
+                </a>
+              );
+            })}
+          </div>
+        </details>
+      )}
       <a class="top-bar-external" href={SITE.portfolio} target="_blank" rel="noopener noreferrer">
         {UI.navPortfolio} ↗
       </a>
@@ -70,6 +95,7 @@ const isActive = (href: string) => path === href || path.startsWith(href);
   (() => {
     const toggle = document.querySelector("[data-nav-toggle]");
     const nav = document.getElementById("primary-nav");
+    const categoryMenus = Array.from(document.querySelectorAll(".top-bar-categories"));
     if (!toggle || !nav) return;
 
     const QUERY = "(max-width: 720px)";
@@ -89,7 +115,19 @@ const isActive = (href: string) => path === href || path.startsWith(href);
 
     // Close after navigating from the menu.
     nav.addEventListener("click", (e) => {
-      if (e.target instanceof Element && e.target.closest("a")) setOpen(false);
+      if (e.target instanceof Element && e.target.closest("a")) {
+        categoryMenus.forEach((menu) => menu.removeAttribute("open"));
+        setOpen(false);
+      }
+    });
+
+    categoryMenus.forEach((menu) => {
+      menu.addEventListener("toggle", () => {
+        if (!menu.hasAttribute("open")) return;
+        categoryMenus.forEach((other) => {
+          if (other !== menu) other.removeAttribute("open");
+        });
+      });
     });
 
     // Close on Escape.
@@ -97,6 +135,8 @@ const isActive = (href: string) => path === href || path.startsWith(href);
       if (e.key === "Escape" && nav.classList.contains("is-open")) {
         setOpen(false);
         toggle.focus();
+      } else if (e.key === "Escape") {
+        categoryMenus.forEach((menu) => menu.removeAttribute("open"));
       }
     });
 
@@ -104,6 +144,9 @@ const isActive = (href: string) => path === href || path.startsWith(href);
     document.addEventListener("click", (e) => {
       if (!nav.classList.contains("is-open")) return;
       const t = e.target;
+      if (t instanceof Node && !categoryMenus.some((menu) => menu.contains(t))) {
+        categoryMenus.forEach((menu) => menu.removeAttribute("open"));
+      }
       if (t instanceof Node && !nav.contains(t) && t !== toggle && !toggle.contains(t)) {
         setOpen(false);
       }
