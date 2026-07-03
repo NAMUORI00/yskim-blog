@@ -75,8 +75,11 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
 
   assert.match(profileRail, /<aside class="profile-rail" aria-label="Profile and categories">/);
   assert.match(profileRail, /<div class="profile-intro">/);
+  assert.match(profileRail, /class="profile-address"/);
   assert.match(profileRail, /class="profile-link-list"/);
+  assert.match(profileRail, /href=\{SITE\.portfolio\}/);
   assert.match(sidebar, /<aside class="blog-sidebar" aria-label="Blog context">/);
+  assert.match(sidebar, /class="blog-sidebar-panel"/);
   assert.match(base, /class="site-footer__inner"/);
   assert.match(base, /class="site-footer__license"/);
   assert.match(base, /class="footer-primary"/);
@@ -84,6 +87,20 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   assert.match(topBar, /class="top-bar-categories"/);
   assert.match(topBar, /class="top-bar-category-menu"/);
   assert.match(topBar, /category\.count/);
+  assert.doesNotMatch(topBar, /top-bar-external/);
+
+  const profileOrder = [
+    profileRail.indexOf('aria-label="프로필"'),
+    profileRail.indexOf("World Calling"),
+    profileRail.indexOf('aria-label="주소"'),
+    profileRail.indexOf('aria-label="링크"'),
+    profileRail.indexOf("aria-label={UI.categories}"),
+  ];
+  assert.ok(profileOrder.every((index) => index >= 0), "Profile rail is missing a requested section");
+  assert.ok(
+    profileOrder.every((index, i, order) => i === 0 || order[i - 1] < index),
+    "Profile rail sections should be ordered profile, intro, address, links, categories",
+  );
 });
 
 test("site css applies shell surface polish and keeps the mobile graph visible", async () => {
@@ -91,16 +108,16 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   const topBar = ruleForSelector(css, ".top-bar");
   const surfaceRule = ruleForSelectors(css, [
     ".profile-rail",
-    ".sidebar-card",
+    ".blog-sidebar-panel",
     ".readme-card",
     ".post-card",
     ".archive-heading",
   ]);
   const railSurfaceRule = ruleForSelectorsWith(
     css,
-    [".profile-rail", ".sidebar-card"],
+    [".profile-rail", ".blog-sidebar-panel"],
     /background:/,
-    ".profile-rail, .sidebar-card background",
+    ".profile-rail, .blog-sidebar-panel background",
   );
   const activeRule = ruleForSelectors(css, [
     ".rail-category-list a.is-active",
@@ -131,11 +148,17 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(ruleForSelector(css, ".top-bar-categories").body, /position:\s*relative/);
   assert.match(ruleForSelector(css, ".top-bar-category-menu").body, /position:\s*absolute/);
   assert.match(ruleForSelectors(css, [".top-bar-category-menu a.is-active", ".top-bar-category-menu a:hover"]).body, /border-left-color:\s*var\(--accent\)/);
+  assert.match(ruleForSelector(css, ".profile-section").body, /border-top:\s*1px solid var\(--line-soft\)/);
+  assert.match(ruleForSelector(css, ".profile-address").body, /font-style:\s*normal/);
+  assert.match(ruleForSelector(css, ".blog-sidebar-panel").body, /display:\s*grid/);
+  assert.match(ruleForSelector(css, ".sidebar-card").body, /box-shadow:\s*none/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-card").body, /display:\s*grid/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-canvas").body, /max-height:\s*240px/);
   assert.match(ruleForSelector(mobile, ".knowledge-graph-canvas").body, /touch-action:\s*pan-y/);
   assert.match(ruleForSelector(mobile, ".knowledge-scene").body, /display:\s*none/);
   assert.match(tablet, /\.profile-rail,\s*\.blog-sidebar\s*\{[^}]*align-self:\s*stretch[^}]*width:\s*100%/s);
+  assert.match(tablet, /\.blog-sidebar-panel\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(200px,\s*1fr\)\)/s);
+  assert.match(mobile, /\.blog-sidebar-panel\s*\{[^}]*grid-template-columns:\s*1fr/s);
 });
 
 test("desktop shell keeps portfolio-like three-column rhythm and license footer", async () => {

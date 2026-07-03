@@ -5,23 +5,49 @@ import { getCategories, categoryUrl } from "../lib/posts";
 
 const gh = getGithubProfile();
 const categories = await getCategories();
-const path = Astro.url.pathname;
+const path = decodeURI(Astro.url.pathname);
 ---
 
 <aside class="profile-rail" aria-label="Profile and categories">
-  <div class="profile-intro">
-    <a class="avatar" href={gh.html_url} target="_blank" rel="noopener noreferrer" aria-label={`${gh.name} GitHub`}>
-      <img src={gh.avatar_url} alt={gh.name} width="56" height="56" loading="lazy" decoding="async" />
-    </a>
-    <div class="profile-block">
-      <p class="profile-kicker">@{SITE.handle}</p>
-      <a class="brand" href="/">{SITE.title}</a>
-      {gh.name && <p class="profile-name">{gh.name}</p>}
+  <section class="profile-section profile-section--identity" aria-label="프로필">
+    <p class="profile-kicker">프로필</p>
+    <div class="profile-intro">
+      <a class="avatar" href={gh.html_url} target="_blank" rel="noopener noreferrer" aria-label={`${gh.name} GitHub`}>
+        <img src={gh.avatar_url} alt={gh.name} width="56" height="56" loading="lazy" decoding="async" />
+      </a>
+      <div class="profile-block">
+        <p class="profile-handle">@{SITE.handle}</p>
+        <a class="brand" href="/">{SITE.title}</a>
+        {gh.name && <p class="profile-name">{gh.name}</p>}
+      </div>
     </div>
-  </div>
-  {gh.bio && <p class="profile-bio">{gh.bio}</p>}
+  </section>
 
-  <section class="rail-section" aria-label={UI.categories}>
+  {gh.bio && (
+    <section class="profile-section" aria-label="World Calling 소개글">
+      <p class="rail-section-title">World Calling</p>
+      <p class="profile-bio">{gh.bio}</p>
+    </section>
+  )}
+
+  <section class="profile-section" aria-label="주소">
+    <p class="rail-section-title">주소</p>
+    <address class="profile-address">
+      <span>{SITE.location}</span>
+      <a href={SITE.url} target="_blank" rel="noopener noreferrer">blog.namuori.net</a>
+    </address>
+  </section>
+
+  <section class="profile-section" aria-label="링크">
+    <p class="rail-section-title">Links</p>
+    <nav class="profile-link-list">
+      <a href={SITE.portfolio} target="_blank" rel="noopener noreferrer">portfolio</a>
+      <a href={gh.html_url} target="_blank" rel="noopener noreferrer">github</a>
+      <a href="/index.xml">rss</a>
+    </nav>
+  </section>
+
+  <section class="profile-section" aria-label={UI.categories}>
     <p class="rail-section-title">{UI.categories}</p>
     <nav class="rail-category-list">
       {categories.length > 0 ? (
@@ -38,15 +64,6 @@ const path = Astro.url.pathname;
       ) : (
         <span class="rail-empty">{UI.noCategories}</span>
       )}
-    </nav>
-  </section>
-
-  <section class="rail-section" aria-label="프로필 링크">
-    <p class="rail-section-title">Links</p>
-    <nav class="profile-link-list">
-      <a href={SITE.portfolio} target="_blank" rel="noopener noreferrer">portfolio</a>
-      <a href={gh.html_url} target="_blank" rel="noopener noreferrer">github</a>
-      <span>{SITE.location}</span>
     </nav>
   </section>
 </aside>
