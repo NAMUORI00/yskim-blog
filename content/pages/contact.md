@@ -7,6 +7,7 @@ tags:
   - meta
 summary: "나무가든 운영자에게 연락하는 방법."
 comments: false
+footer_label: "Contact"
 translationKey: "contact"
 ---
 

@@ -1,5 +1,6 @@
 ---
 import { SITE, UI, ASSET_VERSION } from "../config";
+import { getCollection } from "astro:content";
 import Seo from "../components/Seo.astro";
 import TopBar from "../components/TopBar.astro";
 import ProfileRail from "../components/ProfileRail.astro";
@@ -24,6 +25,19 @@ export interface Props {
 const { math = false, ...seo } = Astro.props;
 const rss = new URL("/index.xml", SITE.url).href;
 const githubUrl = `https://github.com/${SITE.github}`;
+const pages = await getCollection("pages", (page) => !page.data.draft);
+const findPage = (slug: string) => pages.find((page) => page.data.slug === slug);
+const footerPageSlugs = ["privacy", "disclaimer", "contact"];
+const footerPages = footerPageSlugs
+  .map((slug) => {
+    const page = findPage(slug);
+    if (!page) return null;
+    return {
+      href: `/pages/${slug}/`,
+      label: page.data.footer_label || page.data.title,
+    };
+  })
+  .filter((page): page is { href: string; label: string } => Boolean(page));
 ---
 
 <!doctype html>
@@ -102,6 +116,26 @@ const githubUrl = `https://github.com/${SITE.github}`;
       })();
     </script>
     <TopBar />
+    <div class="rail-dock-layer" aria-label="접힌 사이드바">
+      <button
+        class="rail-dock rail-dock--left"
+        type="button"
+        data-drag-rail-toggle="left"
+        aria-controls="profile-rail"
+        aria-expanded="false"
+      >
+        Profile
+      </button>
+      <button
+        class="rail-dock rail-dock--right"
+        type="button"
+        data-drag-rail-toggle="right"
+        aria-controls="blog-sidebar"
+        aria-expanded="false"
+      >
+        Graph
+      </button>
+    </div>
     <div class="site-shell">
       <ProfileRail />
       <div class="content-column">
@@ -119,11 +153,11 @@ const githubUrl = `https://github.com/${SITE.github}`;
                 <a href={SITE.notionPublicUrl} target="_blank" rel="noopener noreferrer">Notion</a>
               )}
             </nav>
-            <nav class="footer-legal" aria-label="사이트 정보">
-              <a href="/pages/privacy/">Privacy</a>
-              <a href="/pages/disclaimer/">Disclaimer</a>
-              <a href="/pages/contact/">Contact</a>
-            </nav>
+            {footerPages.length > 0 && (
+              <nav class="footer-legal" aria-label="사이트 정보">
+                {footerPages.map((page) => <a href={page.href}>{page.label}</a>)}
+              </nav>
+            )}
           </div>
         </footer>
       </div>

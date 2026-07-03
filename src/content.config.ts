@@ -23,6 +23,12 @@ const posts = defineCollection({
   }),
 });
 
+const profileLink = z.object({
+  label: z.string(),
+  href: z.string(),
+  note: z.string().optional().default(""),
+});
+
 // Static pages can be authored in-repo or generated from Notion page records.
 const pages = defineCollection({
   loader: glob({ pattern: "**/[^_]*.md", base: "./content/pages" }),
@@ -38,6 +44,13 @@ const pages = defineCollection({
     generated_by: z.string().optional(),
     translationKey: z.string().optional(),
     math: z.boolean().optional(),
+    footer_label: z.string().optional(),
+    profile_name: z.string().optional(),
+    profile_handle: z.string().optional(),
+    profile_address: z.string().optional(),
+    profile_avatar: z.string().optional(),
+    profile_url: z.string().optional(),
+    links: z.array(profileLink).default([]),
   }),
 });
 

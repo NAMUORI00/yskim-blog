@@ -85,6 +85,13 @@ const isCategoryActive = Boolean(activeCategory);
           data-top-search-input
         />
       </form>
+      <button class="top-bar-drag-reset" type="button" hidden data-window-drag-reset aria-label="창 위치 초기화">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M3 12a9 9 0 1 0 3-6.7" />
+          <path d="M3 4v6h6" />
+        </svg>
+        <span>위치 초기화</span>
+      </button>
       <div class="top-bar-search__results" hidden data-top-search-results></div>
       <template data-top-search-index>{searchIndex}</template>
     </div>

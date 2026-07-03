@@ -73,7 +73,20 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
     readFile(files.topBar, "utf8"),
   ]);
 
-  assert.match(profileRail, /<aside class="profile-rail" aria-label="Profile and categories">/);
+  assert.match(base, /import \{ getCollection \} from "astro:content";/);
+  assert.match(base, /const footerPageSlugs = \["privacy", "disclaimer", "contact"\]/);
+  assert.match(base, /const footerPages = footerPageSlugs/);
+  assert.match(base, /page\.data\.footer_label \|\| page\.data\.title/);
+  assert.match(profileRail, /<aside id="profile-rail" class="profile-rail" aria-label="Profile and categories" data-drag-rail="left">/);
+  assert.match(profileRail, /id="profile-rail"/);
+  assert.match(profileRail, /data-drag-rail="left"/);
+  assert.match(profileRail, /import \{ getCollection \} from "astro:content";/);
+  assert.match(profileRail, /const profilePage = findPage\("profile"\)/);
+  assert.match(profileRail, /const linksPage = findPage\("links"\)/);
+  assert.match(profileRail, /profilePage\?\.data\.profile_address \|\| SITE\.location/);
+  assert.match(profileRail, /linksPage\?\.data\.links/);
+  assert.match(profileRail, /profilePage\?\.data\.profile_name \|\| gh\.name/);
+  assert.match(profileRail, /profilePage\?\.data\.profile_handle \|\| SITE\.handle/);
   assert.match(profileRail, /<div class="profile-intro">/);
   assert.match(profileRail, /class="profile-address"/);
   assert.match(profileRail, /class="profile-address-label">주소<\/p>/);
@@ -83,11 +96,23 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   assert.doesNotMatch(profileRail, /faviconFor|profile-link-favicon|google\.com\/s2\/favicons/);
   assert.match(profileRail, /\{ label: "Portfolio", href: SITE\.portfolio \}/);
   assert.doesNotMatch(profileRail, /href="\/index\.xml"|blog\.namuori\.net/);
-  assert.match(sidebar, /<aside class="blog-sidebar" aria-label="Blog context">/);
+  assert.match(sidebar, /<aside id="blog-sidebar" class="blog-sidebar" aria-label="Blog context" data-drag-rail="right">/);
+  assert.match(sidebar, /id="blog-sidebar"/);
+  assert.match(sidebar, /data-drag-rail="right"/);
   assert.match(sidebar, /class="blog-sidebar-panel"/);
+  assert.match(base, /class="rail-dock-layer"/);
+  assert.match(base, /data-drag-rail-toggle="left"/);
+  assert.match(base, /data-drag-rail-toggle="right"/);
+  assert.match(base, /aria-controls="profile-rail"/);
+  assert.match(base, /aria-controls="blog-sidebar"/);
   assert.match(base, /class="site-footer__inner"/);
   assert.match(base, /class="site-footer__license"/);
   assert.match(base, /class="footer-primary"/);
+  assert.match(base, /class="footer-legal" aria-label="사이트 정보"/);
+  assert.match(base, /footerPages\.map/);
+  assert.doesNotMatch(base, /<a href="\/pages\/privacy\/">Privacy<\/a>/);
+  assert.doesNotMatch(base, /<a href="\/pages\/disclaimer\/">Disclaimer<\/a>/);
+  assert.doesNotMatch(base, /<a href="\/pages\/contact\/">Contact<\/a>/);
   assert.match(topBar, /import \{ getCategories, getPublishedPosts, categoryUrl, postUrl \} from "\.\.\/lib\/posts";/);
   assert.match(topBar, /getPublishedPosts/);
   assert.match(topBar, /postUrl/);
@@ -118,7 +143,7 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
 
   const profileOrder = [
     profileRail.indexOf('aria-label="프로필"'),
-    profileRail.indexOf("World Calling"),
+    profileRail.indexOf('aria-label="World Calling 소개글과 주소"'),
     profileRail.indexOf('class="profile-address"'),
     profileRail.indexOf("aria-label={UI.categories}"),
     profileRail.indexOf('aria-label="링크"'),
@@ -172,6 +197,13 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(activeRule.body, /background:\s*var\(--accent-soft\)/);
   assert.match(activeRule.body, /border-color:\s*var\(--accent-border\)/);
   assert.match(ruleForSelector(css, ".top-bar-categories").body, /position:\s*relative/);
+  assert.match(ruleForSelector(css, ".rail-dock-layer").body, /pointer-events:\s*none/);
+  assert.match(ruleForSelector(css, ".rail-dock").body, /display:\s*none/);
+  assert.match(ruleForSelector(css, "body.has-window-drag-mode .rail-dock").body, /display:\s*inline-flex/);
+  assert.match(ruleForSelector(css, "body.has-window-drag-mode .site-shell").body, /--content-column-max:\s*min\(1240px,\s*calc\(100vw - 96px\)\)/);
+  assert.match(ruleForSelectors(css, ["body.has-window-drag-mode .profile-rail", "body.has-window-drag-mode .blog-sidebar"]).body, /position:\s*fixed/);
+  assert.match(ruleForSelector(css, "body.has-window-drag-mode:not(.is-rail-left-open):not(.is-rail-left-peeking) .profile-rail").body, /translateX\(calc\(-100% - var\(--space-5\)\)\)/);
+  assert.match(ruleForSelector(css, "body.has-window-drag-mode:not(.is-rail-right-open):not(.is-rail-right-peeking) .blog-sidebar").body, /translateX\(calc\(100% \+ var\(--space-5\)\)\)/);
   assert.match(ruleForSelector(css, ".top-bar-category-menu").body, /position:\s*absolute/);
   assert.match(ruleForSelector(css, ".top-bar-left").body, /justify-content:\s*flex-start/);
   assert.match(ruleForSelector(css, ".top-bar-left").body, /gap:\s*clamp\(24px,\s*4vw,\s*72px\)/);
@@ -229,7 +261,8 @@ test("desktop shell keeps portfolio-like three-column rhythm and license footer"
   assert.match(stickyRails.body, /position:\s*sticky/);
   assert.match(stickyRails.body, /top:\s*calc\(var\(--topbar-h\) \+ var\(--space-4\)\)/);
   assert.match(stickyRails.body, /var\(--footer-reserved\)/);
-  assert.doesNotMatch(desktop, /position:\s*fixed/);
+  assert.doesNotMatch(stickyRails.body, /position:\s*fixed/);
+  assert.match(desktop, /body\.has-window-drag-mode\s+\.site-shell\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*var\(--content-column-max\)\)/s);
   assert.match(ruleForSelector(css, ".site-footer").body, /position:\s*fixed/);
   assert.match(ruleForSelector(css, ".site-footer").body, /bottom:\s*0/);
   assert.match(ruleForSelector(css, ".site-footer").body, /max-height:\s*var\(--footer-fixed-h\)/);

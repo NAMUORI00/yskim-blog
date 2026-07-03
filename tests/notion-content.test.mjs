@@ -30,6 +30,7 @@ import {
   isTweetUrl,
   mermaidTag,
   collectRemoteMarkdownAssets,
+  normalizeCustomFrontMatter,
 } from "../scripts/notion-content.mjs";
 
 const notionPage = {
@@ -56,6 +57,10 @@ const notionPage = {
     },
     Canonical: { type: "url", url: "" },
     Comments: { type: "checkbox", checkbox: true },
+    "custom-front-matter": {
+      type: "rich_text",
+      rich_text: [],
+    },
   },
 };
 
@@ -75,6 +80,21 @@ const notionStaticPage = {
     Summary: {
       type: "rich_text",
       rich_text: [{ plain_text: "Landing copy managed in Notion." }],
+    },
+    "custom-front-matter": {
+      type: "rich_text",
+      rich_text: [{
+        plain_text: [
+          'footer_label: "Home"',
+          'profile_name: "KIM YUSEOK"',
+          'profile_handle: "namuori"',
+          'profile_address: "Seoul, Korea"',
+          'profile_url: "https://github.com/NAMUORI00"',
+          "links:",
+          '  - label: "Portfolio"',
+          '    href: "https://namuori.net/"',
+        ].join("\n"),
+      }],
     },
     Tags: {
       type: "multi_select",
@@ -129,6 +149,16 @@ test("maps Notion page records to static page metadata", () => {
     tags: ["meta"],
     summary: "Landing copy managed in Notion.",
     comments: false,
+    customFrontMatter: [
+      'footer_label: "Home"',
+      'profile_name: "KIM YUSEOK"',
+      'profile_handle: "namuori"',
+      'profile_address: "Seoul, Korea"',
+      'profile_url: "https://github.com/NAMUORI00"',
+      "links:",
+      '  - label: "Portfolio"',
+      '    href: "https://namuori.net/"',
+    ].join("\n"),
   });
 });
 
@@ -143,8 +173,25 @@ test("renders Notion-managed static page frontmatter", () => {
   assert.match(document, /comments: false/);
   assert.match(document, /notion_id: "47ddcd44-779f-81ca-b0c8-ff017ae62cc2"/);
   assert.match(document, /generated_by: "notion"/);
+  assert.match(document, /footer_label: "Home"/);
+  assert.match(document, /profile_name: "KIM YUSEOK"/);
+  assert.match(document, /profile_handle: "namuori"/);
+  assert.match(document, /profile_address: "Seoul, Korea"/);
+  assert.match(document, /profile_url: "https:\/\/github\.com\/NAMUORI00"/);
+  assert.match(document, /links:\n  - label: "Portfolio"\n    href: "https:\/\/namuori\.net\/"/);
   assert.match(document, /translationKey: "home"/);
   assert.match(document, /math: true/);
+});
+
+test("normalizes Notion custom frontmatter for managed legal profile and links pages", () => {
+  assert.equal(
+    normalizeCustomFrontMatter("---\nfooter_label: Privacy\n---\n"),
+    "footer_label: Privacy",
+  );
+  assert.equal(
+    normalizeCustomFrontMatter("title: Wrong\nprofile_address: Seoul\nnotion_id: fake"),
+    "profile_address: Seoul",
+  );
 });
 
 test("detects temporary Notion file URLs", () => {
