@@ -18,6 +18,23 @@ function ruleContaining(css, selector) {
   return rule;
 }
 
+function mediaBlock(css, query) {
+  const start = css.indexOf(query);
+  assert.ok(start >= 0, `Missing media block ${query}`);
+
+  const open = css.indexOf("{", start);
+  assert.ok(open >= 0, `Missing media block body for ${query}`);
+
+  let depth = 0;
+  for (let index = open; index < css.length; index += 1) {
+    if (css[index] === "{") depth += 1;
+    if (css[index] === "}") depth -= 1;
+    if (depth === 0) return css.slice(open + 1, index);
+  }
+
+  assert.fail(`Unclosed media block ${query}`);
+}
+
 test("home page separates the visual hero from conditional Notion about rendering", async () => {
   const home = await readFile(files.home, "utf8");
 
@@ -68,14 +85,23 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   const css = await readFile(files.css, "utf8");
   const contentColumnIndex = css.indexOf(".content-column {");
   const heroIndex = css.indexOf(".home-hero {");
+  const homeHeroRule = ruleContaining(css, ".home-hero");
+  const homeHeroTitleRule = ruleContaining(css, ".home-hero h1");
 
   assert.ok(contentColumnIndex >= 0, "Missing content-column rule");
   assert.ok(heroIndex > contentColumnIndex, "Home hero styles should follow content-column");
-  assert.match(ruleContaining(css, ".home-hero"), /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(180px,\s*280px\)/);
-  assert.match(ruleContaining(css, ".home-hero"), /min-height:\s*clamp\(320px,\s*48vh,\s*520px\)/);
+  assert.match(homeHeroRule, /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(180px,\s*280px\)/);
+  assert.match(homeHeroRule, /min-height:\s*clamp\(320px,\s*48vh,\s*520px\)/);
+  assert.match(homeHeroRule, /background:\s*var\(--panel\)/);
+  assert.doesNotMatch(homeHeroRule, /radial-gradient/);
+  assert.match(homeHeroTitleRule, /font-size:\s*3\.25rem/);
+  assert.doesNotMatch(homeHeroTitleRule, /vw|clamp\(/);
   assert.match(ruleContaining(css, ".home-hero__copy"), /max-width:\s*var\(--content-width\)/);
   assert.match(ruleContaining(css, ".signal-orbit"), /border-radius:\s*999px/);
   assert.match(ruleContaining(css, ".archive-heading"), /background:\s*var\(--panel\)/);
+  assert.match(mediaBlock(css, "@media (max-width: 1200px)"), /\.home-hero h1\s*\{[\s\S]*?font-size:\s*2\.75rem/s);
+  assert.match(mediaBlock(css, "@media (max-width: 900px)"), /\.home-hero h1\s*\{[\s\S]*?font-size:\s*2\.25rem/s);
+  assert.match(mediaBlock(css, "@media (max-width: 600px)"), /\.home-hero h1\s*\{[\s\S]*?font-size:\s*1\.9rem/s);
   assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.home-hero\s*\{[\s\S]*?grid-template-columns:\s*1fr/s);
   assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.home-hero__signal\s*\{[\s\S]*?max-width:\s*220px/s);
 });
