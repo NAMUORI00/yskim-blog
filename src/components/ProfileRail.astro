@@ -17,10 +17,6 @@ const hostnameFor = (href: string) => {
     return href;
   }
 };
-const faviconFor = (href: string) => {
-  const host = hostnameFor(href);
-  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32`;
-};
 ---
 
 <aside class="profile-rail" aria-label="Profile and categories">
@@ -49,29 +45,6 @@ const faviconFor = (href: string) => {
     </div>
   </section>
 
-  <section class="profile-section" aria-label="링크">
-    <p class="rail-section-title">Links</p>
-    <nav class="profile-link-list">
-      {profileLinks.map((link) => (
-        <a href={link.href} target="_blank" rel="noopener noreferrer">
-          <img
-            class="profile-link-favicon"
-            src={faviconFor(link.href)}
-            alt=""
-            width="16"
-            height="16"
-            loading="lazy"
-            decoding="async"
-          />
-          <span class="profile-link-copy">
-            <strong>{link.label}</strong>
-            <em>{hostnameFor(link.href)}</em>
-          </span>
-        </a>
-      ))}
-    </nav>
-  </section>
-
   <section class="profile-section" aria-label={UI.categories}>
     <p class="rail-section-title">{UI.categories}</p>
     <nav class="rail-category-list">
@@ -89,6 +62,26 @@ const faviconFor = (href: string) => {
       ) : (
         <span class="rail-empty">{UI.noCategories}</span>
       )}
+    </nav>
+  </section>
+
+  <section class="profile-section" aria-label="링크">
+    <p class="rail-section-title">Links</p>
+    <nav class="profile-link-list">
+      {profileLinks.map((link) => (
+        <a href={link.href} target="_blank" rel="noopener noreferrer">
+          <span class="profile-link-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none">
+              <path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 1 0-7.07-7.07l-1.22 1.22" />
+              <path d="M14 11a5 5 0 0 0-7.07 0l-2.12 2.12a5 5 0 1 0 7.07 7.07l1.22-1.22" />
+            </svg>
+          </span>
+          <span class="profile-link-copy">
+            <strong>{link.label}</strong>
+            <em>{hostnameFor(link.href)}</em>
+          </span>
+        </a>
+      ))}
     </nav>
   </section>
 </aside>

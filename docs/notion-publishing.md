@@ -4,7 +4,7 @@ This is the lightweight production target for managing blog content in a private
 
 ## Goal
 
-Keep `yskim-blog` as the only active publishing repository. Notion-managed content becomes Hugo-ready Markdown before validation, category path organization, Hugo build, comments, reactions, and deployment run.
+Keep `yskim-blog` as the only active publishing repository. Notion-managed content becomes Hugo-ready Markdown before validation, category path organization, Hugo build, comments, and deployment run.
 
 Notion is the CMS and editorial workspace. Hugo remains the owned static rendering layer. Do not embed Notion pages or scrape Notion public HTML.
 
@@ -135,7 +135,7 @@ Do not do partial updates at first. Full rebuild keeps unpublished, deleted, or 
 4. Add KaTeX or MathJax support to Hugo and verify rendered math.
 5. Switch GitHub Actions to the Notion source with manual dispatch and cron polling.
 6. Publish generated artifacts to `production` and deploy that branch to Cloudflare Pages.
-7. Verify production home, category page, post page, reactions, Giscus comments, images, and equations in the browser.
+7. Verify production home, category page, post page, Giscus comments, images, and equations in the browser.
 8. Rename legacy repositories with an `-archive` suffix once Notion is stable.
 
 ## Needed before implementation
