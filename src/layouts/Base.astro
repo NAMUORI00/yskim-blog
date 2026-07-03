@@ -23,6 +23,7 @@ export interface Props {
 
 const { math = false, ...seo } = Astro.props;
 const rss = new URL("/index.xml", SITE.url).href;
+const githubUrl = `https://github.com/${SITE.github}`;
 ---
 
 <!doctype html>
@@ -107,22 +108,22 @@ const rss = new URL("/index.xml", SITE.url).href;
           <slot />
         </main>
         <footer class="site-footer">
-          <p>
-            {UI.footerCopyright} ·
-            <a href={SITE.portfolio} target="_blank" rel="noopener noreferrer">{UI.navPortfolio}</a> ·
-            <a href="/index.xml">RSS</a>
-            {SITE.notionPublicUrl && (
-              <>
-                {" · "}
-                <a href={SITE.notionPublicUrl} target="_blank" rel="noopener noreferrer">노션으로 보기</a>
-              </>
-            )}
-          </p>
-          <nav class="footer-legal" aria-label="사이트 정보">
-            <a href="/pages/privacy/">개인정보처리방침</a> ·
-            <a href="/pages/disclaimer/">면책조항</a> ·
-            <a href="/pages/contact/">연락처</a>
-          </nav>
+          <div class="site-footer__inner">
+            <span class="site-footer__license">{UI.footerCopyright}</span>
+            <nav class="footer-primary" aria-label="프로젝트 링크">
+              <a href={SITE.portfolio} target="_blank" rel="noopener noreferrer">{UI.navPortfolio}</a>
+              <a href={githubUrl} target="_blank" rel="noopener noreferrer">GitHub</a>
+              <a href="/index.xml">RSS</a>
+              {SITE.notionPublicUrl && (
+                <a href={SITE.notionPublicUrl} target="_blank" rel="noopener noreferrer">Notion</a>
+              )}
+            </nav>
+            <nav class="footer-legal" aria-label="사이트 정보">
+              <a href="/pages/privacy/">Privacy</a>
+              <a href="/pages/disclaimer/">Disclaimer</a>
+              <a href="/pages/contact/">Contact</a>
+            </nav>
+          </div>
         </footer>
       </div>
       <Sidebar />

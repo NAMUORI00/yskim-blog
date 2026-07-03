@@ -46,5 +46,5 @@ export const UI = {
   comments: "댓글",
   reactions: "반응",
   themeToggle: "화면 테마 전환",
-  footerCopyright: "© yskim",
+  footerCopyright: "© 2026 yskim (namuori)",
 } as const;

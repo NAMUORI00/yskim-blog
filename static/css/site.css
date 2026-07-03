@@ -21,9 +21,10 @@
   --font-xl: 1.5rem;
   --font-2xl: 2rem;
   --content-width: 42rem;
-  --rail-width: 220px;
-  --sidebar-width: 280px;
-  --shell-max: 1280px;
+  --content-column-max: 820px;
+  --rail-width: 232px;
+  --sidebar-width: 292px;
+  --shell-max: 1420px;
   --font-sans: "Pretendard Variable", Pretendard, "Nanum Gothic", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
   --font-serif: "Noto Serif KR", Georgia, serif;
   --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, SFMono-Regular, monospace;
@@ -321,11 +322,20 @@ body.theme-dark .theme-icon-moon {
 
 .profile-rail {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--line);
   border-radius: var(--radius-sm);
   box-shadow: var(--shadow-soft);
+}
+
+.profile-intro {
+  display: grid;
+  grid-template-columns: 56px minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: center;
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--line-soft);
 }
 
 .avatar {
@@ -348,16 +358,16 @@ body.theme-dark .theme-icon-moon {
 .profile-name {
   margin: var(--space-1) 0 0;
   color: var(--heading);
-  font-size: var(--font-sm);
+  font-size: var(--font-xs);
   font-weight: 700;
   line-height: 1.35;
 }
 
 .profile-bio {
-  margin: var(--space-2) 0 0;
+  margin: 0;
   color: var(--muted);
-  font-size: var(--font-sm);
-  line-height: 1.5;
+  font-size: var(--font-xs);
+  line-height: 1.55;
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
@@ -367,6 +377,8 @@ body.theme-dark .theme-icon-moon {
 .profile-bio--about {
   max-width: var(--content-width);
   margin-top: var(--space-3);
+  font-size: var(--font-base);
+  line-height: 1.65;
   -webkit-line-clamp: unset;
   overflow: visible;
   display: block;
@@ -376,6 +388,7 @@ body.theme-dark .theme-icon-moon {
   padding: 0;
   background: transparent;
   border: 0;
+  min-width: 0;
 }
 
 .readme-card {
@@ -402,10 +415,15 @@ body.theme-dark .theme-icon-moon {
 .brand {
   display: block;
   color: var(--heading);
-  font-size: var(--font-lg);
+  font-size: 1rem;
   font-weight: 800;
   line-height: 1.22;
   text-decoration: none;
+}
+
+.profile-intro .profile-kicker {
+  margin-bottom: var(--space-1);
+  font-size: 0.68rem;
 }
 
 .handle {
@@ -452,7 +470,8 @@ body.theme-dark .theme-icon-moon {
 .rail-section {
   display: grid;
   gap: var(--space-2);
-  margin-top: var(--space-1);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--line-soft);
 }
 
 .rail-section-title {
@@ -514,6 +533,32 @@ body.theme-dark .theme-icon-moon {
   padding: var(--space-2);
   color: var(--faint);
   font-size: var(--font-sm);
+}
+
+.profile-link-list {
+  display: grid;
+  gap: 1px;
+}
+
+.profile-link-list a,
+.profile-link-list span {
+  display: flex;
+  align-items: center;
+  min-height: 30px;
+  padding: var(--space-1) var(--space-2);
+  color: var(--muted);
+  background: transparent;
+  border-left: 2px solid transparent;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  text-decoration: none;
+}
+
+.profile-link-list a:hover {
+  color: var(--accent-strong);
+  background: var(--panel-soft);
+  border-left-color: var(--accent);
 }
 
 .content-column {
@@ -1672,13 +1717,17 @@ body.theme-dark .chroma .s {
 }
 
 .site-footer {
-  padding: var(--space-4) 0 0;
+  margin-top: var(--space-7);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--line);
   color: var(--muted);
-  font-size: var(--font-sm);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  line-height: 1.5;
 }
 
 .site-footer a {
-  color: var(--muted);
+  color: var(--accent);
   text-decoration: none;
 }
 
@@ -1686,10 +1735,26 @@ body.theme-dark .chroma .s {
   color: var(--accent-strong);
 }
 
+.site-footer__inner,
+.footer-primary,
 .footer-legal {
-  margin-top: var(--space-2);
-  font-size: var(--font-xs, 0.78rem);
-  opacity: 0.85;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+}
+
+.site-footer__inner {
+  justify-content: space-between;
+}
+
+.site-footer__license {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.footer-legal {
+  justify-content: flex-end;
 }
 
 .ad-slot {
@@ -1737,7 +1802,9 @@ body.theme-dark .chroma .s {
   :root {
     --shell-max: 1500px;
     --content-width: 48rem;
-    --sidebar-width: 300px;
+    --content-column-max: 860px;
+    --rail-width: 240px;
+    --sidebar-width: 304px;
   }
 
   html {
@@ -1755,7 +1822,8 @@ body.theme-dark .chroma .s {
   :root {
     --shell-max: 1660px;
     --content-width: 52rem;
-    --rail-width: 240px;
+    --content-column-max: 900px;
+    --rail-width: 252px;
     --sidebar-width: 320px;
   }
 
@@ -1773,54 +1841,60 @@ body.theme-dark .chroma .s {
   :root {
     --shell-max: 1820px;
     --content-width: 56rem;
+    --content-column-max: 960px;
   }
 }
 
-/* Desktop (>1200px): pin the profile rail to the left edge and the sidebar to
-   the right edge, both fixed in place while the page scrolls, with the main
-   content centered in the band between them. */
+/* Desktop (>1200px): keep the portfolio's left profile / center scroll /
+   right context rhythm as one explicit three-column shell. */
 @media (min-width: 1201px) {
   :root {
     /* Top bar height (min-height 50px + 1px border) used to offset the rails. */
     --topbar-h: 51px;
-    --rail-edge: var(--space-6);
-    --rail-content-gap: var(--space-6);
+  }
+
+  .top-bar-inner,
+  .site-shell {
+    grid-template-columns: var(--rail-width) minmax(0, var(--content-column-max)) var(--sidebar-width);
+    justify-content: center;
+  }
+
+  .top-bar-inner {
+    display: grid;
+  }
+
+  .top-bar-brand {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .top-bar-nav {
+    justify-content: center;
+  }
+
+  .top-bar-utils {
+    justify-content: flex-end;
   }
 
   .site-shell {
-    display: block;
-    width: 100%;
-    max-width: none;
-    margin: 0;
-    padding: var(--space-7) 0 var(--space-8);
+    align-items: start;
+    width: min(100% - var(--space-8), var(--shell-max));
+    margin: 0 auto;
+    padding: var(--space-7) var(--space-4) var(--space-8);
   }
 
   .profile-rail,
   .blog-sidebar {
-    position: fixed;
+    position: sticky;
     top: calc(var(--topbar-h) + var(--space-5));
     max-height: calc(100dvh - var(--topbar-h) - var(--space-7));
     margin: 0;
     overflow-y: auto;
     overscroll-behavior: contain;
     scrollbar-width: thin;
-    z-index: 20;
-  }
-
-  .profile-rail {
-    left: var(--rail-edge);
-    width: var(--rail-width);
-  }
-
-  .blog-sidebar {
-    right: var(--rail-edge);
-    width: var(--sidebar-width);
-  }
-
-  /* Reserve room for each fixed rail so the content never slides under it. */
-  .content-column {
-    margin-left: calc(var(--rail-edge) + var(--rail-width) + var(--rail-content-gap));
-    margin-right: calc(var(--rail-edge) + var(--sidebar-width) + var(--rail-content-gap));
+    z-index: 10;
   }
 }
 
@@ -1885,13 +1959,20 @@ body.theme-dark .chroma .s {
   .profile-rail,
   .blog-sidebar {
     position: static;
+    align-self: stretch;
+    width: 100%;
   }
 
   .profile-rail {
-    grid-template-columns: 52px minmax(0, 1fr);
     gap: var(--space-2) var(--space-3);
     align-items: start;
     margin-bottom: var(--space-4);
+  }
+
+  .profile-intro {
+    grid-template-columns: 52px minmax(0, 1fr);
+    padding-bottom: 0;
+    border-bottom: 0;
   }
 
   .avatar {

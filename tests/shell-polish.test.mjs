@@ -5,6 +5,7 @@ import { readFile } from "node:fs/promises";
 const files = {
   css: new URL("../static/css/site.css", import.meta.url),
   enhance: new URL("../src/styles/enhance.css", import.meta.url),
+  base: new URL("../src/layouts/Base.astro", import.meta.url),
   profileRail: new URL("../src/components/ProfileRail.astro", import.meta.url),
   sidebar: new URL("../src/components/Sidebar.astro", import.meta.url),
 };
@@ -64,13 +65,19 @@ function mediaBlock(css, query) {
 }
 
 test("profile and sidebar asides expose contextual landmark labels", async () => {
-  const [profileRail, sidebar] = await Promise.all([
+  const [profileRail, sidebar, base] = await Promise.all([
     readFile(files.profileRail, "utf8"),
     readFile(files.sidebar, "utf8"),
+    readFile(files.base, "utf8"),
   ]);
 
   assert.match(profileRail, /<aside class="profile-rail" aria-label="Profile and categories">/);
+  assert.match(profileRail, /<div class="profile-intro">/);
+  assert.match(profileRail, /class="profile-link-list"/);
   assert.match(sidebar, /<aside class="blog-sidebar" aria-label="Blog context">/);
+  assert.match(base, /class="site-footer__inner"/);
+  assert.match(base, /class="site-footer__license"/);
+  assert.match(base, /class="footer-primary"/);
 });
 
 test("site css applies shell surface polish and keeps the mobile graph visible", async () => {
@@ -95,6 +102,7 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
     ".top-bar-nav a.is-active",
   ]);
   const mobile = mediaBlock(css, "@media (max-width: 600px)");
+  const tablet = mediaBlock(css, "@media (max-width: 900px)");
 
   assert.match(topBar.body, /background:\s*var\(--panel-glass\)/);
   assert.match(topBar.body, /border-bottom:\s*1px solid var\(--line\)/);
@@ -118,6 +126,28 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(ruleForSelector(mobile, ".sidebar-graph-canvas").body, /max-height:\s*240px/);
   assert.match(ruleForSelector(mobile, ".knowledge-graph-canvas").body, /touch-action:\s*pan-y/);
   assert.match(ruleForSelector(mobile, ".knowledge-scene").body, /display:\s*none/);
+  assert.match(tablet, /\.profile-rail,\s*\.blog-sidebar\s*\{[^}]*align-self:\s*stretch[^}]*width:\s*100%/s);
+});
+
+test("desktop shell keeps portfolio-like three-column rhythm and license footer", async () => {
+  const css = await readFile(files.css, "utf8");
+  const desktop = mediaBlock(css, "@media (min-width: 1201px)");
+  const shellGrid = ruleForSelectors(desktop, [".top-bar-inner", ".site-shell"]);
+  const stickyRails = ruleForSelectors(desktop, [".profile-rail", ".blog-sidebar"]);
+
+  assert.match(css, /--content-column-max:\s*820px/);
+  assert.match(ruleForSelector(css, ".profile-intro").body, /grid-template-columns:\s*56px minmax\(0,\s*1fr\)/);
+  assert.match(ruleForSelector(css, ".profile-bio").body, /font-size:\s*var\(--font-xs\)/);
+  assert.match(ruleForSelector(css, ".profile-link-list").body, /display:\s*grid/);
+  assert.match(shellGrid.body, /grid-template-columns:\s*var\(--rail-width\) minmax\(0,\s*var\(--content-column-max\)\) var\(--sidebar-width\)/);
+  assert.match(ruleForSelectorsWith(desktop, [".top-bar-inner"], /display:\s*grid/, ".top-bar-inner desktop grid").body, /display:\s*grid/);
+  assert.match(ruleForSelectorsWith(desktop, [".site-shell"], /align-items:\s*start/, ".site-shell desktop alignment").body, /align-items:\s*start/);
+  assert.match(stickyRails.body, /position:\s*sticky/);
+  assert.doesNotMatch(desktop, /position:\s*fixed/);
+  assert.match(ruleForSelector(css, ".site-footer").body, /border-top:\s*1px solid var\(--line\)/);
+  assert.match(ruleForSelector(css, ".site-footer").body, /font-family:\s*var\(--font-mono\)/);
+  assert.match(ruleForSelector(css, ".site-footer").body, /font-size:\s*0\.65rem/);
+  assert.match(ruleForSelectorsWith(css, [".site-footer__inner"], /justify-content:\s*space-between/, ".site-footer__inner spacing").body, /justify-content:\s*space-between/);
 });
 
 test("enhance css animates signal details only when motion is allowed", async () => {
