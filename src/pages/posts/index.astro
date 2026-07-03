@@ -8,9 +8,11 @@ const posts = await getPublishedPosts();
 ---
 
 <Base title={UI.allPosts} description="공개 발행된 노트와 글.">
-  <header class="page-heading">
+  <header class="page-heading archive-heading">
+    <p class="eyebrow">Archive</p>
     <h1>{UI.allPosts}</h1>
     <p>공개 발행된 노트와 글.</p>
+    <p class="page-header-count">{posts.length} entries</p>
   </header>
   <section class="post-feed">
     {posts.length > 0 ? (

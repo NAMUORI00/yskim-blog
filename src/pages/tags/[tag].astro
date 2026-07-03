@@ -23,7 +23,8 @@ const { name, posts } = Astro.props;
 ---
 
 <Base title={`#${name}`} description={`태그: ${name}`}>
-  <header class="page-heading">
+  <header class="page-heading archive-heading">
+    <p class="eyebrow">Tag</p>
     <h1>#{name}</h1>
     <p>태그 · {posts.length}개의 글</p>
   </header>

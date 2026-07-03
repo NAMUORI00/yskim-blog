@@ -514,6 +514,82 @@ body.theme-dark .theme-icon-moon {
   background: var(--bg);
 }
 
+.home-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 280px);
+  gap: var(--space-6);
+  align-items: center;
+  min-height: clamp(320px, 48vh, 520px);
+  margin-bottom: var(--space-5);
+  padding: var(--space-7);
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 82% 30%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 34%),
+    var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-soft);
+}
+
+.home-hero__copy {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  gap: var(--space-4);
+  max-width: var(--content-width);
+}
+
+.home-hero h1 {
+  margin: 0;
+  color: var(--heading);
+  font-family: var(--font-serif);
+  font-size: clamp(2rem, 4vw, 4.2rem);
+  line-height: 1.05;
+}
+
+.home-hero__signal {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+}
+
+.signal-orbit,
+.signal-node {
+  position: absolute;
+  border-radius: 999px;
+}
+
+.signal-orbit {
+  inset: 12%;
+  border: 1px solid color-mix(in srgb, var(--accent) 28%, transparent);
+}
+
+.signal-orbit--two {
+  inset: 28%;
+  border-color: color-mix(in srgb, var(--accent-light) 34%, transparent);
+}
+
+.signal-node {
+  width: 18px;
+  height: 18px;
+  background: var(--accent);
+  box-shadow: 0 0 0 10px color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.signal-node--root { left: 48%; top: 46%; }
+.signal-node--post { right: 18%; top: 22%; background: var(--accent-light); }
+.signal-node--tag { left: 16%; bottom: 22%; background: var(--muted); }
+
+.archive-heading {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+}
+
 .section-link {
   display: inline-flex;
   align-items: center;
@@ -1756,6 +1832,18 @@ body.theme-dark .chroma .s {
   .content-column { order: 1; }
   .profile-rail { order: 2; }
   .blog-sidebar { order: 3; }
+
+  .home-hero {
+    grid-template-columns: 1fr;
+    min-height: auto;
+    padding: var(--space-5);
+  }
+
+  .home-hero__signal {
+    max-width: 220px;
+    width: 70%;
+    margin: 0 auto;
+  }
 
   .profile-rail,
   .blog-sidebar {

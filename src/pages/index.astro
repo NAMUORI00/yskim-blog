@@ -16,36 +16,50 @@ const AboutContent = about ? (await render(about)).Content : null;
 ---
 
 <Base isHome={true} title={SITE.title} description={SITE.description} type="website">
-  <article class="readme-card post home-readme">
-    <div class="filebar">
-      <span></span><span></span><span></span>
-      <strong>README.md</strong>
-      <em>{SITE.handle}</em>
+  <section class="home-hero" aria-labelledby="home-title">
+    <div class="home-hero__copy">
+      <p class="eyebrow">NAMUORI.LOG</p>
+      <h1 id="home-title">{SITE.title}</h1>
+      <p class="summary">{SITE.description}</p>
+      {gh.bio && <p class="profile-bio profile-bio--about">{gh.bio}</p>}
+      <div class="hero-actions">
+        <a class="primary-link" href="/posts/">{UI.allPosts}</a>
+        <a class="text-link" href={SITE.portfolio} target="_blank" rel="noopener noreferrer">
+          {UI.navPortfolio} ↗
+        </a>
+      </div>
     </div>
-    <div class="post-inner">
-      <header class="post-header">
-        <h1>{SITE.title}</h1>
-        <p class="summary">{SITE.description}</p>
-        {gh.bio && <p class="profile-bio profile-bio--about">{gh.bio}</p>}
-        <div class="hero-actions">
-          <a class="primary-link" href="/posts/">{UI.allPosts}</a>
-          <a class="text-link" href={SITE.portfolio} target="_blank" rel="noopener noreferrer">
-            {UI.navPortfolio} ↗
-          </a>
-        </div>
-      </header>
-      {AboutContent && (
+    <div class="home-hero__signal" aria-hidden="true">
+      <span class="signal-orbit signal-orbit--one"></span>
+      <span class="signal-orbit signal-orbit--two"></span>
+      <span class="signal-node signal-node--root"></span>
+      <span class="signal-node signal-node--post"></span>
+      <span class="signal-node signal-node--tag"></span>
+    </div>
+  </section>
+
+  {AboutContent && (
+    <article class="readme-card post home-readme">
+      <div class="filebar">
+        <span></span><span></span><span></span>
+        <strong>README.md</strong>
+        <em>{SITE.handle}</em>
+      </div>
+      <div class="post-inner">
         <div class="content">
           <AboutContent />
         </div>
-      )}
-    </div>
-  </article>
+      </div>
+    </article>
+  )}
 
   {posts.length > 0 && (
     <section class="post-feed post-feed--home">
       <div class="section-heading">
-        <h2>{UI.recent}</h2>
+        <div>
+          <p class="eyebrow">Recent Notes</p>
+          <h2>{UI.recent}</h2>
+        </div>
         <a class="section-link" href="/posts/">{UI.allPosts}</a>
       </div>
       <div class="post-list">
