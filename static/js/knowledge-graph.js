@@ -4,6 +4,7 @@
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
   const lerp = (from, to, amount) => from + (to - from) * amount;
+  const sphereRadiusFor = (width, height) => Math.min(width, height) * 0.48;
 
   function readCssVar(name, fallback) {
     const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
@@ -112,10 +113,10 @@
       pointer: null,
       hoverNode: null,
       focusNode: activeNode,
-      offsetX: 0,
-      offsetY: 0,
-      targetOffsetX: 0,
-      targetOffsetY: 0,
+      rotationX: 0,
+      rotationY: 0,
+      targetRotationX: 0,
+      targetRotationY: 0,
       laidOut: false,
       raf: 0,
     };
@@ -212,14 +213,57 @@
       state.laidOut = true;
     };
 
-    const displayPoint = (node) => ({
-      x: node.x + state.offsetX,
-      y: node.y + state.offsetY,
-    });
+    const sphereVector = (node) => {
+      const radius = Math.max(1, sphereRadiusFor(state.width, state.height));
+      const nx = clamp((node.x - state.width / 2) / radius, -0.96, 0.96);
+      const ny = clamp((node.y - state.height / 2) / radius, -0.96, 0.96);
+      const distance = Math.hypot(nx, ny);
+      const scale = distance > 0.96 ? 0.96 / distance : 1;
+      const x = nx * scale;
+      const y = ny * scale;
+      const z = Math.sqrt(Math.max(0, 1 - x * x - y * y));
+      return { x, y, z };
+    };
 
-    const setOffsetTarget = (node) => {
-      state.targetOffsetX = node ? state.width / 2 - node.x : 0;
-      state.targetOffsetY = node ? state.height / 2 - node.y : 0;
+    const rotateSphereVector = (vector) => {
+      const cosY = Math.cos(state.rotationY);
+      const sinY = Math.sin(state.rotationY);
+      const x1 = vector.x * cosY + vector.z * sinY;
+      const z1 = -vector.x * sinY + vector.z * cosY;
+
+      const cosX = Math.cos(state.rotationX);
+      const sinX = Math.sin(state.rotationX);
+      const y2 = vector.y * cosX - z1 * sinX;
+      const z2 = vector.y * sinX + z1 * cosX;
+
+      return { x: x1, y: y2, z: z2 };
+    };
+
+    const displayPoint = (node) => {
+      const radius = Math.max(1, sphereRadiusFor(state.width, state.height));
+      const rotated = rotateSphereVector(sphereVector(node));
+      const depth = clamp((rotated.z + 1) / 2, 0, 1);
+      const perspective = 0.82 + depth * 0.22;
+      return {
+        x: state.width / 2 + rotated.x * radius * perspective,
+        y: state.height / 2 + rotated.y * radius * perspective,
+        depth,
+      };
+    };
+
+    const setRotationTarget = (node) => {
+      if (!node) {
+        state.targetRotationX = 0;
+        state.targetRotationY = 0;
+        return;
+      }
+
+      const vector = sphereVector(node);
+      const rotationY = -Math.atan2(vector.x, vector.z);
+      const zAfterY = Math.hypot(vector.x, vector.z);
+      const rotationX = Math.atan2(vector.y, zAfterY);
+      state.targetRotationX = clamp(rotationX, -1.08, 1.08);
+      state.targetRotationY = clamp(rotationY, -1.08, 1.08);
     };
 
     const pointerInfluence = (node) => {
@@ -269,21 +313,33 @@
         const sourceFocus = Math.max(link.source.focus, link.target.focus);
         const source = displayPoint(link.source);
         const target = displayPoint(link.target);
+        const midX = (source.x + target.x) / 2;
+        const midY = (source.y + target.y) / 2;
+        const normalX = midX - state.width / 2;
+        const normalY = midY - state.height / 2;
+        const distance = Math.hypot(normalX, normalY) || 1;
+        const lift = Math.min(16, Math.hypot(source.x - target.x, source.y - target.y) * 0.08);
         ctx.beginPath();
         ctx.moveTo(source.x, source.y);
-        ctx.lineTo(target.x, target.y);
+        ctx.quadraticCurveTo(
+          midX + (normalX / distance) * lift,
+          midY + (normalY / distance) * lift,
+          target.x,
+          target.y,
+        );
         ctx.strokeStyle = focused ? colors.edgeFocus : colors.edge;
-        ctx.globalAlpha = focused ? 0.34 + sourceFocus * 0.28 : 0.18;
+        ctx.globalAlpha = focused ? 0.3 + sourceFocus * 0.3 : 0.12 + Math.min(source.depth, target.depth) * 0.08;
         ctx.lineWidth = focused ? 1.1 + sourceFocus * 0.8 : 0.8;
         ctx.lineCap = "round";
         ctx.stroke();
       }
       ctx.globalAlpha = 1;
 
-      for (const node of nodes) {
+      const nodesByDepth = [...nodes].sort((a, b) => displayPoint(a).depth - displayPoint(b).depth);
+      for (const node of nodesByDepth) {
         const focus = node.focus;
-        const radius = node.r * (1 + focus * 0.32);
         const point = displayPoint(node);
+        const radius = node.r * (0.86 + point.depth * 0.2) * (1 + focus * 0.32);
         let fill = colors.post;
         if (node.type === "main") fill = colors.main;
         if (node.type === "category") fill = colors.category;
@@ -300,7 +356,7 @@
         ctx.beginPath();
         ctx.arc(point.x, point.y, radius, 0, TAU);
         ctx.fillStyle = fill;
-        ctx.globalAlpha = 0.54 + focus * 0.42;
+        ctx.globalAlpha = 0.42 + point.depth * 0.22 + focus * 0.36;
         ctx.fill();
         ctx.lineWidth = 0.8 + focus * 1.1;
         ctx.strokeStyle = focus > 0.5 ? colors.edgeFocus : colors.nodeStroke;
@@ -332,16 +388,16 @@
     const animateFocus = () => {
       state.raf = 0;
       let needsNext = false;
-      const nextOffsetX = prefersReduced ? state.targetOffsetX : lerp(state.offsetX, state.targetOffsetX, 0.18);
-      const nextOffsetY = prefersReduced ? state.targetOffsetY : lerp(state.offsetY, state.targetOffsetY, 0.18);
+      const nextRotationX = prefersReduced ? state.targetRotationX : lerp(state.rotationX, state.targetRotationX, 0.16);
+      const nextRotationY = prefersReduced ? state.targetRotationY : lerp(state.rotationY, state.targetRotationY, 0.16);
       if (
-        Math.abs(nextOffsetX - state.targetOffsetX) > 0.2 ||
-        Math.abs(nextOffsetY - state.targetOffsetY) > 0.2
+        Math.abs(nextRotationX - state.targetRotationX) > 0.002 ||
+        Math.abs(nextRotationY - state.targetRotationY) > 0.002
       ) {
         needsNext = true;
       }
-      state.offsetX = needsNext ? nextOffsetX : state.targetOffsetX;
-      state.offsetY = needsNext ? nextOffsetY : state.targetOffsetY;
+      state.rotationX = needsNext ? nextRotationX : state.targetRotationX;
+      state.rotationY = needsNext ? nextRotationY : state.targetRotationY;
       for (const node of nodes) {
         const next = prefersReduced ? node.targetFocus : lerp(node.focus, node.targetFocus, 0.22);
         if (Math.abs(next - node.targetFocus) > 0.01) needsNext = true;
@@ -359,7 +415,7 @@
     const ensureLayout = () => {
       const changed = resize();
       if (changed || !state.laidOut) layout();
-      setOffsetTarget(state.hoverNode);
+      setRotationTarget(state.hoverNode);
       updateTargets();
       draw();
     };
@@ -374,7 +430,7 @@
       const hit = nearestNode(state.pointer.x, state.pointer.y) || state.hoverNode;
       state.hoverNode = hit;
       state.focusNode = hit || activeNode;
-      setOffsetTarget(hit);
+      setRotationTarget(hit);
       canvas.style.cursor = hit?.url ? "pointer" : "default";
       scheduleFocus();
     };
@@ -383,7 +439,7 @@
       state.pointer = null;
       state.hoverNode = null;
       state.focusNode = activeNode;
-      setOffsetTarget(null);
+      setRotationTarget(null);
       canvas.style.cursor = "default";
       scheduleFocus();
     };
