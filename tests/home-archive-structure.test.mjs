@@ -43,6 +43,7 @@ test("home page renders one Notion-managed intro without readme or recent posts"
   assert.match(home, /<section class="home-hero" aria-labelledby="home-title">/);
   assert.match(home, /<article class="readme-card home-intro-window" aria-label="나무가든 소개" data-content-window>/);
   assert.match(home, /class="filebar home-intro-window__bar"/);
+  assert.match(home, /data-window-action="move"/);
   assert.match(home, /<p class="eyebrow">NAMUORI\.LOG<\/p>/);
   assert.match(home, /const homePage = findPage\("home"\)/);
   assert.match(home, /const HomeContent = homePage \? \(await render\(homePage\)\)\.Content : null/);
@@ -50,6 +51,7 @@ test("home page renders one Notion-managed intro without readme or recent posts"
   assert.doesNotMatch(home, /homeSource|home-hero__metrics|<dt>Source<\/dt>|<dt>Pages<\/dt>|<dt>Categories<\/dt>/);
   assert.match(home, /<aside class="readme-card home-grove-window" aria-label="나무 애니메이션 창" data-content-window>/);
   assert.match(home, /class="filebar home-grove-window__bar"/);
+  assert.match(home, /data-window-action="move"/);
   assert.match(home, /<strong>garden\.motion<\/strong>/);
   assert.match(home, /<div class="home-hero__grove" aria-hidden="true">/);
   assert.match(home, /class="grove-leaf grove-leaf--float grove-leaf--drift-four"/);
@@ -105,6 +107,7 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   assert.ok(contentColumnIndex >= 0, "Missing content-column rule");
   assert.ok(heroIndex > contentColumnIndex, "Home hero styles should follow content-column");
   assert.match(homeHeroRule, /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(150px,\s*220px\)/);
+  assert.match(homeHeroRule, /gap:\s*var\(--space-4\)/);
   assert.match(homeHeroRule, /min-height:\s*clamp\(280px,\s*38vh,\s*420px\)/);
   assert.match(homeHeroRule, /align-items:\s*start/);
   assert.match(homeHeroRule, /background:\s*transparent/);
@@ -114,15 +117,19 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   assert.doesNotMatch(homeHeroTitleRule, /vw|clamp\(/);
   assert.match(ruleContaining(css, ".home-hero__copy"), /max-width:\s*var\(--content-width\)/);
   assert.match(ruleContaining(css, ".home-intro-window"), /margin-bottom:\s*0/);
+  assert.match(ruleContaining(css, ".home-intro-window"), /align-self:\s*start/);
   assert.match(ruleContaining(css, ".home-grove-window"), /align-self:\s*start/);
   assert.doesNotMatch(ruleContaining(css, ".home-grove-window"), /grid-template-rows:\s*auto minmax\(0,\s*1fr\)/);
   assert.match(ruleContaining(css, ".home-grove-window"), /padding:\s*0/);
   assert.match(ruleContaining(css, ".home-grove-window__body"), /display:\s*grid/);
   assert.match(ruleContaining(css, ".home-grove-window__body"), /min-height:\s*0/);
+  assert.match(ruleContaining(css, ".home-grove-window__body"), /padding:\s*var\(--space-4\)\s*var\(--space-3\)/);
   assert.match(ruleContaining(css, ".home-hero__grove"), /aspect-ratio:\s*1\s*\/\s*1/);
   assert.match(css, /\.grove-trunk\s*\{[^}]*background:\s*linear-gradient\(180deg,\s*var\(--accent-light\),\s*var\(--accent-strong\)\)/s);
   assert.match(css, /\.grove-leaf\s*\{[^}]*border-radius:\s*100% 0 100% 0/s);
   assert.match(ruleContaining(css, ".archive-window__bar"), /min-height:\s*32px/);
+  assert.doesNotMatch(ruleContaining(css, ".filebar strong"), /text-overflow:\s*ellipsis|white-space:\s*nowrap/);
+  assert.match(ruleContaining(css, ".filebar strong"), /overflow-wrap:\s*anywhere/);
   assert.match(css, /\.archive-window__feed\s*\{[^}]*padding:\s*var\(--space-4\)/s);
   assert.match(css, /\.search-panel\s*\{[^}]*display:\s*grid/s);
   assert.doesNotMatch(css, /home-readme__|signal-orbit|archive-heading|home-hero__metrics/);

@@ -16,13 +16,26 @@ const DEFAULT_PROPERTIES = {
   canonical: "Canonical",
   comments: "Comments",
   type: "Type",
+  customFrontMatter: "custom-front-matter",
 };
 
 const GENERATED_POSTS_DIR = path.join("content", "posts");
 const GENERATED_PAGES_DIR = path.join("content", "pages");
 const GENERATED_NOTION_IMAGES_DIR = path.join("static", "images", "notion");
 const GENERATED_NOTION_FILES_DIR = path.join("static", "files", "notion");
-const STATIC_PAGE_TYPES = new Set(["page", "static", "static page", "home", "about", "readme"]);
+const STATIC_PAGE_TYPES = new Set([
+  "page",
+  "static",
+  "static page",
+  "home",
+  "about",
+  "readme",
+  "privacy",
+  "disclaimer",
+  "contact",
+  "profile",
+  "links",
+]);
 
 export function pageToContentType(page, propertyNames = DEFAULT_PROPERTIES) {
   const properties = page.properties ?? {};
@@ -110,6 +123,7 @@ export function pageToStaticPage(page, propertyNames = DEFAULT_PROPERTIES) {
     tags: readMultiSelect(properties[propertyNames.tags]),
     summary: readPlainText(properties[propertyNames.summary]),
     comments: readCheckbox(properties[propertyNames.comments], false),
+    customFrontMatter: readPlainText(properties[propertyNames.customFrontMatter]),
   };
 
   const missing = [];
@@ -147,12 +161,67 @@ export function buildStaticPageDocument(staticPage, markdownBody) {
     `translationKey: ${yamlString(staticPage.slug)}`,
   );
 
+  const customFrontMatter = normalizeCustomFrontMatter(staticPage.customFrontMatter);
+  if (customFrontMatter) {
+    frontMatter.push(...customFrontMatter.split("\n"));
+  }
+
   if (containsMath(markdownBody)) {
     frontMatter.push("math: true");
   }
 
   frontMatter.push("---", "");
   return `${frontMatter.join("\n")}${markdownBody.trim()}\n`;
+}
+
+export function normalizeCustomFrontMatter(value) {
+  const reserved = new Set([
+    "title",
+    "date",
+    "draft",
+    "slug",
+    "tags",
+    "summary",
+    "comments",
+    "notion_id",
+    "generated_by",
+    "translationkey",
+    "math",
+  ]);
+  const lines = String(value ?? "")
+    .replace(/\r\n/g, "\n")
+    .split("\n")
+    .map((line) => line.trimEnd());
+
+  while (lines[0]?.trim() === "") lines.shift();
+  while (lines.at(-1)?.trim() === "") lines.pop();
+  while (lines[0]?.trim() === "---") lines.shift();
+  while (lines.at(-1)?.trim() === "---") lines.pop();
+  while (lines[0]?.trim() === "") lines.shift();
+  while (lines.at(-1)?.trim() === "") lines.pop();
+
+  const kept = [];
+  let skippingReservedBlock = false;
+  for (const line of lines) {
+    if (!line.trim()) {
+      if (kept.length > 0 && !skippingReservedBlock) kept.push("");
+      continue;
+    }
+
+    const topLevel = line.match(/^([A-Za-z0-9_-]+)\s*:/);
+    if (topLevel) {
+      const key = topLevel[1].toLowerCase();
+      skippingReservedBlock = reserved.has(key);
+      if (skippingReservedBlock) continue;
+    }
+
+    if (!skippingReservedBlock) {
+      kept.push(line);
+    }
+  }
+
+  while (kept.at(-1) === "") kept.pop();
+  return kept.join("\n").trim();
 }
 
 export function hasTemporaryNotionUrl(markdown) {

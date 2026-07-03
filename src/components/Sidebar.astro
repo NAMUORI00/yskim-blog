@@ -8,7 +8,7 @@ const recent = posts.slice(0, 5);
 const tags = await getTags();
 ---
 
-<aside class="blog-sidebar" aria-label="Blog context">
+<aside id="blog-sidebar" class="blog-sidebar" aria-label="Blog context" data-drag-rail="right">
   <div class="blog-sidebar-panel">
     <KnowledgeGraph />
     <section class="sidebar-card">

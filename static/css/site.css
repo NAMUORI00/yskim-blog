@@ -414,6 +414,40 @@ pre {
   font-family: var(--font-mono);
 }
 
+.top-bar-drag-reset {
+  position: absolute;
+  top: calc(100% + var(--space-2));
+  left: 50%;
+  z-index: 135;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 34px;
+  padding: 0 var(--space-3);
+  color: var(--accent-strong);
+  background: var(--panel);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.top-bar-drag-reset[hidden] {
+  display: none;
+}
+
+.top-bar-drag-reset svg {
+  width: 15px;
+  height: 15px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .top-bar-utils {
   display: flex;
   align-items: center;
@@ -515,6 +549,101 @@ body.theme-dark .theme-icon-moon {
   padding: var(--space-6) var(--space-4) var(--space-8);
 }
 
+.rail-dock-layer {
+  position: fixed;
+  inset: calc(51px + var(--space-2)) 0 var(--footer-reserved);
+  z-index: 96;
+  pointer-events: none;
+}
+
+.rail-dock {
+  position: absolute;
+  top: 50%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  min-height: 92px;
+  padding: var(--space-2) var(--space-1);
+  color: var(--accent-strong);
+  background: var(--panel-glass);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(14px);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  pointer-events: auto;
+  text-orientation: mixed;
+  text-transform: uppercase;
+  transform: translateY(-50%);
+  transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
+  writing-mode: vertical-rl;
+}
+
+.rail-dock:hover,
+.rail-dock[aria-expanded="true"] {
+  background: var(--panel);
+  border-color: var(--accent-border);
+}
+
+.rail-dock--left {
+  left: var(--space-2);
+}
+
+.rail-dock--right {
+  right: var(--space-2);
+}
+
+body.has-window-drag-mode .rail-dock {
+  display: inline-flex;
+}
+
+body.has-window-drag-mode .site-shell {
+  --content-column-max: min(1240px, calc(100vw - 96px));
+  display: grid;
+  grid-template-columns: minmax(0, var(--content-column-max));
+  justify-content: center;
+}
+
+body.has-window-drag-mode .content-column {
+  grid-column: 1;
+}
+
+body.has-window-drag-mode .profile-rail,
+body.has-window-drag-mode .blog-sidebar {
+  position: fixed;
+  top: calc(51px + var(--space-3));
+  bottom: calc(var(--footer-reserved) + var(--space-3));
+  z-index: 92;
+  max-height: none;
+  margin: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  transition: transform 0.2s ease, opacity 0.18s ease;
+}
+
+body.has-window-drag-mode .profile-rail {
+  left: var(--space-4);
+  width: var(--rail-width);
+}
+
+body.has-window-drag-mode .blog-sidebar {
+  right: var(--space-4);
+  width: var(--sidebar-width);
+}
+
+body.has-window-drag-mode:not(.is-rail-left-open):not(.is-rail-left-peeking) .profile-rail {
+  transform: translateX(calc(-100% - var(--space-5)));
+}
+
+body.has-window-drag-mode:not(.is-rail-right-open):not(.is-rail-right-peeking) .blog-sidebar {
+  transform: translateX(calc(100% + var(--space-5)));
+}
+
 .profile-rail,
 .blog-sidebar {
   position: sticky;
@@ -607,6 +736,13 @@ body.theme-dark .theme-icon-moon {
   min-width: 0;
 }
 
+[data-content-window] {
+  --window-drag-x: 0px;
+  --window-drag-y: 0px;
+  transform: translate3d(var(--window-drag-x), var(--window-drag-y), 0);
+  transition: transform 0.18s ease, box-shadow 0.14s ease, border-color 0.14s ease;
+}
+
 .readme-card {
   overflow: hidden;
   margin-bottom: var(--space-4);
@@ -624,6 +760,21 @@ body.theme-dark .theme-icon-moon {
   box-shadow: none;
 }
 
+.readme-card.is-drag-armed > .filebar {
+  cursor: grab;
+}
+
+.readme-card.is-dragging {
+  z-index: 70;
+  border-color: var(--accent-border);
+  box-shadow: 0 24px 70px -34px rgba(0, 0, 0, 0.56);
+  transition: none;
+}
+
+.readme-card.is-dragging > .filebar {
+  cursor: grabbing;
+}
+
 .readme-card.is-maximized {
   position: fixed;
   inset: calc(52px + var(--space-3)) var(--space-4) var(--space-4);
@@ -634,6 +785,7 @@ body.theme-dark .theme-icon-moon {
   overflow: auto;
   border-color: var(--accent-border);
   box-shadow: 0 28px 80px -34px rgba(0, 0, 0, 0.58);
+  transform: none;
 }
 
 .readme-card.is-maximized > .filebar {
@@ -915,7 +1067,7 @@ body.has-maximized-content-window {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(150px, 220px);
-  gap: var(--space-5);
+  gap: var(--space-4);
   align-items: start;
   isolation: isolate;
   min-height: clamp(280px, 38vh, 420px);
@@ -933,6 +1085,7 @@ body.has-maximized-content-window {
 }
 
 .home-intro-window {
+  align-self: start;
   margin-bottom: 0;
 }
 
@@ -960,7 +1113,7 @@ body.has-maximized-content-window {
   display: grid;
   place-items: center;
   min-height: 0;
-  padding: var(--space-3);
+  padding: var(--space-4) var(--space-3);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 38%, transparent), transparent 62%),
     var(--panel);
@@ -1225,6 +1378,7 @@ body.has-maximized-content-window {
   align-items: center;
   gap: var(--space-2);
   margin-right: var(--space-2);
+  flex: 0 0 auto;
 }
 
 .filebar-control {
@@ -1248,6 +1402,25 @@ body.has-maximized-content-window {
   background: #d2685f;
 }
 
+.filebar-control--move {
+  position: relative;
+  background: var(--accent);
+}
+
+.filebar-control--move::before,
+.filebar-control--move::after {
+  content: "";
+  position: absolute;
+  inset: 3px;
+  border-top: 1px solid color-mix(in srgb, var(--panel) 82%, transparent);
+  border-left: 1px solid color-mix(in srgb, var(--panel) 82%, transparent);
+  transform: rotate(45deg);
+}
+
+.filebar-control--move::after {
+  transform: rotate(225deg);
+}
+
 .filebar-control--minimize {
   background: #d6aa45;
 }
@@ -1262,11 +1435,13 @@ body.has-maximized-content-window {
 
 .filebar strong {
   min-width: 0;
-  overflow: hidden;
+  flex: 1 1 auto;
+  overflow: visible;
   color: var(--accent-strong);
   font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  white-space: normal;
 }
 
 .filebar em {
@@ -2441,6 +2616,10 @@ body.theme-dark .chroma .s {
     width: calc(100% - var(--space-4));
     margin: 0 auto;
     padding: var(--space-7) 0 var(--space-8);
+  }
+
+  body.has-window-drag-mode .site-shell {
+    grid-template-columns: minmax(0, var(--content-column-max));
   }
 
   .profile-rail,

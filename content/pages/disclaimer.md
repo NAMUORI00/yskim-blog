@@ -7,6 +7,7 @@ tags:
   - meta
 summary: "콘텐츠의 책임 범위와 광고·제휴 링크에 관한 고지."
 comments: false
+footer_label: "Disclaimer"
 translationKey: "disclaimer"
 ---
 

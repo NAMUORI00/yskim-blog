@@ -7,6 +7,7 @@ tags:
   - meta
 summary: "나무가든이 수집·이용하는 정보와 쿠키, 제3자 광고에 관한 안내."
 comments: false
+footer_label: "Privacy"
 translationKey: "privacy"
 ---
 
