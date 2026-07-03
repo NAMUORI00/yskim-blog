@@ -106,6 +106,7 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   assert.ok(heroIndex > contentColumnIndex, "Home hero styles should follow content-column");
   assert.match(homeHeroRule, /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(150px,\s*220px\)/);
   assert.match(homeHeroRule, /min-height:\s*clamp\(280px,\s*38vh,\s*420px\)/);
+  assert.match(homeHeroRule, /align-items:\s*start/);
   assert.match(homeHeroRule, /background:\s*transparent/);
   assert.doesNotMatch(homeHeroRule, /radial-gradient/);
   assert.match(homeHeroTitleRule, /font-size:\s*2\.2rem/);
@@ -113,9 +114,11 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   assert.doesNotMatch(homeHeroTitleRule, /vw|clamp\(/);
   assert.match(ruleContaining(css, ".home-hero__copy"), /max-width:\s*var\(--content-width\)/);
   assert.match(ruleContaining(css, ".home-intro-window"), /margin-bottom:\s*0/);
-  assert.match(ruleContaining(css, ".home-grove-window"), /align-self:\s*center/);
+  assert.match(ruleContaining(css, ".home-grove-window"), /align-self:\s*start/);
+  assert.doesNotMatch(ruleContaining(css, ".home-grove-window"), /grid-template-rows:\s*auto minmax\(0,\s*1fr\)/);
   assert.match(ruleContaining(css, ".home-grove-window"), /padding:\s*0/);
   assert.match(ruleContaining(css, ".home-grove-window__body"), /display:\s*grid/);
+  assert.match(ruleContaining(css, ".home-grove-window__body"), /min-height:\s*0/);
   assert.match(ruleContaining(css, ".home-hero__grove"), /aspect-ratio:\s*1\s*\/\s*1/);
   assert.match(css, /\.grove-trunk\s*\{[^}]*background:\s*linear-gradient\(180deg,\s*var\(--accent-light\),\s*var\(--accent-strong\)\)/s);
   assert.match(css, /\.grove-leaf\s*\{[^}]*border-radius:\s*100% 0 100% 0/s);

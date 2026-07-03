@@ -123,6 +123,8 @@
       targetRotationX: 0,
       targetRotationY: 0,
       idleSpinPhase: 0,
+      idlePoleBlend: 0,
+      targetIdlePoleBlend: 0,
       isIdlePoleView: false,
       laidOut: false,
       raf: 0,
@@ -278,8 +280,7 @@
       };
     };
 
-    const displayPoint = (node) => {
-      if (state.isIdlePoleView) return polarSurfacePoint(node);
+    const sphereDisplayPoint = (node) => {
       const radius = Math.max(1, sphereRadiusFor(state.width, state.height));
       const rotated = rotateSphereVector(sphereVector(node));
       const depth = clamp((rotated.z + 1) / 2, 0, 1);
@@ -289,6 +290,19 @@
         y: state.height / 2 + rotated.y * radius * perspective,
         depth,
       };
+    };
+
+    const blendDisplayPoint = (spherePoint, polarPoint, amount) => ({
+      x: lerp(spherePoint.x, polarPoint.x, amount),
+      y: lerp(spherePoint.y, polarPoint.y, amount),
+      depth: lerp(spherePoint.depth, polarPoint.depth, amount),
+    });
+
+    const displayPoint = (node) => {
+      const blend = prefersReduced ? state.targetIdlePoleBlend : state.idlePoleBlend;
+      if (blend <= 0.001) return sphereDisplayPoint(node);
+      if (blend >= 0.999) return polarSurfacePoint(node);
+      return blendDisplayPoint(sphereDisplayPoint(node), polarSurfacePoint(node), blend);
     };
 
     const wireframePoint = (vector) => {
@@ -412,7 +426,8 @@
         clearTimeout(idleReturnTimer);
         idleReturnTimer = 0;
       }
-      state.isIdlePoleView = false;
+      state.targetIdlePoleBlend = 0;
+      state.isIdlePoleView = state.idlePoleBlend > 0.001;
     };
 
     const scheduleIdleReturn = () => {
@@ -422,7 +437,8 @@
         state.pointer = null;
         state.hoverNode = null;
         state.focusNode = rootNode;
-        state.isIdlePoleView = Boolean(rootNode) && cameraAboveNorthPole && !prefersReduced;
+        state.targetIdlePoleBlend = Boolean(rootNode) && cameraAboveNorthPole && !prefersReduced ? 1 : 0;
+        state.isIdlePoleView = state.targetIdlePoleBlend > 0;
         setRotationTarget(rootNode);
         canvas.style.cursor = "default";
         scheduleFocus();
@@ -470,7 +486,7 @@
       ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
       ctx.clearRect(0, 0, state.width, state.height);
 
-      if (state.isIdlePoleView) drawNorthPoleWireframe();
+      if (state.idlePoleBlend > 0.05 || state.targetIdlePoleBlend > 0) drawNorthPoleWireframe();
       else drawSphereWireframe();
 
       const focusIds = adjacency.get(state.focusNode?.id) || new Set();
@@ -554,7 +570,16 @@
     const animateFocus = () => {
       state.raf = 0;
       let needsNext = false;
-      if (state.isIdlePoleView && !prefersReduced) {
+      const nextIdlePoleBlend = prefersReduced
+        ? state.targetIdlePoleBlend
+        : lerp(state.idlePoleBlend, state.targetIdlePoleBlend, 0.12);
+      if (Math.abs(nextIdlePoleBlend - state.targetIdlePoleBlend) > 0.01) {
+        needsNext = true;
+      }
+      state.idlePoleBlend = needsNext ? nextIdlePoleBlend : state.targetIdlePoleBlend;
+      state.isIdlePoleView = state.idlePoleBlend > 0.001 || state.targetIdlePoleBlend > 0;
+
+      if (state.targetIdlePoleBlend > 0 && !prefersReduced) {
         state.idleSpinPhase += IDLE_SPIN_SPEED;
         state.rotationX = lerp(state.rotationX, 0, 0.08);
         state.rotationY = lerp(state.rotationY, 0, 0.08);

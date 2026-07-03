@@ -33,12 +33,17 @@ test("knowledge graph keeps only data-backed nodes and edges with pointer focus 
   assert.match(script, /state\.targetRotationY/);
   assert.match(script, /idleReturnTimer/);
   assert.match(script, /idleSpinPhase/);
+  assert.match(script, /idlePoleBlend/);
+  assert.match(script, /targetIdlePoleBlend/);
   assert.match(script, /rootNode/);
   assert.match(script, /scheduleIdleReturn/);
   assert.match(script, /state\.isIdlePoleView/);
   assert.match(script, /drawSphereWireframe/);
   assert.match(script, /drawNorthPoleWireframe/);
   assert.match(script, /polarSurfacePoint/);
+  assert.match(script, /sphereDisplayPoint/);
+  assert.match(script, /blendDisplayPoint/);
+  assert.match(script, /lerp\(state\.idlePoleBlend,\s*state\.targetIdlePoleBlend/);
   assert.match(script, /cameraAboveNorthPole/);
   assert.match(script, /const longitude = baseAngle \+ state\.idleSpinPhase/);
   assert.match(script, /rootPole/);
@@ -47,6 +52,7 @@ test("knowledge graph keeps only data-backed nodes and edges with pointer focus 
   assert.match(script, /latitude/);
   assert.match(script, /quadraticCurveTo/);
   assert.match(script, /const showLabel = state\.hoverNode\?\.id === node\.id/);
+  assert.doesNotMatch(script, /const cancelIdleReturn = \(\) => \{[\s\S]*?state\.isIdlePoleView = false;[\s\S]*?\};/);
   assert.doesNotMatch(script, /const showLabel = node\.type === "main" \|\| node\.active/);
   assert.doesNotMatch(script, /createRadialGradient|twinkle|lineDashOffset|levelSpeed|grid/);
 });
