@@ -15,6 +15,7 @@
       edge: readCssVar("--line-strong", "#c7ccbf"),
       edgeFocus: readCssVar("--accent", "#305c47"),
       main: readCssVar("--accent-strong", "#162f25"),
+      category: readCssVar("--accent-light", "#3f8a65"),
       post: readCssVar("--accent", "#305c47"),
       tag: readCssVar("--muted", "#71786f"),
       nodeStroke: readCssVar("--panel", "#ffffff"),
@@ -56,7 +57,7 @@
     return label.length > max ? `${label.slice(0, max - 1)}...` : label;
   }
 
-  const levelOf = (type) => (type === "main" ? 0 : type === "post" ? 1 : 2);
+  const levelOf = (type) => (type === "main" ? 0 : type === "category" ? 1 : type === "post" ? 2 : 3);
 
   function initGraph(root) {
     const canvas = root.querySelector(".knowledge-graph-canvas");
@@ -75,7 +76,8 @@
     const radiusFor = (node) => {
       const weight = degree.get(node.id) || 0;
       if (node.type === "main") return 8.5;
-      if (node.type === "post") return 5.4 + Math.min(2.4, weight * 0.5);
+      if (node.type === "category") return 6.2 + Math.min(2.1, weight * 0.45);
+      if (node.type === "post") return 5.1 + Math.min(2.1, weight * 0.42);
       return 3.8 + Math.min(2.8, weight * 0.75);
     };
 
@@ -158,14 +160,16 @@
     const ringRadius = (level) => {
       const base = Math.min(state.width, state.height);
       if (level === 0) return 0;
-      if (level === 1) return base * 0.28;
-      return base * 0.43;
+      if (level === 1) return base * 0.22;
+      if (level === 2) return base * 0.34;
+      return base * 0.46;
     };
 
     const siblingSpread = (level, count) => {
       if (count <= 1) return 0;
       if (level === 1) return TAU / count;
-      return Math.min(0.62, Math.PI / Math.max(4, count + 1));
+      if (level === 2) return Math.min(0.82, Math.PI / Math.max(3, count));
+      return Math.min(0.56, Math.PI / Math.max(4, count + 1));
     };
 
     const layout = () => {
@@ -174,7 +178,7 @@
       const pad = 18;
       const angles = new Map();
 
-      for (let level = 0; level <= 2; level += 1) {
+      for (let level = 0; level <= 3; level += 1) {
         const levelNodes = nodes
           .filter((node) => node.level === level)
           .sort((a, b) => hashFraction(a.id, "order") - hashFraction(b.id, "order") || a.id.localeCompare(b.id));
@@ -282,6 +286,7 @@
         const point = displayPoint(node);
         let fill = colors.post;
         if (node.type === "main") fill = colors.main;
+        if (node.type === "category") fill = colors.category;
         if (node.type === "tag") fill = colors.tag;
 
         if (focus > 0.18) {
@@ -312,7 +317,7 @@
         const label = truncate(node.label, node.type === "tag" ? 14 : 20);
         const radius = node.r * (1 + node.focus * 0.32);
         const point = displayPoint(node);
-        const fontSize = node.type === "main" ? 11 : 9.5;
+        const fontSize = node.type === "main" || node.type === "category" ? 11 : 9.5;
         ctx.font = `${node.focus > 0.5 ? "700" : "600"} ${fontSize}px ${fontFamily}`;
         ctx.lineWidth = 3;
         ctx.strokeStyle = colors.labelBg;

@@ -1,0 +1,121 @@
+---
+import Base from "../layouts/Base.astro";
+import { SITE, UI } from "../config";
+import { getPublishedPosts, postUrl } from "../lib/posts";
+
+const posts = await getPublishedPosts();
+const searchItems = posts.map((post) => ({
+  title: post.data.title,
+  slug: post.data.slug,
+  href: postUrl(post.data.slug),
+  summary: post.data.summary,
+  date: post.data.date.toISOString().slice(0, 10),
+  categories: post.data.categories,
+  tags: post.data.tags,
+}));
+const searchIndex = JSON.stringify(searchItems);
+---
+
+<Base title={UI.navSearch} description={`${SITE.title} 글 검색`}>
+  <article class="readme-card search-window" aria-label="검색" data-content-window>
+    <div class="filebar search-window__bar">
+      <div class="filebar-controls" aria-label="검색 창 제어">
+        <button type="button" class="filebar-control filebar-control--close" data-window-action="close" aria-label="닫기"></button>
+        <button type="button" class="filebar-control filebar-control--minimize" data-window-action="minimize" aria-label="최소화"></button>
+        <button type="button" class="filebar-control filebar-control--maximize" data-window-action="maximize" aria-label="최대화"></button>
+      </div>
+      <strong>검색: 글</strong>
+      <em>{posts.length} entries</em>
+    </div>
+    <section class="search-panel">
+      <label class="search-field">
+        <span>{UI.navSearch}</span>
+        <input type="search" inputmode="search" autocomplete="off" placeholder="제목, 요약, 카테고리, 태그" data-search-input />
+      </label>
+      <p class="search-count" data-search-count>{posts.length} entries</p>
+      <div class="search-results" data-search-results></div>
+      <template class="search-index" data-search-index>{searchIndex}</template>
+    </section>
+  </article>
+
+  <script is:inline>
+    (() => {
+      const input = document.querySelector("[data-search-input]");
+      const results = document.querySelector("[data-search-results]");
+      const count = document.querySelector("[data-search-count]");
+      const index = document.querySelector("[data-search-index]");
+      if (!input || !results || !count || !index) return;
+
+      let items = [];
+      try {
+        const raw = index instanceof HTMLTemplateElement ? index.content.textContent : index.textContent;
+        items = JSON.parse(raw.trim());
+      } catch {
+        items = [];
+      }
+
+      const params = new URLSearchParams(window.location.search);
+      const initialQuery = params.get("q") || "";
+      input.value = initialQuery;
+
+      const normalize = (value) => String(value || "").toLocaleLowerCase("ko-KR");
+      const matches = (item, query) => {
+        if (!query) return true;
+        const haystack = [
+          item.title,
+          item.slug,
+          item.href,
+          item.summary,
+          item.date,
+          ...(item.categories || []),
+          ...(item.tags || []),
+        ].map(normalize).join(" ");
+        return haystack.includes(query);
+      };
+
+      const render = () => {
+        const query = normalize(input.value.trim());
+        const filtered = items.filter((item) => matches(item, query));
+        count.textContent = `${filtered.length} entries`;
+        results.replaceChildren();
+
+        if (filtered.length === 0) {
+          const empty = document.createElement("p");
+          empty.className = "search-empty";
+          empty.textContent = "검색 결과가 없습니다.";
+          results.append(empty);
+          return;
+        }
+
+        for (const item of filtered) {
+          const link = document.createElement("a");
+          link.className = "search-result";
+          link.href = item.href;
+
+          const meta = document.createElement("span");
+          meta.className = "search-result-meta";
+          meta.textContent = [item.date, ...(item.categories || [])].filter(Boolean).join(" · ");
+
+          const title = document.createElement("strong");
+          title.textContent = item.title;
+
+          const summary = document.createElement("span");
+          summary.className = "search-result-summary";
+          summary.textContent = item.summary || "";
+
+          const tags = document.createElement("span");
+          tags.className = "search-result-tags";
+          tags.textContent = (item.tags || []).slice(0, 5).map((tag) => `#${tag}`).join(" ");
+
+          link.append(meta, title);
+          if (item.summary) link.append(summary);
+          if ((item.tags || []).length > 0) link.append(tags);
+          results.append(link);
+        }
+      };
+
+      input.addEventListener("input", render);
+      render();
+    })();
+  </script>
+</Base>

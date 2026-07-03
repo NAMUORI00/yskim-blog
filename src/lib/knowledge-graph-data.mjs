@@ -11,7 +11,7 @@ const normalizeHandle = (handle) => {
   };
 };
 
-export function buildKnowledgeGraph({ posts, handle, currentSlug, postUrl, tagUrl, slugifyTerm }) {
+export function buildKnowledgeGraph({ posts, handle, currentSlug, postUrl, categoryUrl, tagUrl, slugifyTerm }) {
   const nodes = [];
   const links = [];
   const seen = new Set();
@@ -39,6 +39,18 @@ export function buildKnowledgeGraph({ posts, handle, currentSlug, postUrl, tagUr
 
   for (const post of posts) {
     const postId = `post:${post.data.slug}`;
+    const categories = post.data.categories?.length ? post.data.categories : ["기타"];
+    for (const category of categories) {
+      const categoryId = `category:${slugifyTerm(category)}`;
+      addNode({
+        id: categoryId,
+        label: category,
+        type: "category",
+        url: categoryUrl ? categoryUrl(category) : "/",
+      });
+      addLink({ source: rootId, target: categoryId });
+    }
+
     addNode({
       id: postId,
       label: post.data.title,
@@ -46,7 +58,11 @@ export function buildKnowledgeGraph({ posts, handle, currentSlug, postUrl, tagUr
       url: postUrl(post.data.slug),
       active: post.data.slug === currentSlug,
     });
-    addLink({ source: rootId, target: postId });
+
+    for (const category of categories) {
+      const categoryId = `category:${slugifyTerm(category)}`;
+      addLink({ source: categoryId, target: postId });
+    }
 
     for (const tag of post.data.tags) {
       const tagId = `tag:${slugifyTerm(tag)}`;
@@ -71,6 +87,17 @@ export function createVisualGraphSubset(graph, { maxNodes = 72 } = {}) {
   const active = graph.nodes.find((node) => node.active);
   if (root) keep.add(root.id);
   if (active) keep.add(active.id);
+
+  if (active) {
+    for (const link of graph.links) {
+      const connectedToActive = link.source === active.id || link.target === active.id;
+      if (!connectedToActive) continue;
+      const otherId = link.source === active.id ? link.target : link.source;
+      const other = nodesById.get(otherId);
+      if (other?.type === "category") keep.add(other.id);
+    }
+  }
+
   const requestedMaxNodes = Number.isFinite(maxNodes) ? Math.max(0, Math.floor(maxNodes)) : 72;
   const effectiveMaxNodes = Math.max(requestedMaxNodes, keep.size);
 

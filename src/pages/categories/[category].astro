@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
-import PostCard from "../../components/PostCard.astro";
-import { getPublishedPosts, postUrl, slugifyTerm, type Post } from "../../lib/posts";
+import PostListWindow from "../../components/PostListWindow.astro";
+import { getPublishedPosts, slugifyTerm, type Post } from "../../lib/posts";
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -23,24 +23,5 @@ const { name, posts } = Astro.props;
 ---
 
 <Base title={name} description={`카테고리: ${name}`}>
-  <header class="page-heading archive-heading">
-    <p class="eyebrow">Category</p>
-    <h1>{name}</h1>
-    <p>카테고리 · {posts.length}개의 글</p>
-  </header>
-  <section class="post-feed">
-    <div class="post-list">
-      {posts.map((p) => (
-        <PostCard
-          href={postUrl(p.data.slug)}
-          title={p.data.title}
-          date={p.data.date}
-          category={p.data.categories[0]}
-          summary={p.data.summary}
-          cover={p.data.cover || undefined}
-          tags={p.data.tags}
-        />
-      ))}
-    </div>
-  </section>
+  <PostListWindow label="카테고리" title={name} posts={posts} />
 </Base>

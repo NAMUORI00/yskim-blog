@@ -4,23 +4,25 @@ import { readFile } from "node:fs/promises";
 
 const files = {
   base: new URL("../src/layouts/Base.astro", import.meta.url),
-  home: new URL("../src/pages/index.astro", import.meta.url),
   page: new URL("../src/pages/pages/[slug].astro", import.meta.url),
   post: new URL("../src/pages/posts/[slug].astro", import.meta.url),
+  postListWindow: new URL("../src/components/PostListWindow.astro", import.meta.url),
+  search: new URL("../src/pages/search.astro", import.meta.url),
   script: new URL("../static/js/window-controls.js", import.meta.url),
   css: new URL("../static/css/site.css", import.meta.url),
 };
 
 test("content windows expose real filebar control buttons", async () => {
-  const [base, home, page, post] = await Promise.all([
+  const [base, page, post, postListWindow, search] = await Promise.all([
     readFile(files.base, "utf8"),
-    readFile(files.home, "utf8"),
     readFile(files.page, "utf8"),
     readFile(files.post, "utf8"),
+    readFile(files.postListWindow, "utf8"),
+    readFile(files.search, "utf8"),
   ]);
 
   assert.match(base, /\/js\/window-controls\.js/);
-  for (const source of [home, page, post]) {
+  for (const source of [page, post, postListWindow, search]) {
     assert.match(source, /data-content-window/);
     assert.match(source, /data-window-action="close"/);
     assert.match(source, /data-window-action="minimize"/);

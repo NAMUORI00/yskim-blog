@@ -2,16 +2,28 @@
    adds depth, motion, and polish on top of the base site.css. */
 
 @media (prefers-reduced-motion: no-preference) {
-  .home-hero__signal {
-    animation: signal-drift 18s linear infinite;
+  .home-hero__grove {
+    animation: grove-sway 9s ease-in-out infinite;
+    transform-origin: 50% 100%;
   }
 
-  .signal-orbit {
-    animation: signal-pulse 3.8s ease-in-out infinite;
+  .grove-leaf--float {
+    animation: leaf-drift 7.6s ease-in-out infinite;
   }
 
-  .signal-orbit--two {
-    animation-duration: 5.4s;
+  .grove-leaf--drift-two {
+    animation-duration: 9.2s;
+    animation-delay: -2.2s;
+  }
+
+  .grove-leaf--drift-three {
+    animation-duration: 8.4s;
+    animation-delay: -4s;
+  }
+
+  .grove-leaf--drift-four {
+    animation-duration: 10.2s;
+    animation-delay: -5.6s;
   }
 
   .post-card,
@@ -81,14 +93,16 @@
     }
   }
 
-  @keyframes signal-drift {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+  @keyframes grove-sway {
+    0%, 100% { transform: rotate(-1.4deg); }
+    50% { transform: rotate(1.8deg); }
   }
 
-  @keyframes signal-pulse {
-    0%, 100% { opacity: 0.46; transform: scale(1); }
-    50% { opacity: 0.82; transform: scale(1.025); }
+  @keyframes leaf-drift {
+    0% { opacity: 0; transform: translate3d(0, 10px, 0) rotate(-28deg); }
+    14% { opacity: 0.9; }
+    52% { opacity: 0.72; transform: translate3d(32px, -16px, 0) rotate(22deg); }
+    100% { opacity: 0; transform: translate3d(88px, -44px, 0) rotate(92deg); }
   }
 }
 
