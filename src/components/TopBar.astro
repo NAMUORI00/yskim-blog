@@ -25,67 +25,69 @@ const isCategoryActive = Boolean(activeCategory);
 
 <header class="top-bar">
   <div class="top-bar-inner">
-    <a class="top-bar-brand" href="/">{SITE.title}</a>
-    <nav id="primary-nav" class="top-bar-nav" aria-label="Main navigation">
-      <a href="/" class={isHome ? "is-active" : ""} aria-current={isHome ? "page" : undefined}>
-        {UI.navHome}
-      </a>
-      {nav.map((item) => (
-        <a
-          href={item.href}
-          class={isActive(item.href) ? "is-active" : ""}
-          aria-current={isActive(item.href) ? "page" : undefined}
-        >
-          {item.name}
+    <div class="top-bar-left">
+      <a class="top-bar-brand" href="/">{SITE.title}</a>
+      <nav id="primary-nav" class="top-bar-nav" aria-label="Main navigation">
+        <a href="/" class={isHome ? "is-active" : ""} aria-current={isHome ? "page" : undefined}>
+          {UI.navHome}
         </a>
-      ))}
-      {categories.length > 0 && (
-        <details class="top-bar-categories">
-          <summary class={isCategoryActive ? "is-active" : ""}>
-            {activeCategory ? activeCategory.name : UI.categories}
-          </summary>
-          <div class="top-bar-category-menu">
-            {categories.map((category) => {
-              const href = categoryUrl(category.name);
-              const active = isActive(href);
-              return (
-                <a href={href} class={active ? "is-active" : ""} aria-current={active ? "page" : undefined}>
-                  <span>{category.name} ({category.count})</span>
-                </a>
-              );
-            })}
-          </div>
-        </details>
-      )}
-      <div class={`top-bar-search${isActive("/search/") ? " is-active" : ""}`} data-top-search>
-        <button
-          class="top-bar-search__toggle"
-          type="button"
-          aria-label={UI.navSearch}
-          aria-expanded="false"
-          data-top-search-toggle
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <circle cx="11" cy="11" r="7"></circle>
-            <path d="m16.5 16.5 4 4"></path>
-          </svg>
-        </button>
-        <form class="top-bar-search__form" action="/search/" role="search" data-top-search-form>
-          <label class="sr-only" for="top-search-input">{UI.navSearch}</label>
-          <input
-            id="top-search-input"
-            type="search"
-            name="q"
-            inputmode="search"
-            autocomplete="off"
-            placeholder="블로그 검색"
-            data-top-search-input
-          />
-        </form>
-        <div class="top-bar-search__results" hidden data-top-search-results></div>
-        <template data-top-search-index>{searchIndex}</template>
-      </div>
-    </nav>
+        {nav.map((item) => (
+          <a
+            href={item.href}
+            class={isActive(item.href) ? "is-active" : ""}
+            aria-current={isActive(item.href) ? "page" : undefined}
+          >
+            {item.name}
+          </a>
+        ))}
+        {categories.length > 0 && (
+          <details class="top-bar-categories">
+            <summary class={isCategoryActive ? "is-active" : ""}>
+              {activeCategory ? activeCategory.name : UI.categories}
+            </summary>
+            <div class="top-bar-category-menu">
+              {categories.map((category) => {
+                const href = categoryUrl(category.name);
+                const active = isActive(href);
+                return (
+                  <a href={href} class={active ? "is-active" : ""} aria-current={active ? "page" : undefined}>
+                    <span>{category.name} ({category.count})</span>
+                  </a>
+                );
+              })}
+            </div>
+          </details>
+        )}
+      </nav>
+    </div>
+    <div class={`top-bar-search${isActive("/search/") ? " is-active" : ""}`} data-top-search>
+      <button
+        class="top-bar-search__toggle"
+        type="button"
+        aria-label={UI.navSearch}
+        aria-expanded="false"
+        data-top-search-toggle
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"></circle>
+          <path d="m16.5 16.5 4 4"></path>
+        </svg>
+      </button>
+      <form class="top-bar-search__form" action="/search/" role="search" data-top-search-form>
+        <label class="sr-only" for="top-search-input">{UI.navSearch}</label>
+        <input
+          id="top-search-input"
+          type="search"
+          name="q"
+          inputmode="search"
+          autocomplete="off"
+          placeholder="블로그 검색"
+          data-top-search-input
+        />
+      </form>
+      <div class="top-bar-search__results" hidden data-top-search-results></div>
+      <template data-top-search-index>{searchIndex}</template>
+    </div>
     <div class="top-bar-utils">
       <button
         class="nav-toggle"
