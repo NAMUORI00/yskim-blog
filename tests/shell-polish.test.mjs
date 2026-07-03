@@ -116,6 +116,7 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(activeRule.body, /border-color:\s*var\(--accent-border\)/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-card").body, /display:\s*grid/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-canvas").body, /max-height:\s*240px/);
+  assert.match(ruleForSelector(mobile, ".knowledge-graph-canvas").body, /touch-action:\s*pan-y/);
   assert.match(ruleForSelector(mobile, ".knowledge-scene").body, /display:\s*none/);
 });
 
@@ -132,6 +133,8 @@ test("enhance css animates signal details only when motion is allowed", async ()
   assert.match(motion, /@keyframes signal-pulse/);
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /animation-duration:\s*0\.001ms !important/);
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /animation-iteration-count:\s*1 !important/);
+  assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /transition-duration:\s*0\.001ms !important/);
+  assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /transition-delay:\s*0ms !important/);
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /scroll-behavior:\s*auto !important/);
   assert.match(ruleForSelector(reduced, ".knowledge-scene").body, /display:\s*none/);
 });
