@@ -40,6 +40,20 @@
     setExpandedState(card);
   };
 
+  const restore = (card) => {
+    card.classList.remove(maximizeClass, minimizeClass);
+    document.body.classList.remove("has-maximized-content-window");
+    setExpandedState(card);
+  };
+
+  const toggleMinimize = (card) => {
+    if (card.classList.contains(minimizeClass)) {
+      restore(card);
+      return;
+    }
+    minimize(card);
+  };
+
   const maximize = (card) => {
     const wasMaximized = card.classList.contains(maximizeClass);
     clearMaximized(card);
@@ -65,7 +79,7 @@
       const button = event.target.closest("[data-window-action]");
       if (!button || !card.contains(button)) return;
       const action = button.dataset.windowAction;
-      if (action === "minimize") minimize(card);
+      if (action === "minimize") toggleMinimize(card);
       if (action === "maximize") maximize(card);
       if (action === "close") close(card);
     });

@@ -108,7 +108,12 @@
       height: 0,
       dpr: 1,
       pointer: null,
+      hoverNode: null,
       focusNode: activeNode,
+      offsetX: 0,
+      offsetY: 0,
+      targetOffsetX: 0,
+      targetOffsetY: 0,
       laidOut: false,
       raf: 0,
     };
@@ -203,10 +208,21 @@
       state.laidOut = true;
     };
 
+    const displayPoint = (node) => ({
+      x: node.x + state.offsetX,
+      y: node.y + state.offsetY,
+    });
+
+    const setOffsetTarget = (node) => {
+      state.targetOffsetX = node ? state.width / 2 - node.x : 0;
+      state.targetOffsetY = node ? state.height / 2 - node.y : 0;
+    };
+
     const pointerInfluence = (node) => {
       if (!state.pointer) return 0;
       const reach = Math.min(state.width, state.height) * 0.32;
-      const distance = Math.hypot(node.x - state.pointer.x, node.y - state.pointer.y);
+      const point = displayPoint(node);
+      const distance = Math.hypot(point.x - state.pointer.x, point.y - state.pointer.y);
       return clamp(1 - distance / reach, 0, 1);
     };
 
@@ -214,7 +230,8 @@
       let best = null;
       let bestDistance = Infinity;
       for (const node of nodes) {
-        const distance = Math.hypot(node.x - x, node.y - y);
+        const point = displayPoint(node);
+        const distance = Math.hypot(point.x - x, point.y - y);
         const hitRadius = Math.max(22, node.r + 12);
         if (distance <= hitRadius && distance < bestDistance) {
           best = node;
@@ -246,9 +263,11 @@
       for (const link of links) {
         const focused = focusIds.has(link.source.id) && focusIds.has(link.target.id);
         const sourceFocus = Math.max(link.source.focus, link.target.focus);
+        const source = displayPoint(link.source);
+        const target = displayPoint(link.target);
         ctx.beginPath();
-        ctx.moveTo(link.source.x, link.source.y);
-        ctx.lineTo(link.target.x, link.target.y);
+        ctx.moveTo(source.x, source.y);
+        ctx.lineTo(target.x, target.y);
         ctx.strokeStyle = focused ? colors.edgeFocus : colors.edge;
         ctx.globalAlpha = focused ? 0.34 + sourceFocus * 0.28 : 0.18;
         ctx.lineWidth = focused ? 1.1 + sourceFocus * 0.8 : 0.8;
@@ -260,20 +279,21 @@
       for (const node of nodes) {
         const focus = node.focus;
         const radius = node.r * (1 + focus * 0.32);
+        const point = displayPoint(node);
         let fill = colors.post;
         if (node.type === "main") fill = colors.main;
         if (node.type === "tag") fill = colors.tag;
 
         if (focus > 0.18) {
           ctx.beginPath();
-          ctx.arc(node.x, node.y, radius + 5 + focus * 4, 0, TAU);
+          ctx.arc(point.x, point.y, radius + 5 + focus * 4, 0, TAU);
           ctx.fillStyle = colors.edgeFocus;
           ctx.globalAlpha = 0.08 + focus * 0.12;
           ctx.fill();
         }
 
         ctx.beginPath();
-        ctx.arc(node.x, node.y, radius, 0, TAU);
+        ctx.arc(point.x, point.y, radius, 0, TAU);
         ctx.fillStyle = fill;
         ctx.globalAlpha = 0.54 + focus * 0.42;
         ctx.fill();
@@ -287,25 +307,36 @@
       ctx.textAlign = "center";
       ctx.textBaseline = "bottom";
       for (const node of nodes) {
-        const showLabel = node.type === "main" || node.active || node.focus > 0.62;
+        const showLabel = state.hoverNode?.id === node.id;
         if (!showLabel) continue;
         const label = truncate(node.label, node.type === "tag" ? 14 : 20);
         const radius = node.r * (1 + node.focus * 0.32);
+        const point = displayPoint(node);
         const fontSize = node.type === "main" ? 11 : 9.5;
         ctx.font = `${node.focus > 0.5 ? "700" : "600"} ${fontSize}px ${fontFamily}`;
         ctx.lineWidth = 3;
         ctx.strokeStyle = colors.labelBg;
         ctx.globalAlpha = 0.86;
-        ctx.strokeText(label, node.x, node.y - radius - 5);
+        ctx.strokeText(label, point.x, point.y - radius - 5);
         ctx.globalAlpha = 1;
         ctx.fillStyle = node.focus > 0.5 || node.type === "main" ? colors.text : colors.muted;
-        ctx.fillText(label, node.x, node.y - radius - 5);
+        ctx.fillText(label, point.x, point.y - radius - 5);
       }
     };
 
     const animateFocus = () => {
       state.raf = 0;
       let needsNext = false;
+      const nextOffsetX = prefersReduced ? state.targetOffsetX : lerp(state.offsetX, state.targetOffsetX, 0.18);
+      const nextOffsetY = prefersReduced ? state.targetOffsetY : lerp(state.offsetY, state.targetOffsetY, 0.18);
+      if (
+        Math.abs(nextOffsetX - state.targetOffsetX) > 0.2 ||
+        Math.abs(nextOffsetY - state.targetOffsetY) > 0.2
+      ) {
+        needsNext = true;
+      }
+      state.offsetX = needsNext ? nextOffsetX : state.targetOffsetX;
+      state.offsetY = needsNext ? nextOffsetY : state.targetOffsetY;
       for (const node of nodes) {
         const next = prefersReduced ? node.targetFocus : lerp(node.focus, node.targetFocus, 0.22);
         if (Math.abs(next - node.targetFocus) > 0.01) needsNext = true;
@@ -323,6 +354,7 @@
     const ensureLayout = () => {
       const changed = resize();
       if (changed || !state.laidOut) layout();
+      setOffsetTarget(state.hoverNode);
       updateTargets();
       draw();
     };
@@ -334,15 +366,19 @@
 
     const onPointerMove = (event) => {
       state.pointer = toLocal(event.clientX, event.clientY);
-      const hit = nearestNode(state.pointer.x, state.pointer.y);
+      const hit = nearestNode(state.pointer.x, state.pointer.y) || state.hoverNode;
+      state.hoverNode = hit;
       state.focusNode = hit || activeNode;
+      setOffsetTarget(hit);
       canvas.style.cursor = hit?.url ? "pointer" : "default";
       scheduleFocus();
     };
 
     const onPointerLeave = () => {
       state.pointer = null;
+      state.hoverNode = null;
       state.focusNode = activeNode;
+      setOffsetTarget(null);
       canvas.style.cursor = "default";
       scheduleFocus();
     };

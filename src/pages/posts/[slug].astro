@@ -2,7 +2,6 @@
 import { render } from "astro:content";
 import Base from "../../layouts/Base.astro";
 import ReadingProgress from "../../components/ReadingProgress.svelte";
-import Reactions from "../../components/Reactions.astro";
 import Comments from "../../components/Comments.astro";
 import AffiliateDisclosure from "../../components/AffiliateDisclosure.astro";
 import { SITE } from "../../config";
@@ -62,12 +61,7 @@ const breadcrumb = [
         {isAffiliate && <AffiliateDisclosure />}
         <Content />
       </div>
-      {d.comments && (
-        <>
-          <Reactions path={`/posts/${d.slug}/`} />
-          <Comments />
-        </>
-      )}
+      {d.comments && <Comments />}
     </div>
   </article>
 </Base>

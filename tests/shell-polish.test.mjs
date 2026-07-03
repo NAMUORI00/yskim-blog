@@ -78,8 +78,9 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   assert.match(profileRail, /class="profile-address"/);
   assert.match(profileRail, /class="profile-address-label">주소<\/p>/);
   assert.match(profileRail, /class="profile-link-list"/);
-  assert.match(profileRail, /class="profile-link-favicon"/);
-  assert.match(profileRail, /faviconFor\(link\.href\)/);
+  assert.match(profileRail, /class="profile-link-icon"/);
+  assert.match(profileRail, /<svg viewBox="0 0 24 24" fill="none">/);
+  assert.doesNotMatch(profileRail, /faviconFor|profile-link-favicon|google\.com\/s2\/favicons/);
   assert.match(profileRail, /\{ label: "Portfolio", href: SITE\.portfolio \}/);
   assert.doesNotMatch(profileRail, /href="\/index\.xml"|blog\.namuori\.net/);
   assert.match(sidebar, /<aside class="blog-sidebar" aria-label="Blog context">/);
@@ -97,13 +98,13 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
     profileRail.indexOf('aria-label="프로필"'),
     profileRail.indexOf("World Calling"),
     profileRail.indexOf('class="profile-address"'),
-    profileRail.indexOf('aria-label="링크"'),
     profileRail.indexOf("aria-label={UI.categories}"),
+    profileRail.indexOf('aria-label="링크"'),
   ];
   assert.ok(profileOrder.every((index) => index >= 0), "Profile rail is missing a requested section");
   assert.ok(
     profileOrder.every((index, i, order) => i === 0 || order[i - 1] < index),
-    "Profile rail sections should be ordered profile, intro, address, links, categories",
+    "Profile rail sections should be ordered profile, intro, address, categories, links",
   );
 });
 
@@ -154,8 +155,10 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(ruleForSelectors(css, [".top-bar-category-menu a.is-active", ".top-bar-category-menu a:hover"]).body, /border-left-color:\s*var\(--accent\)/);
   assert.match(ruleForSelector(css, ".profile-section").body, /border-top:\s*1px solid var\(--line-soft\)/);
   assert.match(ruleForSelector(css, ".profile-address").body, /font-style:\s*normal/);
-  assert.match(ruleForSelector(css, ".profile-link-list a").body, /grid-template-columns:\s*18px minmax\(0,\s*1fr\)/);
-  assert.match(ruleForSelector(css, ".profile-link-favicon").body, /width:\s*16px/);
+  assert.match(ruleForSelector(css, ".profile-link-list a").body, /grid-template-columns:\s*22px minmax\(0,\s*1fr\)/);
+  assert.match(ruleForSelector(css, ".profile-link-icon").body, /color:\s*var\(--accent-strong\)/);
+  assert.match(ruleForSelector(css, ".profile-link-icon svg").body, /stroke:\s*currentColor/);
+  assert.match(ruleForSelector(css, ".profile-link-copy em").body, /overflow-wrap:\s*anywhere/);
   assert.match(ruleForSelector(css, ".blog-sidebar-panel").body, /display:\s*grid/);
   assert.match(ruleForSelector(css, ".sidebar-card").body, /box-shadow:\s*none/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-card").body, /display:\s*grid/);

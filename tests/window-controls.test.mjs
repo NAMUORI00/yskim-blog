@@ -32,9 +32,14 @@ test("content windows expose real filebar control buttons", async () => {
 test("window controls close only restores a maximized card", async () => {
   const script = await readFile(files.script, "utf8");
 
+  assert.match(script, /const restore = \(card\) => \{/);
+  assert.match(script, /const toggleMinimize = \(card\) => \{/);
+  assert.match(script, /card\.classList\.contains\(minimizeClass\)/);
+  assert.match(script, /restore\(card\)/);
   assert.match(script, /const close = \(card\) => \{/);
   assert.match(script, /card\.classList\.contains\(maximizeClass\)/);
   assert.match(script, /card\.classList\.remove\(maximizeClass\)/);
+  assert.match(script, /if \(action === "minimize"\) toggleMinimize\(card\)/);
   assert.match(script, /minimize\(card\)/);
   assert.match(script, /Escape/);
 });

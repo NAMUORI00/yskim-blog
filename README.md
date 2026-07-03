@@ -11,8 +11,8 @@ GitHub repository used for production publishing.
 - **Astro 6** static site (`src/`) with **Svelte 5** islands for interactivity.
 - **Notion** as the CMS (single source of truth for posts and selected
   static pages).
-- **Cloudflare Pages** hosting + Pages Functions (`functions/`) for reactions,
-  comments, and the optional media proxy.
+- **Cloudflare Pages** hosting + Pages Functions (`functions/`) for comments
+  and the optional media proxy.
 
 ## Branch model
 
@@ -71,16 +71,13 @@ Site configuration (title, author, giscus, search-engine verification codes,
 AdSense publisher id) lives in `src/config.ts`. The deployment URL is set as
 `site` in `astro.config.mjs`.
 
-## Comments and reactions
+## Comments
 
 Post pages support:
 
 - GitHub-authenticated comments through Giscus and GitHub Discussions.
 - Optional anonymous comments through Cloudflare Pages Functions, Turnstile,
   and D1.
-- Post reactions (좋아요 / 유용해요 / 다시 읽기) via a Pages Function with
-  shared D1 counts when `COMMENTS_DB` is bound and local browser fallback when
-  it is not.
 
 Giscus is enabled through the `General` discussion category (configured in
 `src/config.ts`). Anonymous comments stay disabled until the Cloudflare D1 and

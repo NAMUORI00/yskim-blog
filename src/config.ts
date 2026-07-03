@@ -44,7 +44,6 @@ export const UI = {
   tags: "태그",
   recent: "최근 글",
   comments: "댓글",
-  reactions: "반응",
   themeToggle: "화면 테마 전환",
   footerCopyright: "© 2026 yskim (namuori)",
 } as const;

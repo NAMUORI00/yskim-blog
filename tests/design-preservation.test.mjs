@@ -24,6 +24,11 @@ test("knowledge graph keeps only data-backed nodes and edges with pointer focus 
   assert.match(script, /const links = \(data\.links \|\| \[\]\)/);
   assert.match(script, /pointerInfluence/);
   assert.match(script, /animateFocus/);
+  assert.match(script, /hoverNode/);
+  assert.match(script, /setOffsetTarget/);
+  assert.match(script, /state\.targetOffsetX = node \? state\.width \/ 2 - node\.x : 0/);
+  assert.match(script, /const showLabel = state\.hoverNode\?\.id === node\.id/);
+  assert.doesNotMatch(script, /const showLabel = node\.type === "main" \|\| node\.active/);
   assert.doesNotMatch(script, /createRadialGradient|twinkle|lineDashOffset|orbit|grid/);
 });
 
@@ -35,12 +40,12 @@ test("knowledge graph renders the 2d canvas without a 3d island", async () => {
   assert.match(graph, /<template class="knowledge-graph-data">/);
 });
 
-test("post detail keeps Notion rendering, reactions, comments, and affiliate disclosure", async () => {
+test("post detail keeps Notion rendering, comments, and affiliate disclosure without local-only reactions", async () => {
   const post = await readFile(files.post, "utf8");
 
   assert.match(post, /import \{ render \} from "astro:content"/);
   assert.match(post, /const \{ Content \} = await render\(entry\)/);
-  assert.match(post, /<Reactions path=\{`\/posts\/\$\{d\.slug\}\/`\} \/>/);
+  assert.doesNotMatch(post, /Reactions|<Reactions|reactions\.js|data-post-reactions/);
   assert.match(post, /<Comments \/>/);
   assert.match(post, /<AffiliateDisclosure \/>/);
 });
