@@ -8,6 +8,7 @@ const files = {
   base: new URL("../src/layouts/Base.astro", import.meta.url),
   profileRail: new URL("../src/components/ProfileRail.astro", import.meta.url),
   sidebar: new URL("../src/components/Sidebar.astro", import.meta.url),
+  topBar: new URL("../src/components/TopBar.astro", import.meta.url),
 };
 
 function selectorList(selectorText) {
@@ -65,10 +66,11 @@ function mediaBlock(css, query) {
 }
 
 test("profile and sidebar asides expose contextual landmark labels", async () => {
-  const [profileRail, sidebar, base] = await Promise.all([
+  const [profileRail, sidebar, base, topBar] = await Promise.all([
     readFile(files.profileRail, "utf8"),
     readFile(files.sidebar, "utf8"),
     readFile(files.base, "utf8"),
+    readFile(files.topBar, "utf8"),
   ]);
 
   assert.match(profileRail, /<aside class="profile-rail" aria-label="Profile and categories">/);
@@ -78,6 +80,10 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   assert.match(base, /class="site-footer__inner"/);
   assert.match(base, /class="site-footer__license"/);
   assert.match(base, /class="footer-primary"/);
+  assert.match(topBar, /import \{ getCategories, categoryUrl \} from "\.\.\/lib\/posts";/);
+  assert.match(topBar, /class="top-bar-categories"/);
+  assert.match(topBar, /class="top-bar-category-menu"/);
+  assert.match(topBar, /category\.count/);
 });
 
 test("site css applies shell surface polish and keeps the mobile graph visible", async () => {
@@ -122,6 +128,9 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(activeRule.body, /color:\s*var\(--accent-strong\)/);
   assert.match(activeRule.body, /background:\s*var\(--accent-soft\)/);
   assert.match(activeRule.body, /border-color:\s*var\(--accent-border\)/);
+  assert.match(ruleForSelector(css, ".top-bar-categories").body, /position:\s*relative/);
+  assert.match(ruleForSelector(css, ".top-bar-category-menu").body, /position:\s*absolute/);
+  assert.match(ruleForSelectors(css, [".top-bar-category-menu a.is-active", ".top-bar-category-menu a:hover"]).body, /border-left-color:\s*var\(--accent\)/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-card").body, /display:\s*grid/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-canvas").body, /max-height:\s*240px/);
   assert.match(ruleForSelector(mobile, ".knowledge-graph-canvas").body, /touch-action:\s*pan-y/);
