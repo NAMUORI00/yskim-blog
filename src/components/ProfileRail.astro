@@ -6,6 +6,21 @@ import { getCategories, categoryUrl } from "../lib/posts";
 const gh = getGithubProfile();
 const categories = await getCategories();
 const path = decodeURI(Astro.url.pathname);
+const profileLinks = [
+  { label: "Portfolio", href: SITE.portfolio },
+  { label: "GitHub", href: gh.html_url },
+].filter((link) => link.href);
+const hostnameFor = (href: string) => {
+  try {
+    return new URL(href).hostname.replace(/^www\./, "");
+  } catch {
+    return href;
+  }
+};
+const faviconFor = (href: string) => {
+  const host = hostnameFor(href);
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=32`;
+};
 ---
 
 <aside class="profile-rail" aria-label="Profile and categories">
@@ -23,27 +38,37 @@ const path = decodeURI(Astro.url.pathname);
     </div>
   </section>
 
-  {gh.bio && (
-    <section class="profile-section" aria-label="World Calling 소개글">
-      <p class="rail-section-title">World Calling</p>
-      <p class="profile-bio">{gh.bio}</p>
-    </section>
-  )}
-
-  <section class="profile-section" aria-label="주소">
-    <p class="rail-section-title">주소</p>
-    <address class="profile-address">
-      <span>{SITE.location}</span>
-      <a href={SITE.url} target="_blank" rel="noopener noreferrer">blog.namuori.net</a>
-    </address>
+  <section class="profile-section" aria-label="World Calling 소개글과 주소">
+    <p class="rail-section-title">World Calling</p>
+    {gh.bio && <p class="profile-bio">{gh.bio}</p>}
+    <div class="profile-address-block">
+      <p class="profile-address-label">주소</p>
+      <address class="profile-address" aria-label="주소">
+        <span>{SITE.location}</span>
+      </address>
+    </div>
   </section>
 
   <section class="profile-section" aria-label="링크">
     <p class="rail-section-title">Links</p>
     <nav class="profile-link-list">
-      <a href={SITE.portfolio} target="_blank" rel="noopener noreferrer">portfolio</a>
-      <a href={gh.html_url} target="_blank" rel="noopener noreferrer">github</a>
-      <a href="/index.xml">rss</a>
+      {profileLinks.map((link) => (
+        <a href={link.href} target="_blank" rel="noopener noreferrer">
+          <img
+            class="profile-link-favicon"
+            src={faviconFor(link.href)}
+            alt=""
+            width="16"
+            height="16"
+            loading="lazy"
+            decoding="async"
+          />
+          <span class="profile-link-copy">
+            <strong>{link.label}</strong>
+            <em>{hostnameFor(link.href)}</em>
+          </span>
+        </a>
+      ))}
     </nav>
   </section>
 

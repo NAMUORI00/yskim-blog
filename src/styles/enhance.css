@@ -110,10 +110,6 @@ button:focus-visible {
     transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
-
-  .knowledge-scene {
-    display: none;
-  }
 }
 
 /* Reading progress bar (Svelte island). */

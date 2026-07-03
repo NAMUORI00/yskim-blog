@@ -38,9 +38,13 @@ const breadcrumb = [
   math={d.math}
 >
   <ReadingProgress client:idle />
-  <article class="readme-card post">
+  <article class="readme-card post" data-content-window>
     <div class="filebar">
-      <span></span><span></span><span></span>
+      <div class="filebar-controls" aria-label="콘텐츠 창 제어">
+        <button type="button" class="filebar-control filebar-control--close" data-window-action="close" aria-label="닫기"></button>
+        <button type="button" class="filebar-control filebar-control--minimize" data-window-action="minimize" aria-label="최소화"></button>
+        <button type="button" class="filebar-control filebar-control--maximize" data-window-action="maximize" aria-label="최대화"></button>
+      </div>
       <strong>posts/{d.slug}.md</strong>
     </div>
     <div class="post-inner">

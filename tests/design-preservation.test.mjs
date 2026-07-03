@@ -4,40 +4,33 @@ import { readFile } from "node:fs/promises";
 
 const files = {
   pkg: new URL("../package.json", import.meta.url),
-  scene: new URL("../src/components/BlogGraphScene.svelte", import.meta.url),
   graph: new URL("../src/components/KnowledgeGraph.astro", import.meta.url),
+  graphScript: new URL("../static/js/knowledge-graph.js", import.meta.url),
   post: new URL("../src/pages/posts/[slug].astro", import.meta.url),
   home: new URL("../src/pages/index.astro", import.meta.url),
   css: new URL("../static/css/site.css", import.meta.url),
 };
 
-test("three is a runtime dependency and the scene imports it lazily", async () => {
+test("knowledge graph no longer ships the three.js scene dependency", async () => {
   const pkg = JSON.parse(await readFile(files.pkg, "utf8"));
-  const scene = await readFile(files.scene, "utf8");
 
-  assert.equal(typeof pkg.dependencies.three, "string");
-  assert.match(scene, /await import\("three"\)/);
-  assert.match(scene, /prefers-reduced-motion:\s*reduce/);
-  assert.match(scene, /yskim:theme-change/);
+  assert.equal(pkg.dependencies.three, undefined);
 });
 
-test("3d scene pauses when inactive and cleans up resources", async () => {
-  const scene = await readFile(files.scene, "utf8");
+test("knowledge graph keeps only data-backed nodes and edges with pointer focus animation", async () => {
+  const script = await readFile(files.graphScript, "utf8");
 
-  assert.match(scene, /IntersectionObserver/);
-  assert.match(scene, /visibilitychange/);
-  assert.match(scene, /cancelAnimationFrame/);
-  assert.match(scene, /renderer\.dispose\(\)/);
-  assert.match(scene, /child\.geometry\.dispose\(\)/);
-  assert.match(scene, /disposeMaterial/);
-  assert.doesNotMatch(scene, /canvas\.addEventListener\("click"/);
+  assert.match(script, /const nodes = rawNodes\.map/);
+  assert.match(script, /const links = \(data\.links \|\| \[\]\)/);
+  assert.match(script, /pointerInfluence/);
+  assert.match(script, /animateFocus/);
+  assert.doesNotMatch(script, /createRadialGradient|twinkle|lineDashOffset|orbit|grid/);
 });
 
-test("knowledge graph keeps the 2d canvas fallback while adding the 3d island", async () => {
+test("knowledge graph renders the 2d canvas without a 3d island", async () => {
   const graph = await readFile(files.graph, "utf8");
 
-  assert.match(graph, /<BlogGraphScene/);
-  assert.match(graph, /client:visible/);
+  assert.doesNotMatch(graph, /BlogGraphScene|client:visible/);
   assert.match(graph, /class="knowledge-graph-canvas"/);
   assert.match(graph, /<template class="knowledge-graph-data">/);
 });
@@ -66,11 +59,8 @@ test("home still renders Notion about content and recent posts", async () => {
 test("css defines stable scene dimensions and fallback layering", async () => {
   const css = await readFile(files.css, "utf8");
 
-  assert.match(css, /\.knowledge-scene/);
   assert.match(css, /aspect-ratio:\s*1\s*\/\s*1/);
-  assert.match(css, /\.knowledge-scene\s*\{[^}]*z-index:\s*1/s);
-  assert.match(css, /\.knowledge-scene\s*\{[^}]*pointer-events:\s*none/s);
-  assert.match(css, /\.knowledge-scene__canvas/);
+  assert.doesNotMatch(css, /\.knowledge-scene/);
   assert.match(css, /\.knowledge-graph-canvas/);
-  assert.match(css, /\.knowledge-graph-canvas\s*\{[^}]*z-index:\s*2/s);
+  assert.match(css, /\.knowledge-graph-canvas\s*\{[^}]*touch-action:\s*pan-y/s);
 });
