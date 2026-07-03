@@ -1,11 +1,20 @@
 ---
 import { SITE, UI } from "../config";
-import { getCategories, categoryUrl } from "../lib/posts";
+import { getCategories, getPublishedPosts, categoryUrl, postUrl } from "../lib/posts";
 
 const path = Astro.url.pathname;
 const decodedPath = decodeURI(path);
 const isHome = path === "/";
 const categories = await getCategories();
+const posts = await getPublishedPosts();
+const searchItems = posts.map((post) => ({
+  title: post.data.title,
+  summary: post.data.summary,
+  category: post.data.categories[0] || "",
+  tags: post.data.tags,
+  url: postUrl(post.data.slug),
+}));
+const searchIndex = JSON.stringify(searchItems);
 const nav = [
   { name: UI.navPosts, href: "/posts/" },
 ];
@@ -41,17 +50,41 @@ const isCategoryActive = Boolean(activeCategory);
               const active = isActive(href);
               return (
                 <a href={href} class={active ? "is-active" : ""} aria-current={active ? "page" : undefined}>
-                  <span>{category.name}</span>
-                  <strong>{category.count}</strong>
+                  <span>{category.name} ({category.count})</span>
                 </a>
               );
             })}
           </div>
         </details>
       )}
-      <a href="/search/" class={isActive("/search/") ? "is-active" : ""} aria-current={isActive("/search/") ? "page" : undefined}>
-        {UI.navSearch}
-      </a>
+      <div class={`top-bar-search${isActive("/search/") ? " is-active" : ""}`} data-top-search>
+        <button
+          class="top-bar-search__toggle"
+          type="button"
+          aria-label={UI.navSearch}
+          aria-expanded="false"
+          data-top-search-toggle
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"></circle>
+            <path d="m16.5 16.5 4 4"></path>
+          </svg>
+        </button>
+        <form class="top-bar-search__form" action="/search/" role="search" data-top-search-form>
+          <label class="sr-only" for="top-search-input">{UI.navSearch}</label>
+          <input
+            id="top-search-input"
+            type="search"
+            name="q"
+            inputmode="search"
+            autocomplete="off"
+            placeholder="블로그 검색"
+            data-top-search-input
+          />
+        </form>
+        <div class="top-bar-search__results" hidden data-top-search-results></div>
+        <template data-top-search-index>{searchIndex}</template>
+      </div>
     </nav>
     <div class="top-bar-utils">
       <button
@@ -95,16 +128,77 @@ const isCategoryActive = Boolean(activeCategory);
     const toggle = document.querySelector("[data-nav-toggle]");
     const nav = document.getElementById("primary-nav");
     const categoryMenus = Array.from(document.querySelectorAll(".top-bar-categories"));
+    const search = document.querySelector("[data-top-search]");
+    const searchToggle = document.querySelector("[data-top-search-toggle]");
+    const searchInput = document.querySelector("[data-top-search-input]");
+    const searchResults = document.querySelector("[data-top-search-results]");
+    const searchIndex = document.querySelector("[data-top-search-index]");
     if (!toggle || !nav) return;
 
     const QUERY = "(max-width: 720px)";
     const mq = window.matchMedia(QUERY);
+    const items = (() => {
+      if (!searchIndex) return [];
+      const raw = searchIndex instanceof HTMLTemplateElement ? searchIndex.content.textContent : searchIndex.textContent;
+      try {
+        return JSON.parse((raw || "[]").trim());
+      } catch {
+        return [];
+      }
+    })();
 
     const setOpen = (open) => {
       nav.classList.toggle("is-open", open);
       document.body.classList.toggle("nav-open", open);
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
       toggle.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
+    };
+
+    const closeSearch = () => {
+      if (!search || !searchToggle || !searchResults) return;
+      search.classList.remove("is-open");
+      searchToggle.setAttribute("aria-expanded", "false");
+      searchResults.hidden = true;
+    };
+
+    const openSearch = () => {
+      if (!search || !searchToggle || !(searchInput instanceof HTMLInputElement)) return;
+      categoryMenus.forEach((menu) => menu.removeAttribute("open"));
+      search.classList.add("is-open");
+      searchToggle.setAttribute("aria-expanded", "true");
+      searchInput.focus();
+      searchInput.select();
+    };
+
+    const renderSearch = () => {
+      if (!(searchInput instanceof HTMLInputElement) || !searchResults) return;
+      const query = searchInput.value.trim().toLowerCase();
+      searchResults.textContent = "";
+      if (!query) {
+        searchResults.hidden = true;
+        return;
+      }
+      const found = items
+        .filter((item) => [item.title, item.summary, item.category, ...(item.tags || [])].join(" ").toLowerCase().includes(query))
+        .slice(0, 6);
+      if (found.length === 0) {
+        const empty = document.createElement("p");
+        empty.className = "top-bar-search__empty";
+        empty.textContent = "검색 결과가 없습니다";
+        searchResults.append(empty);
+      } else {
+        for (const item of found) {
+          const link = document.createElement("a");
+          link.href = item.url;
+          const title = document.createElement("strong");
+          title.textContent = item.title;
+          const meta = document.createElement("span");
+          meta.textContent = item.category || "post";
+          link.append(title, meta);
+          searchResults.append(link);
+        }
+      }
+      searchResults.hidden = false;
     };
 
     toggle.addEventListener("click", (e) => {
@@ -123,10 +217,27 @@ const isCategoryActive = Boolean(activeCategory);
     categoryMenus.forEach((menu) => {
       menu.addEventListener("toggle", () => {
         if (!menu.hasAttribute("open")) return;
+        closeSearch();
         categoryMenus.forEach((other) => {
           if (other !== menu) other.removeAttribute("open");
         });
       });
+    });
+
+    searchToggle?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      if (search?.classList.contains("is-open")) closeSearch();
+      else openSearch();
+    });
+
+    searchInput?.addEventListener("input", renderSearch);
+
+    searchInput?.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        closeSearch();
+        searchToggle?.focus();
+      }
     });
 
     // Close on Escape.
@@ -135,6 +246,7 @@ const isCategoryActive = Boolean(activeCategory);
         setOpen(false);
         toggle.focus();
       } else if (e.key === "Escape") {
+        closeSearch();
         categoryMenus.forEach((menu) => menu.removeAttribute("open"));
       }
     });
@@ -143,6 +255,9 @@ const isCategoryActive = Boolean(activeCategory);
     document.addEventListener("click", (e) => {
       if (!nav.classList.contains("is-open")) return;
       const t = e.target;
+      if (t instanceof Node && search && !search.contains(t)) {
+        closeSearch();
+      }
       if (t instanceof Node && !categoryMenus.some((menu) => menu.contains(t))) {
         categoryMenus.forEach((menu) => menu.removeAttribute("open"));
       }
@@ -157,5 +272,12 @@ const isCategoryActive = Boolean(activeCategory);
     };
     if (mq.addEventListener) mq.addEventListener("change", onChange);
     else mq.addListener(onChange);
+
+    document.addEventListener("click", (e) => {
+      const target = e.target;
+      if (target instanceof Node && search && !search.contains(target)) {
+        closeSearch();
+      }
+    });
   })();
 </script>

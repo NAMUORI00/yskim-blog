@@ -30,6 +30,14 @@ test("knowledge graph keeps only data-backed nodes and edges with pointer focus 
   assert.match(script, /setRotationTarget/);
   assert.match(script, /state\.targetRotationX/);
   assert.match(script, /state\.targetRotationY/);
+  assert.match(script, /idleReturnTimer/);
+  assert.match(script, /idleSpinPhase/);
+  assert.match(script, /rootNode/);
+  assert.match(script, /scheduleIdleReturn/);
+  assert.match(script, /state\.isIdleOrbit/);
+  assert.match(script, /drawSphereWireframe/);
+  assert.match(script, /wireframe/);
+  assert.match(script, /latitude/);
   assert.match(script, /quadraticCurveTo/);
   assert.match(script, /const showLabel = state\.hoverNode\?\.id === node\.id/);
   assert.doesNotMatch(script, /const showLabel = node\.type === "main" \|\| node\.active/);

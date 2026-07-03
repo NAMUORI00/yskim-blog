@@ -88,12 +88,17 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   assert.match(base, /class="site-footer__inner"/);
   assert.match(base, /class="site-footer__license"/);
   assert.match(base, /class="footer-primary"/);
-  assert.match(topBar, /import \{ getCategories, categoryUrl \} from "\.\.\/lib\/posts";/);
+  assert.match(topBar, /import \{ getCategories, getPublishedPosts, categoryUrl, postUrl \} from "\.\.\/lib\/posts";/);
+  assert.match(topBar, /getPublishedPosts/);
+  assert.match(topBar, /postUrl/);
   assert.match(topBar, /class="top-bar-categories"/);
   assert.match(topBar, /class="top-bar-category-menu"/);
-  assert.match(topBar, /category\.count/);
-  assert.match(topBar, /href="\/search\/"/);
-  assert.match(topBar, /\{UI\.navSearch\}/);
+  assert.match(topBar, /\(\{category\.count\}\)/);
+  assert.match(topBar, /data-top-search/);
+  assert.match(topBar, /data-top-search-toggle/);
+  assert.match(topBar, /data-top-search-input/);
+  assert.match(topBar, /data-top-search-results/);
+  assert.doesNotMatch(topBar, /href="\/search\/" class=\{isActive\("\/search\/"\)/);
   assert.doesNotMatch(topBar, /top-bar-external/);
 
   const profileOrder = [
@@ -153,13 +158,19 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(activeRule.body, /border-color:\s*var\(--accent-border\)/);
   assert.match(ruleForSelector(css, ".top-bar-categories").body, /position:\s*relative/);
   assert.match(ruleForSelector(css, ".top-bar-category-menu").body, /position:\s*absolute/);
+  assert.match(ruleForSelector(css, ".top-bar-search__toggle").body, /border-radius:\s*999px/);
+  assert.match(ruleForSelector(css, ".top-bar-search__form").body, /width:\s*0/);
+  assert.match(ruleForSelector(css, ".top-bar-search.is-open .top-bar-search__form").body, /width:\s*min\(28vw,\s*260px\)/);
+  assert.match(ruleForSelector(css, ".top-bar-search__results").body, /position:\s*absolute/);
   assert.match(ruleForSelectors(css, [".top-bar-category-menu a.is-active", ".top-bar-category-menu a:hover"]).body, /border-left-color:\s*var\(--accent\)/);
   assert.match(ruleForSelector(css, ".profile-section").body, /border-top:\s*1px solid var\(--line-soft\)/);
   assert.match(ruleForSelector(css, ".profile-address").body, /font-style:\s*normal/);
   assert.match(ruleForSelector(css, ".profile-link-list a").body, /grid-template-columns:\s*22px minmax\(0,\s*1fr\)/);
   assert.match(ruleForSelector(css, ".profile-link-icon").body, /color:\s*var\(--accent-strong\)/);
   assert.match(ruleForSelector(css, ".profile-link-icon svg").body, /stroke:\s*currentColor/);
+  assert.doesNotMatch(ruleForSelector(css, ".profile-link-copy strong").body, /text-overflow:\s*ellipsis|white-space:\s*nowrap/);
   assert.match(ruleForSelector(css, ".profile-link-copy em").body, /overflow-wrap:\s*anywhere/);
+  assert.match(ruleForSelector(css, ".profile-link-copy em").body, /word-break:\s*break-word/);
   assert.match(ruleForSelector(css, ".blog-sidebar-panel").body, /display:\s*grid/);
   assert.match(ruleForSelector(css, ".sidebar-card").body, /box-shadow:\s*none/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-card").body, /display:\s*grid/);
@@ -177,14 +188,16 @@ test("desktop shell keeps portfolio-like three-column rhythm and license footer"
   const shellGrid = ruleForSelectors(desktop, [".top-bar-inner", ".site-shell"]);
   const stickyRails = ruleForSelectors(desktop, [".profile-rail", ".blog-sidebar"]);
 
-  assert.match(css, /--content-column-max:\s*820px/);
+  assert.match(css, /--content-column-max:\s*min\(980px,\s*calc\(100vw - \(var\(--rail-width\) \+ var\(--sidebar-width\) \+ 72px\)\)\)/);
   assert.match(ruleForSelector(css, ".profile-intro").body, /grid-template-columns:\s*56px minmax\(0,\s*1fr\)/);
   assert.match(ruleForSelector(css, ".profile-bio").body, /font-size:\s*var\(--font-xs\)/);
   assert.match(ruleForSelector(css, ".profile-link-list").body, /display:\s*grid/);
   assert.match(shellGrid.body, /grid-template-columns:\s*var\(--rail-width\) minmax\(0,\s*var\(--content-column-max\)\) var\(--sidebar-width\)/);
+  assert.match(shellGrid.body, /justify-content:\s*space-between/);
   assert.match(ruleForSelectorsWith(desktop, [".top-bar-inner"], /display:\s*grid/, ".top-bar-inner desktop grid").body, /display:\s*grid/);
   assert.match(ruleForSelectorsWith(desktop, [".site-shell"], /align-items:\s*start/, ".site-shell desktop alignment").body, /align-items:\s*start/);
   assert.match(stickyRails.body, /position:\s*sticky/);
+  assert.match(stickyRails.body, /top:\s*calc\(var\(--topbar-h\) \+ var\(--space-4\)\)/);
   assert.doesNotMatch(desktop, /position:\s*fixed/);
   assert.match(ruleForSelector(css, ".site-footer").body, /border-top:\s*1px solid var\(--line\)/);
   assert.match(ruleForSelector(css, ".site-footer").body, /font-family:\s*var\(--font-mono\)/);
