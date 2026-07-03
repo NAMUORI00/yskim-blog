@@ -54,8 +54,7 @@ const hostnameFor = (href: string) => {
           const active = path === href;
           return (
             <a href={href} class={active ? "is-active" : ""} aria-current={active ? "page" : undefined}>
-              <span>{c.name}</span>
-              <strong>{c.count}</strong>
+              <span>{c.name} ({c.count})</span>
             </a>
           );
         })

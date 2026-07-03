@@ -2,9 +2,6 @@
 import Base from "../layouts/Base.astro";
 import { SITE, UI } from "../config";
 import { getCollection, render } from "astro:content";
-import { getCategories } from "../lib/posts";
-
-const categories = await getCategories();
 
 const pages = await getCollection("pages", (p) => !p.data.draft);
 const findPage = (slug: string) => pages.find((p) => p.data.slug === slug);
@@ -12,41 +9,37 @@ const homePage = findPage("home");
 const HomeContent = homePage ? (await render(homePage)).Content : null;
 const heroTitle = homePage?.data.title || SITE.title;
 const heroSummary = homePage?.data.summary || SITE.description;
-const homeSource = homePage?.data.generated_by === "notion" ? "Notion DB" : "Repository";
 ---
 
 <Base isHome={true} title={heroTitle} description={heroSummary} type="website">
   <section class="home-hero" aria-labelledby="home-title">
-    <div class="home-hero__copy">
-      <p class="eyebrow">NAMUORI.LOG</p>
-      <h1 id="home-title">{heroTitle}</h1>
-      <p class="summary">{heroSummary}</p>
-      {HomeContent && (
-        <div class="home-hero__note content">
-          <HomeContent />
+    <article class="readme-card home-intro-window" aria-label="나무가든 소개" data-content-window>
+      <div class="filebar home-intro-window__bar">
+        <div class="filebar-controls" aria-label="홈 소개 창 제어">
+          <button type="button" class="filebar-control filebar-control--close" data-window-action="close" aria-label="닫기"></button>
+          <button type="button" class="filebar-control filebar-control--minimize" data-window-action="minimize" aria-label="최소화"></button>
+          <button type="button" class="filebar-control filebar-control--maximize" data-window-action="maximize" aria-label="최대화"></button>
         </div>
-      )}
-      <dl class="home-hero__metrics" aria-label="블로그 현황">
-        <div>
-          <dt>Source</dt>
-          <dd>{homeSource}</dd>
-        </div>
-        <div>
-          <dt>Pages</dt>
-          <dd>{pages.length}</dd>
-        </div>
-        <div>
-          <dt>Categories</dt>
-          <dd>{categories.length}</dd>
-        </div>
-      </dl>
-      <div class="hero-actions">
-        <a class="primary-link" href="/posts/">{UI.navPosts}</a>
-        <a class="text-link" href={SITE.portfolio} target="_blank" rel="noopener noreferrer">
-          {UI.navPortfolio} ↗
-        </a>
+        <strong>{heroTitle}</strong>
+        <em>소개</em>
       </div>
-    </div>
+      <div class="home-hero__copy">
+        <p class="eyebrow">NAMUORI.LOG</p>
+        <h1 id="home-title">{heroTitle}</h1>
+        {heroSummary && <p class="summary">{heroSummary}</p>}
+        {HomeContent && (
+          <div class="home-hero__note content">
+            <HomeContent />
+          </div>
+        )}
+        <div class="hero-actions">
+          <a class="primary-link" href="/posts/">{UI.navPosts}</a>
+          <a class="text-link" href={SITE.portfolio} target="_blank" rel="noopener noreferrer">
+            {UI.navPortfolio}
+          </a>
+        </div>
+      </div>
+    </article>
     <div class="home-hero__grove" aria-hidden="true">
       <span class="grove-trunk"></span>
       <span class="grove-branch grove-branch--one"></span>

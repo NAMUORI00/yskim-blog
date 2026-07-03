@@ -1,5 +1,7 @@
 (() => {
   const TAU = Math.PI * 2;
+  const IDLE_RETURN_MS = 1800;
+  const IDLE_SPIN_SPEED = 0.0032;
   const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
@@ -23,6 +25,7 @@
       text: readCssVar("--text", "#23271f"),
       muted: readCssVar("--muted", "#71786f"),
       labelBg: readCssVar("--panel", "#ffffff"),
+      wireframe: readCssVar("--line-strong", "#c7ccbf"),
     };
   }
 
@@ -105,7 +108,8 @@
       incident.get(link.target.id).push(link);
     }
 
-    const activeNode = nodes.find((node) => node.active) || nodes.find((node) => node.type === "main") || null;
+    const rootNode = nodes.find((node) => node.type === "main") || nodes[0] || null;
+    const activeNode = nodes.find((node) => node.active) || rootNode;
     const state = {
       width: 0,
       height: 0,
@@ -113,13 +117,17 @@
       pointer: null,
       hoverNode: null,
       focusNode: activeNode,
+      rootNode,
       rotationX: 0,
       rotationY: 0,
       targetRotationX: 0,
       targetRotationY: 0,
+      idleSpinPhase: 0,
+      isIdleOrbit: false,
       laidOut: false,
       raf: 0,
     };
+    let idleReturnTimer = 0;
 
     let colors = getColors();
     let fontFamily = getFontFamily();
@@ -240,6 +248,9 @@
     };
 
     const displayPoint = (node) => {
+      if (state.isIdleOrbit && state.rootNode?.id === node.id) {
+        return { x: state.width / 2, y: state.height / 2, depth: 1 };
+      }
       const radius = Math.max(1, sphereRadiusFor(state.width, state.height));
       const rotated = rotateSphereVector(sphereVector(node));
       const depth = clamp((rotated.z + 1) / 2, 0, 1);
@@ -249,6 +260,67 @@
         y: state.height / 2 + rotated.y * radius * perspective,
         depth,
       };
+    };
+
+    const wireframePoint = (vector) => {
+      const radius = Math.max(1, sphereRadiusFor(state.width, state.height));
+      const rotated = rotateSphereVector(vector);
+      const depth = clamp((rotated.z + 1) / 2, 0, 1);
+      const perspective = 0.82 + depth * 0.22;
+      return {
+        x: state.width / 2 + rotated.x * radius * perspective,
+        y: state.height / 2 + rotated.y * radius * perspective,
+        depth,
+      };
+    };
+
+    const drawSphereWireframe = () => {
+      if (Math.min(state.width, state.height) <= 1) return;
+      ctx.save();
+      ctx.strokeStyle = colors.wireframe;
+      ctx.lineWidth = 0.45;
+      ctx.lineCap = "round";
+
+      const strokeRing = (points, baseAlpha) => {
+        ctx.beginPath();
+        points.forEach((point, index) => {
+          if (index === 0) ctx.moveTo(point.x, point.y);
+          else ctx.lineTo(point.x, point.y);
+        });
+        ctx.closePath();
+        const averageDepth = points.reduce((sum, point) => sum + point.depth, 0) / points.length;
+        ctx.globalAlpha = baseAlpha * (0.45 + averageDepth * 0.55);
+        ctx.stroke();
+      };
+
+      for (const latitude of [-0.72, -0.38, 0, 0.38, 0.72]) {
+        const y = Math.sin(latitude);
+        const ring = Math.cos(latitude);
+        const points = [];
+        for (let index = 0; index <= 80; index += 1) {
+          const angle = (index / 80) * TAU;
+          points.push(wireframePoint({ x: Math.cos(angle) * ring, y, z: Math.sin(angle) * ring }));
+        }
+        strokeRing(points, latitude === 0 ? 0.1 : 0.068);
+      }
+
+      for (let longitude = 0; longitude < 8; longitude += 1) {
+        const angle = (longitude / 8) * TAU;
+        const points = [];
+        for (let index = 0; index <= 80; index += 1) {
+          const latitude = -Math.PI / 2 + (index / 80) * Math.PI;
+          const ring = Math.cos(latitude);
+          points.push(wireframePoint({
+            x: Math.cos(angle) * ring,
+            y: Math.sin(latitude),
+            z: Math.sin(angle) * ring,
+          }));
+        }
+        strokeRing(points, 0.055);
+      }
+
+      ctx.restore();
+      ctx.globalAlpha = 1;
     };
 
     const setRotationTarget = (node) => {
@@ -264,6 +336,28 @@
       const rotationX = Math.atan2(vector.y, zAfterY);
       state.targetRotationX = clamp(rotationX, -1.08, 1.08);
       state.targetRotationY = clamp(rotationY, -1.08, 1.08);
+    };
+
+    const cancelIdleReturn = () => {
+      if (idleReturnTimer) {
+        clearTimeout(idleReturnTimer);
+        idleReturnTimer = 0;
+      }
+      state.isIdleOrbit = false;
+    };
+
+    const scheduleIdleReturn = () => {
+      if (idleReturnTimer) clearTimeout(idleReturnTimer);
+      idleReturnTimer = window.setTimeout(() => {
+        idleReturnTimer = 0;
+        state.pointer = null;
+        state.hoverNode = null;
+        state.focusNode = rootNode;
+        state.isIdleOrbit = Boolean(rootNode) && !prefersReduced;
+        setRotationTarget(rootNode);
+        canvas.style.cursor = "default";
+        scheduleFocus();
+      }, IDLE_RETURN_MS);
     };
 
     const pointerInfluence = (node) => {
@@ -306,6 +400,8 @@
       if (!state.laidOut) return;
       ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
       ctx.clearRect(0, 0, state.width, state.height);
+
+      drawSphereWireframe();
 
       const focusIds = adjacency.get(state.focusNode?.id) || new Set();
       for (const link of links) {
@@ -388,16 +484,23 @@
     const animateFocus = () => {
       state.raf = 0;
       let needsNext = false;
-      const nextRotationX = prefersReduced ? state.targetRotationX : lerp(state.rotationX, state.targetRotationX, 0.16);
-      const nextRotationY = prefersReduced ? state.targetRotationY : lerp(state.rotationY, state.targetRotationY, 0.16);
-      if (
-        Math.abs(nextRotationX - state.targetRotationX) > 0.002 ||
-        Math.abs(nextRotationY - state.targetRotationY) > 0.002
-      ) {
+      if (state.isIdleOrbit && !prefersReduced) {
+        state.idleSpinPhase += IDLE_SPIN_SPEED;
+        state.rotationX = lerp(state.rotationX, 0.12, 0.04);
+        state.rotationY += IDLE_SPIN_SPEED;
         needsNext = true;
+      } else {
+        const nextRotationX = prefersReduced ? state.targetRotationX : lerp(state.rotationX, state.targetRotationX, 0.16);
+        const nextRotationY = prefersReduced ? state.targetRotationY : lerp(state.rotationY, state.targetRotationY, 0.16);
+        if (
+          Math.abs(nextRotationX - state.targetRotationX) > 0.002 ||
+          Math.abs(nextRotationY - state.targetRotationY) > 0.002
+        ) {
+          needsNext = true;
+        }
+        state.rotationX = needsNext ? nextRotationX : state.targetRotationX;
+        state.rotationY = needsNext ? nextRotationY : state.targetRotationY;
       }
-      state.rotationX = needsNext ? nextRotationX : state.targetRotationX;
-      state.rotationY = needsNext ? nextRotationY : state.targetRotationY;
       for (const node of nodes) {
         const next = prefersReduced ? node.targetFocus : lerp(node.focus, node.targetFocus, 0.22);
         if (Math.abs(next - node.targetFocus) > 0.01) needsNext = true;
@@ -426,6 +529,7 @@
     };
 
     const onPointerMove = (event) => {
+      cancelIdleReturn();
       state.pointer = toLocal(event.clientX, event.clientY);
       const hit = nearestNode(state.pointer.x, state.pointer.y) || state.hoverNode;
       state.hoverNode = hit;
@@ -442,9 +546,11 @@
       setRotationTarget(null);
       canvas.style.cursor = "default";
       scheduleFocus();
+      scheduleIdleReturn();
     };
 
     const onClick = (event) => {
+      cancelIdleReturn();
       const point = toLocal(event.clientX, event.clientY);
       const hit = nearestNode(point.x, point.y);
       if (hit?.url) window.location.href = hit.url;
@@ -454,6 +560,7 @@
     canvas.addEventListener("pointermove", onPointerMove);
     canvas.addEventListener("pointerleave", onPointerLeave);
     canvas.addEventListener("click", onClick);
+    scheduleIdleReturn();
 
     const resizeObserver = new ResizeObserver(ensureLayout);
     resizeObserver.observe(root);
