@@ -27,7 +27,7 @@ const dateStr = date.toISOString().slice(0, 10);
     {summary && <p class="post-card-summary">{summary}</p>}
     {tags.length > 0 && (
       <ul class="tags post-card-tags" aria-label="Tags">
-        {tags.map((t) => <li>{t}</li>)}
+        {tags.slice(0, 6).map((t) => <li>{t}</li>)}
       </ul>
     )}
   </div>

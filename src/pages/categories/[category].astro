@@ -23,7 +23,8 @@ const { name, posts } = Astro.props;
 ---
 
 <Base title={name} description={`카테고리: ${name}`}>
-  <header class="page-heading">
+  <header class="page-heading archive-heading">
+    <p class="eyebrow">Category</p>
     <h1>{name}</h1>
     <p>카테고리 · {posts.length}개의 글</p>
   </header>
