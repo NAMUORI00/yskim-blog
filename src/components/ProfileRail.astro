@@ -8,7 +8,7 @@ const categories = await getCategories();
 const path = Astro.url.pathname;
 ---
 
-<aside class="profile-rail" aria-label="Profile">
+<aside class="profile-rail" aria-label="Profile and categories">
   <a class="avatar" href={gh.html_url} target="_blank" rel="noopener noreferrer" aria-label={`${gh.name} GitHub`}>
     <img src={gh.avatar_url} alt={gh.name} width="56" height="56" loading="lazy" decoding="async" />
   </a>
