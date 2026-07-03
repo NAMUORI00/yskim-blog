@@ -706,6 +706,7 @@ body.theme-dark .theme-icon-moon {
 .page-header-kicker {
   margin: 0;
   color: var(--faint);
+  font-family: var(--font-mono);
   font-size: var(--font-xs);
   font-weight: 800;
   letter-spacing: 0.04em;
