@@ -45,6 +45,7 @@ Design changes are allowed across:
 ### Task 1: Portfolio Tokens And Typography Contract
 
 **Files:**
+
 - Create: `tests/design-tokens.test.mjs`
 - Modify: `static/css/site.css`
 - Modify: `src/layouts/Base.astro`
@@ -246,6 +247,7 @@ git commit -m "style: inherit portfolio theme tokens"
 ### Task 2: Reusable Knowledge Graph Data
 
 **Files:**
+
 - Create: `src/lib/knowledge-graph-data.mjs`
 - Create: `tests/knowledge-graph-data.test.mjs`
 - Modify: `src/components/KnowledgeGraph.astro`
@@ -482,6 +484,7 @@ git commit -m "refactor: share blog knowledge graph data"
 ### Task 3: Three.js Graph Enhancement
 
 **Files:**
+
 - Modify: `package.json`
 - Modify: `package-lock.json`
 - Create: `tests/design-preservation.test.mjs`
@@ -844,6 +847,7 @@ git commit -m "feat: add three dimensional graph enhancement"
 ### Task 4: Home And Archive Visual Structure
 
 **Files:**
+
 - Modify: `src/pages/index.astro`
 - Modify: `src/pages/posts/index.astro`
 - Modify: `src/pages/categories/[category].astro`
@@ -1095,6 +1099,7 @@ git commit -m "style: reshape blog home and archives"
 ### Task 5: Shell, Rails, Motion, And Responsive Polish
 
 **Files:**
+
 - Modify: `static/css/site.css`
 - Modify: `src/styles/enhance.css`
 - Modify: `src/components/ProfileRail.astro`
@@ -1254,6 +1259,7 @@ git commit -m "style: polish portfolio inspired blog shell"
 ### Task 6: Browser Verification And Final Fixes
 
 **Files:**
+
 - Modify only files touched in Tasks 1-5 if browser verification reveals layout bugs.
 
 - [ ] **Step 1: Run full local verification**
