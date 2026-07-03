@@ -16,9 +16,13 @@ Notion is the CMS and editorial workspace. Hugo remains the owned static renderi
 
 ## Source of truth
 
-Notion is the single source of truth for post content.
+Notion is the single source of truth for post content and selected static
+pages such as the home intro, README/about copy, and profile pages.
 
-Generated Markdown and images under `content/posts` and `static/images/notion` are build artifacts. Do not edit generated Markdown by hand; the next Notion fetch will overwrite it. Avoid two-way sync between Notion and repo Markdown.
+Generated Markdown and images under `content/posts`, Notion-generated files in
+`content/pages`, and `static/images/notion` are build artifacts. Do not edit
+generated Markdown by hand; the next Notion fetch will overwrite it. Avoid
+two-way sync between Notion and repo Markdown.
 
 On `main`, generated `content/` and `static/images/` stay ignored. On `production`, GitHub Actions force-adds them so the exact deployed state is auditable in Git.
 
@@ -29,6 +33,8 @@ Use one private Notion database shared with a read-only Notion integration. The 
 Each post row should provide these database properties:
 
 - `Status`: only `Published` rows are exported.
+- `Type`: optional. Missing or `Post` means a blog post. `Page` means a
+  Notion-managed static page.
 - `Title`
 - `Slug`
 - `Date`
@@ -41,6 +47,11 @@ Each post row should provide these database properties:
 
 Optional properties such as `Series`, `Priority`, or `Featured` can be added later. The simplest stable version is one Notion database row per post, with the post body in the row page.
 
+For `Type=Page` rows, only `Title` and `Slug` are required. `Summary`,
+`Tags`, `Date`, and `Comments` are optional. The home route reads `home` for
+hero copy and `readme` or `about` for the README section, so those slugs can be
+managed entirely from the same Notion database.
+
 ## Data flow
 
 1. Query all Notion database rows where `Status` is `Published`.
@@ -48,13 +59,18 @@ Optional properties such as `Series`, `Priority`, or `Featured` can be added lat
 3. Convert blocks to Markdown with a proven converter such as `notion-to-md`.
 4. Download Notion-hosted images and file assets, then rewrite Markdown paths.
 5. Preserve equations and post-process unsupported or lossy blocks.
-6. Generate Hugo frontmatter and Markdown under `content/posts`.
-7. Fully replace generated post and Notion image artifacts on every build.
-8. Write `data/content-source.yaml` with `provider: notion`, database id, exported page count, and fetch time.
-9. Run the existing category path organizer so posts become `content/posts/<category-slug>/<slug>.md`.
-10. Run the existing content validation.
-11. Commit generated source artifacts to the `production` branch.
-12. Deploy the built `public/` artifact to Cloudflare Pages as the `production` branch.
+6. Generate Hugo frontmatter and Markdown under `content/posts` for posts.
+7. Generate Notion-managed static pages under `content/pages` for `Type=Page`.
+8. Fully replace generated post, generated page, and Notion image artifacts on
+   every build.
+9. Write `data/content-source.yaml` with `provider: notion`, database id,
+   exported post/page counts, and fetch time.
+10. Run the existing category path organizer so posts become
+   `content/posts/<category-slug>/<slug>.md`.
+11. Run the existing content validation.
+12. Commit generated source artifacts to the `production` branch.
+13. Deploy the built `public/` artifact to Cloudflare Pages as the
+    `production` branch.
 
 Public URLs should stay slug-based, for example `/posts/my-note/`.
 

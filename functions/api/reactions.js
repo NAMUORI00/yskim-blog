@@ -48,11 +48,11 @@ export async function onRequestGet({ request, env }) {
 
   const db = getDb(env);
   if (!db) {
-    return json({ reactions: emptyReactionCounts(), mode: "local" });
+    return json({ reactions: emptyReactionCounts(), mode: "local", keys: REACTION_KEYS });
   }
 
   await ensureSchema(db);
-  return json({ reactions: await readCounts(db, path), mode: "shared" });
+  return json({ reactions: await readCounts(db, path), mode: "shared", keys: REACTION_KEYS });
 }
 
 export async function onRequestPost({ request, env }) {
@@ -73,6 +73,7 @@ export async function onRequestPost({ request, env }) {
     return json({
       reactions: applyReactionDelta(emptyReactionCounts(), previousReaction, reaction),
       mode: "local",
+      keys: REACTION_KEYS,
     }, 202);
   }
 

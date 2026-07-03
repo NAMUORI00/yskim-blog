@@ -8,9 +8,12 @@ import { tmpdir } from "node:os";
 import {
   assertNoUnsupportedGeneratedMarkdown,
   buildPostDocument,
+  buildStaticPageDocument,
   convertPageToMarkdown,
   hasTemporaryNotionUrl,
+  isStaticPageRecord,
   pageToPost,
+  pageToStaticPage,
   prepareGeneratedContent,
   queryPublishedPages,
   rewriteMarkdownAssetUrls,
@@ -56,6 +59,30 @@ const notionPage = {
   },
 };
 
+const notionStaticPage = {
+  id: "47ddcd44-779f-81ca-b0c8-ff017ae62cc2",
+  properties: {
+    Title: {
+      type: "title",
+      title: [{ plain_text: "Home README" }],
+    },
+    Status: { type: "select", select: { name: "Published" } },
+    Type: { type: "select", select: { name: "Page" } },
+    Slug: {
+      type: "rich_text",
+      rich_text: [{ plain_text: "home" }],
+    },
+    Summary: {
+      type: "rich_text",
+      rich_text: [{ plain_text: "Landing copy managed in Notion." }],
+    },
+    Tags: {
+      type: "multi_select",
+      multi_select: [{ name: "meta" }],
+    },
+  },
+};
+
 test("maps Notion page properties to Hugo post metadata", () => {
   const post = pageToPost(notionPage);
 
@@ -86,6 +113,37 @@ test("renders Hugo frontmatter without allowing Markdown edits to become source 
   assert.match(document, /comments: true/);
   assert.match(document, /notion_id: "37ddcd44-779f-81ca-b0c8-ff017ae62cc1"/);
   assert.match(document, /generated_by: "notion"/);
+  assert.match(document, /math: true/);
+});
+
+test("maps Notion page records to static page metadata", () => {
+  assert.equal(isStaticPageRecord(notionStaticPage), true);
+
+  const staticPage = pageToStaticPage(notionStaticPage);
+  assert.deepEqual(staticPage, {
+    notionId: "47ddcd44-779f-81ca-b0c8-ff017ae62cc2",
+    title: "Home README",
+    status: "Published",
+    slug: "home",
+    date: "",
+    tags: ["meta"],
+    summary: "Landing copy managed in Notion.",
+    comments: false,
+  });
+});
+
+test("renders Notion-managed static page frontmatter", () => {
+  const staticPage = pageToStaticPage(notionStaticPage);
+  const document = buildStaticPageDocument(staticPage, "Home body with math:\n\n$$a^2+b^2=c^2$$\n");
+
+  assert.match(document, /^---\n/);
+  assert.match(document, /title: "Home README"/);
+  assert.match(document, /slug: "home"/);
+  assert.match(document, /tags:\n  - "meta"/);
+  assert.match(document, /comments: false/);
+  assert.match(document, /notion_id: "47ddcd44-779f-81ca-b0c8-ff017ae62cc2"/);
+  assert.match(document, /generated_by: "notion"/);
+  assert.match(document, /translationKey: "home"/);
   assert.match(document, /math: true/);
 });
 
@@ -297,6 +355,7 @@ test("full rebuild removes generated posts and Notion images only", async () => 
   await mkdir(join(root, "static", "images", "manual"), { recursive: true });
   await writeFile(join(root, "content", "posts", "old", "stale.md"), "stale", "utf8");
   await writeFile(join(root, "content", "pages", "about.md"), "about", "utf8");
+  await writeFile(join(root, "content", "pages", "home.md"), "---\ngenerated_by: \"notion\"\n---\nold", "utf8");
   await writeFile(join(root, "static", "images", "notion", "old", "stale.png"), "image", "utf8");
   await writeFile(join(root, "static", "files", "notion", "old", "stale.pdf"), "file", "utf8");
   await writeFile(join(root, "static", "images", "manual", "keep.png"), "image", "utf8");
@@ -304,6 +363,7 @@ test("full rebuild removes generated posts and Notion images only", async () => 
   await prepareGeneratedContent(root);
 
   assert.equal(existsSync(join(root, "content", "posts", "old", "stale.md")), false);
+  assert.equal(existsSync(join(root, "content", "pages", "home.md")), false);
   assert.equal(existsSync(join(root, "static", "images", "notion", "old", "stale.png")), false);
   assert.equal(existsSync(join(root, "static", "files", "notion", "old", "stale.pdf")), false);
   assert.equal(await readFile(join(root, "content", "pages", "about.md"), "utf8"), "about");

@@ -40,11 +40,14 @@ test("home page separates the visual hero from conditional Notion about renderin
 
   assert.match(home, /<section class="home-hero" aria-labelledby="home-title">/);
   assert.match(home, /<p class="eyebrow">NAMUORI\.LOG<\/p>/);
-  assert.match(home, /<h1 id="home-title">\{SITE\.title\}<\/h1>/);
+  assert.match(home, /const homePage = findPage\("home"\)/);
+  assert.match(home, /const readmePage = findPage\("readme"\) \?\? findPage\("about"\)/);
+  assert.match(home, /<h1 id="home-title">\{heroTitle\}<\/h1>/);
+  assert.match(home, /class="home-hero__metrics"/);
   assert.match(home, /<div class="home-hero__signal" aria-hidden="true">/);
   assert.match(home, /class="signal-node signal-node--tag"/);
-  assert.match(home, /\{AboutContent && \(\s*<article class="readme-card post home-readme">/s);
-  assert.match(home, /<AboutContent \/>/);
+  assert.match(home, /\{ReadmeContent && readmePage && \(\s*<article class="readme-card post home-readme"/s);
+  assert.match(home, /<ReadmeContent \/>/);
   assert.match(home, /<p class="eyebrow">Recent Notes<\/p>/);
 });
 
@@ -97,6 +100,8 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   assert.match(homeHeroTitleRule, /font-size:\s*3\.25rem/);
   assert.doesNotMatch(homeHeroTitleRule, /vw|clamp\(/);
   assert.match(ruleContaining(css, ".home-hero__copy"), /max-width:\s*var\(--content-width\)/);
+  assert.match(ruleContaining(css, ".home-hero__metrics"), /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
+  assert.match(ruleContaining(css, ".home-readme__header"), /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(180px,\s*240px\)/);
   assert.match(ruleContaining(css, ".signal-orbit"), /border-radius:\s*999px/);
   assert.match(ruleContaining(css, ".archive-heading"), /background:\s*var\(--panel\)/);
   assert.match(mediaBlock(css, "@media (max-width: 1200px)"), /\.home-hero h1\s*\{[\s\S]*?font-size:\s*2\.75rem/s);

@@ -5,6 +5,11 @@ interface Props {
   path: string;
 }
 const { path } = Astro.props;
+const reactions = [
+  { key: "like", token: "LIKE", label: "좋아요", note: "잘 읽었어요" },
+  { key: "useful", token: "USE", label: "유용해요", note: "도움이 됐어요" },
+  { key: "reread", token: "SAVE", label: "다시 읽기", note: "다시 펼쳐볼게요" },
+];
 ---
 
 <section
@@ -13,21 +18,35 @@ const { path } = Astro.props;
   data-post-reactions
   data-path={path}
   data-storage-key={`yskim-reaction:${path}`}
+  data-loading-label="반응을 불러오는 중"
+  data-shared-label="공유 반응"
+  data-local-label="이 브라우저에 저장됨"
+  data-saving-label="저장 중"
+  data-saved-label="저장됨"
+  data-offline-label="오프라인 상태로 반영됨"
 >
   <div class="post-reactions-heading">
-    <p class="eyebrow" id="post-reactions-title">반응</p>
-    <p class="post-reactions-status" data-reaction-status aria-live="polite"></p>
+    <div>
+      <p class="eyebrow" id="post-reactions-title">반응</p>
+      <h2>이 글에 남긴 신호</h2>
+    </div>
+    <div class="post-reactions-total" aria-label="총 반응">
+      <span>Total</span>
+      <strong data-reaction-total>0</strong>
+    </div>
   </div>
   <div class="post-reaction-buttons" role="group" aria-label="반응">
-    <button type="button" data-reaction-button data-reaction="like">
-      <span>좋아요</span><strong data-reaction-count="like">0</strong>
-    </button>
-    <button type="button" data-reaction-button data-reaction="useful">
-      <span>유용해요</span><strong data-reaction-count="useful">0</strong>
-    </button>
-    <button type="button" data-reaction-button data-reaction="reread">
-      <span>다시 읽기</span><strong data-reaction-count="reread">0</strong>
-    </button>
+    {reactions.map((reaction) => (
+      <button type="button" data-reaction-button data-reaction={reaction.key} aria-pressed="false">
+        <span class="post-reaction-token">{reaction.token}</span>
+        <span class="post-reaction-copy">
+          <span class="post-reaction-label">{reaction.label}</span>
+          <span class="post-reaction-note">{reaction.note}</span>
+        </span>
+        <strong data-reaction-count={reaction.key}>0</strong>
+      </button>
+    ))}
   </div>
+  <p class="post-reactions-status" data-reaction-status aria-live="polite"></p>
 </section>
 <script src={`/js/reactions.js?v=${ASSET_VERSION}`} is:inline defer></script>

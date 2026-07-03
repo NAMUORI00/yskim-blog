@@ -3,25 +3,52 @@ import Base from "../layouts/Base.astro";
 import PostCard from "../components/PostCard.astro";
 import { SITE, UI } from "../config";
 import { getCollection, render } from "astro:content";
-import { getPublishedPosts, postUrl } from "../lib/posts";
+import { getCategories, getPublishedPosts, postUrl } from "../lib/posts";
 import { getGithubProfile } from "../lib/site-data";
 
 const gh = getGithubProfile();
-const posts = (await getPublishedPosts()).slice(0, 5);
+const allPosts = await getPublishedPosts();
+const posts = allPosts.slice(0, 5);
+const categories = await getCategories();
 
-// 홈 = 홈 + 소개. about 페이지 본문을 랜딩에 그대로 합쳐서 보여준다.
 const pages = await getCollection("pages", (p) => !p.data.draft);
-const about = pages.find((p) => p.data.slug === "about");
-const AboutContent = about ? (await render(about)).Content : null;
+const findPage = (slug: string) => pages.find((p) => p.data.slug === slug);
+const homePage = findPage("home");
+const readmePage = findPage("readme") ?? findPage("about");
+const HomeContent = homePage ? (await render(homePage)).Content : null;
+const ReadmeContent = readmePage ? (await render(readmePage)).Content : null;
+const heroTitle = homePage?.data.title || SITE.title;
+const heroSummary = homePage?.data.summary || SITE.description;
+const latestPostDate = allPosts[0]?.data.date.toISOString().slice(0, 10) ?? "ready";
+const readmeSource = readmePage?.data.generated_by === "notion" ? "Notion DB" : "Repository";
 ---
 
-<Base isHome={true} title={SITE.title} description={SITE.description} type="website">
+<Base isHome={true} title={heroTitle} description={heroSummary} type="website">
   <section class="home-hero" aria-labelledby="home-title">
     <div class="home-hero__copy">
       <p class="eyebrow">NAMUORI.LOG</p>
-      <h1 id="home-title">{SITE.title}</h1>
-      <p class="summary">{SITE.description}</p>
+      <h1 id="home-title">{heroTitle}</h1>
+      <p class="summary">{heroSummary}</p>
       {gh.bio && <p class="profile-bio profile-bio--about">{gh.bio}</p>}
+      {HomeContent && (
+        <div class="home-hero__note content">
+          <HomeContent />
+        </div>
+      )}
+      <dl class="home-hero__metrics" aria-label="블로그 현황">
+        <div>
+          <dt>Notes</dt>
+          <dd>{allPosts.length}</dd>
+        </div>
+        <div>
+          <dt>Categories</dt>
+          <dd>{categories.length}</dd>
+        </div>
+        <div>
+          <dt>Latest</dt>
+          <dd>{latestPostDate}</dd>
+        </div>
+      </dl>
       <div class="hero-actions">
         <a class="primary-link" href="/posts/">{UI.allPosts}</a>
         <a class="text-link" href={SITE.portfolio} target="_blank" rel="noopener noreferrer">
@@ -38,16 +65,33 @@ const AboutContent = about ? (await render(about)).Content : null;
     </div>
   </section>
 
-  {AboutContent && (
-    <article class="readme-card post home-readme">
+  {ReadmeContent && readmePage && (
+    <article class="readme-card post home-readme" aria-labelledby="home-readme-title">
       <div class="filebar">
         <span></span><span></span><span></span>
-        <strong>README.md</strong>
+        <strong>{readmePage.data.slug}.md</strong>
         <em>{SITE.handle}</em>
       </div>
-      <div class="post-inner">
-        <div class="content">
-          <AboutContent />
+      <header class="home-readme__header">
+        <div>
+          <p class="eyebrow">Notion README</p>
+          <h2 id="home-readme-title">{readmePage.data.title}</h2>
+          {readmePage.data.summary && <p class="summary">{readmePage.data.summary}</p>}
+        </div>
+        <dl class="home-readme__meta" aria-label="README source">
+          <div>
+            <dt>Source</dt>
+            <dd>{readmeSource}</dd>
+          </div>
+          <div>
+            <dt>Slug</dt>
+            <dd>{readmePage.data.slug}</dd>
+          </div>
+        </dl>
+      </header>
+      <div class="post-inner home-readme__inner">
+        <div class="content home-readme__content">
+          <ReadmeContent />
         </div>
       </div>
     </article>
