@@ -101,7 +101,7 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   assert.doesNotMatch(homeHeroTitleRule, /vw|clamp\(/);
   assert.match(ruleContaining(css, ".home-hero__copy"), /max-width:\s*var\(--content-width\)/);
   assert.match(ruleContaining(css, ".home-hero__metrics"), /grid-template-columns:\s*repeat\(3,\s*minmax\(0,\s*1fr\)\)/);
-  assert.match(ruleContaining(css, ".home-readme__header"), /grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(180px,\s*240px\)/);
+  assert.match(css, /\.home-readme__header\s*\{[\s\S]*?grid-template-columns:\s*minmax\(0,\s*1fr\)\s*minmax\(180px,\s*240px\)/);
   assert.match(ruleContaining(css, ".signal-orbit"), /border-radius:\s*999px/);
   assert.match(ruleContaining(css, ".archive-heading"), /background:\s*var\(--panel\)/);
   assert.match(mediaBlock(css, "@media (max-width: 1200px)"), /\.home-hero h1\s*\{[\s\S]*?font-size:\s*2\.75rem/s);

@@ -76,8 +76,12 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   assert.match(profileRail, /<aside class="profile-rail" aria-label="Profile and categories">/);
   assert.match(profileRail, /<div class="profile-intro">/);
   assert.match(profileRail, /class="profile-address"/);
+  assert.match(profileRail, /class="profile-address-label">주소<\/p>/);
   assert.match(profileRail, /class="profile-link-list"/);
-  assert.match(profileRail, /href=\{SITE\.portfolio\}/);
+  assert.match(profileRail, /class="profile-link-favicon"/);
+  assert.match(profileRail, /faviconFor\(link\.href\)/);
+  assert.match(profileRail, /\{ label: "Portfolio", href: SITE\.portfolio \}/);
+  assert.doesNotMatch(profileRail, /href="\/index\.xml"|blog\.namuori\.net/);
   assert.match(sidebar, /<aside class="blog-sidebar" aria-label="Blog context">/);
   assert.match(sidebar, /class="blog-sidebar-panel"/);
   assert.match(base, /class="site-footer__inner"/);
@@ -92,7 +96,7 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   const profileOrder = [
     profileRail.indexOf('aria-label="프로필"'),
     profileRail.indexOf("World Calling"),
-    profileRail.indexOf('aria-label="주소"'),
+    profileRail.indexOf('class="profile-address"'),
     profileRail.indexOf('aria-label="링크"'),
     profileRail.indexOf("aria-label={UI.categories}"),
   ];
@@ -150,12 +154,14 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(ruleForSelectors(css, [".top-bar-category-menu a.is-active", ".top-bar-category-menu a:hover"]).body, /border-left-color:\s*var\(--accent\)/);
   assert.match(ruleForSelector(css, ".profile-section").body, /border-top:\s*1px solid var\(--line-soft\)/);
   assert.match(ruleForSelector(css, ".profile-address").body, /font-style:\s*normal/);
+  assert.match(ruleForSelector(css, ".profile-link-list a").body, /grid-template-columns:\s*18px minmax\(0,\s*1fr\)/);
+  assert.match(ruleForSelector(css, ".profile-link-favicon").body, /width:\s*16px/);
   assert.match(ruleForSelector(css, ".blog-sidebar-panel").body, /display:\s*grid/);
   assert.match(ruleForSelector(css, ".sidebar-card").body, /box-shadow:\s*none/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-card").body, /display:\s*grid/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-canvas").body, /max-height:\s*240px/);
   assert.match(ruleForSelector(mobile, ".knowledge-graph-canvas").body, /touch-action:\s*pan-y/);
-  assert.match(ruleForSelector(mobile, ".knowledge-scene").body, /display:\s*none/);
+  assert.doesNotMatch(css, /\.knowledge-scene/);
   assert.match(tablet, /\.profile-rail,\s*\.blog-sidebar\s*\{[^}]*align-self:\s*stretch[^}]*width:\s*100%/s);
   assert.match(tablet, /\.blog-sidebar-panel\s*\{[^}]*grid-template-columns:\s*repeat\(auto-fit,\s*minmax\(200px,\s*1fr\)\)/s);
   assert.match(mobile, /\.blog-sidebar-panel\s*\{[^}]*grid-template-columns:\s*1fr/s);
@@ -198,5 +204,5 @@ test("enhance css animates signal details only when motion is allowed", async ()
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /transition-duration:\s*0\.001ms !important/);
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /transition-delay:\s*0ms !important/);
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /scroll-behavior:\s*auto !important/);
-  assert.match(ruleForSelector(reduced, ".knowledge-scene").body, /display:\s*none/);
+  assert.doesNotMatch(reduced, /\.knowledge-scene/);
 });
