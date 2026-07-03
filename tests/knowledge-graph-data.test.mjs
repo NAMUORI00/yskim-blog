@@ -47,6 +47,61 @@ test("buildKnowledgeGraph creates root, post, and tag nodes with stable links", 
   ]);
 });
 
+test("buildKnowledgeGraph normalizes missing or blank handles to a stable profile node", () => {
+  for (const handle of [undefined, "", "@"]) {
+    const graph = buildKnowledgeGraph({
+      posts: [],
+      handle,
+      currentSlug: undefined,
+      postUrl,
+      tagUrl,
+      slugifyTerm,
+    });
+
+    assert.deepEqual(graph.nodes[0], {
+      id: "profile:namuori",
+      label: "@namuori",
+      type: "main",
+      url: "/",
+    });
+  }
+});
+
+test("buildKnowledgeGraph keeps explicit handle labels while normalizing root ids", () => {
+  const graph = buildKnowledgeGraph({
+    posts: [],
+    handle: "@namuori",
+    currentSlug: undefined,
+    postUrl,
+    tagUrl,
+    slugifyTerm,
+  });
+
+  assert.deepEqual(graph.nodes[0], {
+    id: "profile:namuori",
+    label: "@namuori",
+    type: "main",
+    url: "/",
+  });
+});
+
+test("buildKnowledgeGraph deduplicates repeated tag links on a post", () => {
+  const graph = buildKnowledgeGraph({
+    posts: [post("first", "First Post", ["Design", "design", "Design"])],
+    handle: "@namuori",
+    currentSlug: undefined,
+    postUrl,
+    tagUrl,
+    slugifyTerm,
+  });
+
+  assert.deepEqual(graph.nodes.map((node) => node.id), ["profile:namuori", "post:first", "tag:design"]);
+  assert.deepEqual(graph.links, [
+    { source: "profile:namuori", target: "post:first" },
+    { source: "post:first", target: "tag:design" },
+  ]);
+});
+
 test("createVisualGraphSubset keeps root, active post, and connected tags", () => {
   const posts = Array.from({ length: 80 }, (_, index) =>
     post(`post-${index}`, `Post ${index}`, [`tag ${index}`, "shared"]),
@@ -68,5 +123,64 @@ test("createVisualGraphSubset keeps root, active post, and connected tags", () =
   assert.equal(ids.has("post:post-42"), true);
   assert.equal(ids.has("tag:tag-42"), true);
   assert.equal(ids.has("tag:shared"), true);
+  assert.equal(subset.links.every((link) => ids.has(link.source) && ids.has(link.target)), true);
+});
+
+test("createVisualGraphSubset treats root and active post as protected when cap is too small", () => {
+  const graph = buildKnowledgeGraph({
+    posts: [post("active", "Active Post", ["alpha", "beta", "gamma"])],
+    handle: "@namuori",
+    currentSlug: "active",
+    postUrl,
+    tagUrl,
+    slugifyTerm,
+  });
+
+  const subset = createVisualGraphSubset(graph, { maxNodes: 1 });
+
+  assert.deepEqual(subset.nodes.map((node) => node.id), ["profile:namuori", "post:active"]);
+  assert.deepEqual(subset.links, [{ source: "profile:namuori", target: "post:active" }]);
+});
+
+test("createVisualGraphSubset hard-caps active posts with many connected tags", () => {
+  const activeTags = ["zeta", "shared", "alpha", "beta", "gamma", "delta"];
+  const graph = buildKnowledgeGraph({
+    posts: [
+      post("active", "Active Post", activeTags),
+      ...Array.from({ length: 6 }, (_, index) => post(`related-${index}`, `Related ${index}`, ["shared"])),
+    ],
+    handle: "@namuori",
+    currentSlug: "active",
+    postUrl,
+    tagUrl,
+    slugifyTerm,
+  });
+
+  const subset = createVisualGraphSubset(graph, { maxNodes: 4 });
+  const ids = new Set(subset.nodes.map((node) => node.id));
+
+  assert.equal(subset.nodes.length, 4);
+  assert.equal(ids.has("profile:namuori"), true);
+  assert.equal(ids.has("post:active"), true);
+  assert.equal(ids.has("tag:shared"), true);
+  assert.equal(ids.has("tag:alpha"), true);
+  assert.equal(subset.links.every((link) => ids.has(link.source) && ids.has(link.target)), true);
+});
+
+test("createVisualGraphSubset caps graph without an active post", () => {
+  const graph = buildKnowledgeGraph({
+    posts: Array.from({ length: 30 }, (_, index) => post(`post-${index}`, `Post ${index}`, [`tag ${index}`])),
+    handle: "@namuori",
+    currentSlug: undefined,
+    postUrl,
+    tagUrl,
+    slugifyTerm,
+  });
+
+  const subset = createVisualGraphSubset(graph, { maxNodes: 10 });
+  const ids = new Set(subset.nodes.map((node) => node.id));
+
+  assert.equal(subset.nodes.length, 10);
+  assert.equal(ids.has("profile:namuori"), true);
   assert.equal(subset.links.every((link) => ids.has(link.source) && ids.has(link.target)), true);
 });
