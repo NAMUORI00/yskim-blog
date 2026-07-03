@@ -916,7 +916,7 @@ body.has-maximized-content-window {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(150px, 220px);
   gap: var(--space-5);
-  align-items: center;
+  align-items: start;
   isolation: isolate;
   min-height: clamp(280px, 38vh, 420px);
   margin-bottom: var(--space-5);
@@ -943,7 +943,8 @@ body.has-maximized-content-window {
 }
 
 .home-grove-window {
-  align-self: center;
+  align-self: start;
+  display: grid;
   width: min(100%, 220px);
   padding: 0;
   overflow: hidden;
@@ -958,6 +959,7 @@ body.has-maximized-content-window {
 .home-grove-window__body {
   display: grid;
   place-items: center;
+  min-height: 0;
   padding: var(--space-3);
   background:
     linear-gradient(180deg, color-mix(in srgb, var(--accent-soft) 38%, transparent), transparent 62%),
