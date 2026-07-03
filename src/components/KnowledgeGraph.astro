@@ -2,6 +2,7 @@
 import { SITE, ASSET_VERSION } from "../config";
 import { getPublishedPosts, postUrl, tagUrl, slugifyTerm } from "../lib/posts";
 import { buildKnowledgeGraph, createVisualGraphSubset } from "../lib/knowledge-graph-data.mjs";
+import BlogGraphScene from "./BlogGraphScene.svelte";
 
 const allPosts = await getPublishedPosts();
 const match = Astro.url.pathname.match(/^\/posts\/([^/]+)\/?$/);
@@ -22,8 +23,12 @@ const hasGraph = graphObject.nodes.length > 1;
 
 {hasGraph && (
   <section class="sidebar-card sidebar-graph-card">
-    <p class="sidebar-title">지식 그래프</p>
+    <div class="knowledge-graph-heading">
+      <p class="sidebar-title">지식 그래프</p>
+      <span>{graphObject.nodes.length} nodes</span>
+    </div>
     <div class="sidebar-graph-canvas" data-knowledge-graph>
+      <BlogGraphScene graph={graphObject} client:visible />
       <template class="knowledge-graph-data">{graph}</template>
       <canvas class="knowledge-graph-canvas" aria-hidden="true"></canvas>
     </div>
