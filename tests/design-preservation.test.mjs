@@ -50,15 +50,16 @@ test("post detail keeps Notion rendering, comments, and affiliate disclosure wit
   assert.match(post, /<AffiliateDisclosure \/>/);
 });
 
-test("home still renders Notion about content and recent posts", async () => {
+test("home keeps the Notion intro as the only home-managed content", async () => {
   const home = await readFile(files.home, "utf8");
 
   assert.match(home, /getCollection\("pages"/);
   assert.match(home, /findPage\("home"\)/);
-  assert.match(home, /findPage\("readme"\) \?\? findPage\("about"\)/);
-  assert.match(home, /await render\(readmePage\)/);
-  assert.match(home, /getPublishedPosts\(\)/);
-  assert.match(home, /<PostCard/);
+  assert.match(home, /await render\(homePage\)/);
+  assert.doesNotMatch(home, /findPage\("readme"\)|findPage\("about"\)/);
+  assert.doesNotMatch(home, /await render\(readmePage\)/);
+  assert.doesNotMatch(home, /getPublishedPosts\(\)/);
+  assert.doesNotMatch(home, /<PostCard|Recent Notes|post-feed--home/);
 });
 
 test("css defines stable scene dimensions and fallback layering", async () => {

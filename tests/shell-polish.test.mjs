@@ -92,6 +92,8 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   assert.match(topBar, /class="top-bar-categories"/);
   assert.match(topBar, /class="top-bar-category-menu"/);
   assert.match(topBar, /category\.count/);
+  assert.match(topBar, /href="\/search\/"/);
+  assert.match(topBar, /\{UI\.navSearch\}/);
   assert.doesNotMatch(topBar, /top-bar-external/);
 
   const profileOrder = [
@@ -116,7 +118,6 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
     ".blog-sidebar-panel",
     ".readme-card",
     ".post-card",
-    ".archive-heading",
   ]);
   const railSurfaceRule = ruleForSelectorsWith(
     css,
@@ -191,17 +192,17 @@ test("desktop shell keeps portfolio-like three-column rhythm and license footer"
   assert.match(ruleForSelectorsWith(css, [".site-footer__inner"], /justify-content:\s*space-between/, ".site-footer__inner spacing").body, /justify-content:\s*space-between/);
 });
 
-test("enhance css animates signal details only when motion is allowed", async () => {
+test("enhance css animates grove details only when motion is allowed", async () => {
   const enhance = await readFile(files.enhance, "utf8");
   const motion = mediaBlock(enhance, "@media (prefers-reduced-motion: no-preference)");
   const reduced = mediaBlock(enhance, "@media (prefers-reduced-motion: reduce)");
 
-  assert.match(ruleForSelector(motion, ".home-hero__signal").body, /animation:\s*signal-drift 18s linear infinite/);
-  assert.match(ruleForSelector(motion, ".signal-orbit").body, /animation:\s*signal-pulse 3\.8s ease-in-out infinite/);
-  assert.match(ruleForSelector(motion, ".signal-orbit--two").body, /animation-duration:\s*5\.4s/);
+  assert.match(ruleForSelector(motion, ".home-hero__grove").body, /animation:\s*grove-sway 9s ease-in-out infinite/);
+  assert.match(ruleForSelector(motion, ".grove-leaf--float").body, /animation:\s*leaf-drift 7\.6s ease-in-out infinite/);
+  assert.match(ruleForSelector(motion, ".grove-leaf--drift-two").body, /animation-duration:\s*9\.2s/);
   assert.match(ruleForSelectors(motion, [".sidebar-card:hover", ".profile-rail:hover"]).body, /border-color:\s*color-mix\(in srgb,\s*var\(--accent\)\s*38%,\s*var\(--line\)\)/);
-  assert.match(motion, /@keyframes signal-drift/);
-  assert.match(motion, /@keyframes signal-pulse/);
+  assert.match(motion, /@keyframes grove-sway/);
+  assert.match(motion, /@keyframes leaf-drift/);
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /animation-duration:\s*0\.001ms !important/);
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /animation-iteration-count:\s*1 !important/);
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /transition-duration:\s*0\.001ms !important/);

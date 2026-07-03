@@ -64,7 +64,7 @@ npm run build    # outputs to dist/
 Generated `content/` and `static/images/` are ignored on `main`. They are
 force-added only by the production publishing workflow. `content/pages/`
 keeps committed source pages such as privacy/contact/disclaimer, while Notion
-rows with `Type=Page` can generate `home`, `readme`, `about`, or other static
+rows with `Type=Page` can generate the home intro (`home`) or other static
 pages in the same folder.
 
 Site configuration (title, author, giscus, search-engine verification codes,

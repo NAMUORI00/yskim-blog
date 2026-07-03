@@ -1,36 +1,12 @@
 ---
 import Base from "../../layouts/Base.astro";
-import PostCard from "../../components/PostCard.astro";
+import PostListWindow from "../../components/PostListWindow.astro";
 import { UI } from "../../config";
-import { getPublishedPosts, postUrl } from "../../lib/posts";
+import { getPublishedPosts } from "../../lib/posts";
 
 const posts = await getPublishedPosts();
 ---
 
 <Base title={UI.allPosts} description="공개 발행된 노트와 글.">
-  <header class="page-heading archive-heading">
-    <p class="eyebrow">Archive</p>
-    <h1>{UI.allPosts}</h1>
-    <p>공개 발행된 노트와 글.</p>
-    <p class="page-header-count">{posts.length} entries</p>
-  </header>
-  <section class="post-feed">
-    {posts.length > 0 ? (
-      <div class="post-list">
-        {posts.map((p) => (
-          <PostCard
-            href={postUrl(p.data.slug)}
-            title={p.data.title}
-            date={p.data.date}
-            category={p.data.categories[0]}
-            summary={p.data.summary}
-            cover={p.data.cover || undefined}
-            tags={p.data.tags}
-          />
-        ))}
-      </div>
-    ) : (
-      <p class="empty-state">{UI.noPostsYet}</p>
-    )}
-  </section>
+  <PostListWindow label="아카이브" title={UI.allPosts} posts={posts} />
 </Base>

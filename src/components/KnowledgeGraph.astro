@@ -1,6 +1,6 @@
 ---
 import { SITE, ASSET_VERSION } from "../config";
-import { getPublishedPosts, postUrl, tagUrl, slugifyTerm } from "../lib/posts";
+import { getPublishedPosts, postUrl, categoryUrl, tagUrl, slugifyTerm } from "../lib/posts";
 import { buildKnowledgeGraph, createVisualGraphSubset } from "../lib/knowledge-graph-data.mjs";
 
 const allPosts = await getPublishedPosts();
@@ -12,6 +12,7 @@ const fullGraph = buildKnowledgeGraph({
   handle: SITE.handle,
   currentSlug,
   postUrl,
+  categoryUrl,
   tagUrl,
   slugifyTerm,
 });

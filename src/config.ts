@@ -34,9 +34,10 @@ export const ASSET_VERSION = String(Date.now());
 
 export const UI = {
   navHome: "홈",
-  navPosts: "글",
+  navPosts: "전체",
   navAbout: "소개",
   navPortfolio: "Portfolio",
+  navSearch: "검색",
   allPosts: "모든 글",
   categories: "카테고리",
   noCategories: "아직 카테고리가 없습니다",

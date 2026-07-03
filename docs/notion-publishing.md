@@ -17,7 +17,7 @@ Notion is the CMS and editorial workspace. Hugo remains the owned static renderi
 ## Source of truth
 
 Notion is the single source of truth for post content and selected static
-pages such as the home intro, README/about copy, and profile pages.
+pages such as the home intro and profile pages.
 
 Generated Markdown and images under `content/posts`, Notion-generated files in
 `content/pages`, and `static/images/notion` are build artifacts. Do not edit
@@ -49,8 +49,8 @@ Optional properties such as `Series`, `Priority`, or `Featured` can be added lat
 
 For `Type=Page` rows, only `Title` and `Slug` are required. `Summary`,
 `Tags`, `Date`, and `Comments` are optional. The home route reads `home` for
-hero copy and `readme` or `about` for the README section, so those slugs can be
-managed entirely from the same Notion database.
+the hero and intro copy. README/about content is not rendered as a separate
+home section, so the introduction should be managed in the `home` row.
 
 ## Data flow
 
