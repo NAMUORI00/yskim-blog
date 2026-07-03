@@ -587,9 +587,16 @@ export function fileAttachmentTag(src, name, caption) {
 export function pdfEmbedTag(src, caption, name) {
   const label = String(name || "PDF 문서");
   return `<figure class="pdf-embed">
-  <object class="pdf-frame" data="${src}" type="application/pdf">
-    <p class="pdf-fallback">PDF 미리보기를 표시할 수 없습니다. <a href="${src}" target="_blank" rel="noopener" download>${escapeHtmlAttribute(label)} 내려받기</a></p>
-  </object>
+  <div class="pdf-viewer-shell" role="group" aria-label="PDF 미리보기: ${escapeHtmlAttribute(label)}">
+    <div class="pdf-viewer-bar" aria-hidden="true">
+      <span class="pdf-viewer-badge">PDF</span>
+      <span class="pdf-viewer-title">${escapeHtmlAttribute(label)}</span>
+      <span class="pdf-viewer-status">preview</span>
+    </div>
+    <object class="pdf-frame" data="${src}" type="application/pdf">
+      <p class="pdf-fallback">PDF 미리보기를 표시할 수 없습니다. <a href="${src}" target="_blank" rel="noopener" download>${escapeHtmlAttribute(label)} 내려받기</a></p>
+    </object>
+  </div>
   <a class="file-attachment file-attachment--pdf" href="${src}" target="_blank" rel="noopener" download>
     <span class="file-attachment-icon" aria-hidden="true">PDF</span>
     <span class="file-attachment-label">${escapeHtmlAttribute(label)}</span>
@@ -609,8 +616,8 @@ export function isTweetUrl(url) {
 // upgrades the blockquote into the rendered tweet — the same approach Notion uses.
 export function tweetTag(url, caption) {
   const tweetUrl = String(url).replace(/^http:/i, "https:");
-  return `<figure class="tweet-embed">
-  <blockquote class="twitter-tweet"><a href="${escapeHtmlAttribute(tweetUrl)}"></a></blockquote>${captionHtml(caption)}
+  return `<figure class="tweet-embed" data-tweet-url="${escapeHtmlAttribute(tweetUrl)}">
+  <blockquote class="twitter-tweet" data-theme="light" data-dnt="true"><a href="${escapeHtmlAttribute(tweetUrl)}"></a></blockquote>${captionHtml(caption)}
 </figure>`;
 }
 

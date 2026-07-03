@@ -251,6 +251,10 @@ test("pdfEmbedTag renders an inline preview plus a download fallback", () => {
   const url = "https://prod-files-secure.s3.us-west-2.amazonaws.com/slides.pdf?X-Amz-Expires=3600";
   const html = pdfEmbedTag(url, "발표 자료", "slides.pdf");
   assert.match(html, /class="pdf-embed"/);
+  assert.match(html, /class="pdf-viewer-shell"/);
+  assert.match(html, /class="pdf-viewer-bar"/);
+  assert.match(html, /class="pdf-viewer-title">slides\.pdf<\/span>/);
+  assert.match(html, /aria-label="PDF 미리보기: slides\.pdf"/);
   assert.match(html, /<object class="pdf-frame" data="[^"]+" type="application\/pdf">/);
   // Raw url is kept verbatim (in every occurrence) so the downloader can rewrite it.
   assert.ok(html.includes(`data="${url}"`));
@@ -282,7 +286,8 @@ test("isTweetUrl matches twitter.com and x.com status links only", () => {
 test("tweetTag renders a twitter-tweet blockquote, normalizing http→https and x.com", () => {
   const html = tweetTag("http://x.com/Interior/status/463440424141459456", "백악관 트윗");
   assert.match(html, /class="tweet-embed"/);
-  assert.match(html, /<blockquote class="twitter-tweet">/);
+  assert.match(html, /data-tweet-url="https:\/\/x\.com\/Interior\/status\/463440424141459456"/);
+  assert.match(html, /<blockquote class="twitter-tweet" data-theme="light" data-dnt="true">/);
   assert.ok(html.includes('href="https://x.com/Interior/status/463440424141459456"'));
   assert.match(html, /<figcaption>백악관 트윗<\/figcaption>/);
 });

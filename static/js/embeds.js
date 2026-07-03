@@ -4,11 +4,55 @@
 //   - <pre class="mermaid">              → rendered diagram via mermaid (CDN, ESM)
 // Both are loaded on demand so pages without embeds pay nothing.
 (() => {
-  const hasTweet = () => document.querySelector(".twitter-tweet");
+  const renderedTweetSelector = 'iframe[id^="twitter-widget"], iframe[src*="platform.twitter.com"]';
+  const hasTweet = () => document.querySelector(".tweet-embed, .twitter-tweet, " + renderedTweetSelector);
   const hasMermaid = () => document.querySelector("pre.mermaid");
 
   // --- Twitter / X ---------------------------------------------------------
-  function loadTwitter() {
+  const twitterTheme = () =>
+    document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+
+  function createTweetBlockquote(url) {
+    const blockquote = document.createElement("blockquote");
+    const anchor = document.createElement("a");
+    blockquote.className = "twitter-tweet";
+    anchor.href = url;
+    blockquote.append(anchor);
+    return blockquote;
+  }
+
+  function prepareTweets({ resetRendered = false } = {}) {
+    document.querySelectorAll("figure.tweet-embed").forEach((figure) => {
+      const renderedFrame = figure.querySelector(renderedTweetSelector);
+      const url = figure.dataset.tweetUrl || figure.querySelector("a[href]")?.getAttribute("href") || "";
+
+      if (resetRendered) {
+        figure.querySelectorAll(renderedTweetSelector).forEach((frame) => frame.remove());
+      }
+
+      let blockquote = figure.querySelector("blockquote.twitter-tweet");
+      if (!blockquote && url && (resetRendered || !renderedFrame)) {
+        blockquote = createTweetBlockquote(url);
+        figure.insertBefore(blockquote, figure.querySelector("figcaption"));
+      }
+
+      if (!blockquote) return;
+      if (url) {
+        figure.dataset.tweetUrl = url;
+        let anchor = blockquote.querySelector("a[href]");
+        if (!anchor) {
+          anchor = document.createElement("a");
+          blockquote.append(anchor);
+        }
+        anchor.href = url;
+      }
+      blockquote.dataset.theme = twitterTheme();
+      blockquote.dataset.dnt = "true";
+    });
+  }
+
+  function loadTwitter(options = {}) {
+    prepareTweets(options);
     if (window.twttr && window.twttr.widgets) {
       window.twttr.widgets.load();
       return;
@@ -64,4 +108,10 @@
   } else {
     init();
   }
+
+  window.addEventListener("yskim:theme-change", () => {
+    if (hasTweet()) {
+      loadTwitter({ resetRendered: true });
+    }
+  });
 })();

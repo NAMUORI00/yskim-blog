@@ -98,8 +98,23 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   assert.match(topBar, /data-top-search-toggle/);
   assert.match(topBar, /data-top-search-input/);
   assert.match(topBar, /data-top-search-results/);
+  assert.match(topBar, /class="top-bar-left"/);
   assert.doesNotMatch(topBar, /href="\/search\/" class=\{isActive\("\/search\/"\)/);
+  assert.doesNotMatch(topBar, /class="top-bar-actions"/);
   assert.doesNotMatch(topBar, /top-bar-external/);
+
+  const topBarOrder = [
+    topBar.indexOf('class="top-bar-left"'),
+    topBar.indexOf('class="top-bar-brand"'),
+    topBar.indexOf('id="primary-nav"'),
+    topBar.indexOf('class={`top-bar-search'),
+    topBar.indexOf('class="top-bar-utils"'),
+  ];
+  assert.ok(topBarOrder.every((index) => index >= 0), "Top bar is missing left group, brand, nav, centered search, or utilities");
+  assert.ok(
+    topBarOrder.every((index, i, order) => i === 0 || order[i - 1] < index),
+    "Top bar should order left-side brand/nav, centered search, and right-side theme utilities",
+  );
 
   const profileOrder = [
     profileRail.indexOf('aria-label="프로필"'),
@@ -158,6 +173,9 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(activeRule.body, /border-color:\s*var\(--accent-border\)/);
   assert.match(ruleForSelector(css, ".top-bar-categories").body, /position:\s*relative/);
   assert.match(ruleForSelector(css, ".top-bar-category-menu").body, /position:\s*absolute/);
+  assert.match(ruleForSelector(css, ".top-bar-left").body, /justify-content:\s*flex-start/);
+  assert.match(ruleForSelector(css, ".top-bar-left").body, /gap:\s*clamp\(24px,\s*4vw,\s*72px\)/);
+  assert.match(ruleForSelector(css, "body").body, /padding-bottom:\s*var\(--footer-reserved\)/);
   assert.match(ruleForSelector(css, ".top-bar-search__toggle").body, /border-radius:\s*999px/);
   assert.match(ruleForSelector(css, ".top-bar-search__form").body, /width:\s*0/);
   assert.match(ruleForSelector(css, ".top-bar-search.is-open .top-bar-search__form").body, /width:\s*min\(28vw,\s*260px\)/);
@@ -171,6 +189,11 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.doesNotMatch(ruleForSelector(css, ".profile-link-copy strong").body, /text-overflow:\s*ellipsis|white-space:\s*nowrap/);
   assert.match(ruleForSelector(css, ".profile-link-copy em").body, /overflow-wrap:\s*anywhere/);
   assert.match(ruleForSelector(css, ".profile-link-copy em").body, /word-break:\s*break-word/);
+  assert.match(css, /\.content figure\.pdf-embed\s*\{[^}]*background:\s*var\(--panel\)/s);
+  assert.match(css, /\.content figure\.pdf-embed\s*\{[^}]*border:\s*1px solid var\(--line\)/s);
+  assert.match(ruleForSelector(css, ".content .pdf-viewer-bar").body, /background:\s*var\(--panel-soft\)/);
+  assert.match(ruleForSelector(css, ".content .pdf-viewer-bar").body, /font-family:\s*var\(--font-mono\)/);
+  assert.match(ruleForSelector(css, ".content .pdf-frame").body, /background:\s*var\(--surface-muted\)/);
   assert.match(ruleForSelector(css, ".blog-sidebar-panel").body, /display:\s*grid/);
   assert.match(ruleForSelector(css, ".sidebar-card").body, /box-shadow:\s*none/);
   assert.match(ruleForSelector(mobile, ".sidebar-graph-card").body, /display:\s*grid/);
@@ -195,10 +218,22 @@ test("desktop shell keeps portfolio-like three-column rhythm and license footer"
   assert.match(shellGrid.body, /grid-template-columns:\s*var\(--rail-width\) minmax\(0,\s*var\(--content-column-max\)\) var\(--sidebar-width\)/);
   assert.match(shellGrid.body, /justify-content:\s*space-between/);
   assert.match(ruleForSelectorsWith(desktop, [".top-bar-inner"], /display:\s*grid/, ".top-bar-inner desktop grid").body, /display:\s*grid/);
+  assert.match(
+    ruleForSelectorsWith(desktop, [".top-bar-inner"], /grid-template-columns:\s*minmax\(0,\s*1fr\) auto minmax\(0,\s*1fr\)/, ".top-bar-inner centered search grid").body,
+    /grid-template-columns:\s*minmax\(0,\s*1fr\) auto minmax\(0,\s*1fr\)/,
+  );
+  assert.match(ruleForSelector(desktop, ".top-bar-left").body, /justify-self:\s*start/);
+  assert.match(ruleForSelector(desktop, ".top-bar-search").body, /justify-self:\s*center/);
+  assert.match(ruleForSelector(desktop, ".top-bar-utils").body, /justify-self:\s*end/);
   assert.match(ruleForSelectorsWith(desktop, [".site-shell"], /align-items:\s*start/, ".site-shell desktop alignment").body, /align-items:\s*start/);
   assert.match(stickyRails.body, /position:\s*sticky/);
   assert.match(stickyRails.body, /top:\s*calc\(var\(--topbar-h\) \+ var\(--space-4\)\)/);
+  assert.match(stickyRails.body, /var\(--footer-reserved\)/);
   assert.doesNotMatch(desktop, /position:\s*fixed/);
+  assert.match(ruleForSelector(css, ".site-footer").body, /position:\s*fixed/);
+  assert.match(ruleForSelector(css, ".site-footer").body, /bottom:\s*0/);
+  assert.match(ruleForSelector(css, ".site-footer").body, /max-height:\s*var\(--footer-fixed-h\)/);
+  assert.match(ruleForSelector(css, ".site-footer").body, /overflow-y:\s*auto/);
   assert.match(ruleForSelector(css, ".site-footer").body, /border-top:\s*1px solid var\(--line\)/);
   assert.match(ruleForSelector(css, ".site-footer").body, /font-family:\s*var\(--font-mono\)/);
   assert.match(ruleForSelector(css, ".site-footer").body, /font-size:\s*0\.65rem/);
@@ -214,6 +249,7 @@ test("enhance css animates grove details only when motion is allowed", async () 
   assert.match(ruleForSelector(motion, ".grove-leaf--float").body, /animation:\s*leaf-drift 7\.6s ease-in-out infinite/);
   assert.match(ruleForSelector(motion, ".grove-leaf--drift-two").body, /animation-duration:\s*9\.2s/);
   assert.match(ruleForSelectors(motion, [".sidebar-card:hover", ".profile-rail:hover"]).body, /border-color:\s*color-mix\(in srgb,\s*var\(--accent\)\s*38%,\s*var\(--line\)\)/);
+  assert.match(enhance, /\.back-to-top\s*\{[^}]*bottom:\s*calc\(var\(--footer-reserved,\s*0px\) \+ 1rem\)/s);
   assert.match(motion, /@keyframes grove-sway/);
   assert.match(motion, /@keyframes leaf-drift/);
   assert.match(ruleForSelectors(reduced, ["*", "*::before", "*::after"]).body, /animation-duration:\s*0\.001ms !important/);

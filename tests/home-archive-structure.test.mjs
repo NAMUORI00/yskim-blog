@@ -48,6 +48,9 @@ test("home page renders one Notion-managed intro without readme or recent posts"
   assert.match(home, /const HomeContent = homePage \? \(await render\(homePage\)\)\.Content : null/);
   assert.match(home, /<h1 id="home-title">\{heroTitle\}<\/h1>/);
   assert.doesNotMatch(home, /homeSource|home-hero__metrics|<dt>Source<\/dt>|<dt>Pages<\/dt>|<dt>Categories<\/dt>/);
+  assert.match(home, /<aside class="readme-card home-grove-window" aria-label="나무 애니메이션 창" data-content-window>/);
+  assert.match(home, /class="filebar home-grove-window__bar"/);
+  assert.match(home, /<strong>garden\.motion<\/strong>/);
   assert.match(home, /<div class="home-hero__grove" aria-hidden="true">/);
   assert.match(home, /class="grove-leaf grove-leaf--float grove-leaf--drift-four"/);
   assert.doesNotMatch(home, /readmePage|ReadmeContent|home-readme/);
@@ -110,6 +113,9 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   assert.doesNotMatch(homeHeroTitleRule, /vw|clamp\(/);
   assert.match(ruleContaining(css, ".home-hero__copy"), /max-width:\s*var\(--content-width\)/);
   assert.match(ruleContaining(css, ".home-intro-window"), /margin-bottom:\s*0/);
+  assert.match(ruleContaining(css, ".home-grove-window"), /align-self:\s*center/);
+  assert.match(ruleContaining(css, ".home-grove-window"), /padding:\s*0/);
+  assert.match(ruleContaining(css, ".home-grove-window__body"), /display:\s*grid/);
   assert.match(ruleContaining(css, ".home-hero__grove"), /aspect-ratio:\s*1\s*\/\s*1/);
   assert.match(css, /\.grove-trunk\s*\{[^}]*background:\s*linear-gradient\(180deg,\s*var\(--accent-light\),\s*var\(--accent-strong\)\)/s);
   assert.match(css, /\.grove-leaf\s*\{[^}]*border-radius:\s*100% 0 100% 0/s);
@@ -121,5 +127,5 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   assert.match(mediaBlock(css, "@media (max-width: 900px)"), /\.home-hero h1\s*\{[\s\S]*?font-size:\s*1\.7rem/s);
   assert.match(mediaBlock(css, "@media (max-width: 600px)"), /\.home-hero h1\s*\{[\s\S]*?font-size:\s*1\.55rem/s);
   assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.home-hero\s*\{[\s\S]*?grid-template-columns:\s*1fr/s);
-  assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.home-hero__grove\s*\{[\s\S]*?max-width:\s*220px/s);
+  assert.match(css, /@media \(max-width: 900px\)[\s\S]*?\.home-grove-window\s*\{[\s\S]*?max-width:\s*260px/s);
 });

@@ -40,17 +40,30 @@ const heroSummary = homePage?.data.summary || SITE.description;
         </div>
       </div>
     </article>
-    <div class="home-hero__grove" aria-hidden="true">
-      <span class="grove-trunk"></span>
-      <span class="grove-branch grove-branch--one"></span>
-      <span class="grove-branch grove-branch--two"></span>
-      <span class="grove-leaf grove-leaf--crown grove-leaf--one"></span>
-      <span class="grove-leaf grove-leaf--crown grove-leaf--two"></span>
-      <span class="grove-leaf grove-leaf--crown grove-leaf--three"></span>
-      <span class="grove-leaf grove-leaf--float grove-leaf--drift-one"></span>
-      <span class="grove-leaf grove-leaf--float grove-leaf--drift-two"></span>
-      <span class="grove-leaf grove-leaf--float grove-leaf--drift-three"></span>
-      <span class="grove-leaf grove-leaf--float grove-leaf--drift-four"></span>
-    </div>
+    <aside class="readme-card home-grove-window" aria-label="나무 애니메이션 창" data-content-window>
+      <div class="filebar home-grove-window__bar">
+        <div class="filebar-controls" aria-label="나무 애니메이션 창 제어">
+          <button type="button" class="filebar-control filebar-control--close" data-window-action="close" aria-label="닫기"></button>
+          <button type="button" class="filebar-control filebar-control--minimize" data-window-action="minimize" aria-label="최소화"></button>
+          <button type="button" class="filebar-control filebar-control--maximize" data-window-action="maximize" aria-label="최대화"></button>
+        </div>
+        <strong>garden.motion</strong>
+        <em>loop</em>
+      </div>
+      <div class="home-grove-window__body">
+        <div class="home-hero__grove" aria-hidden="true">
+          <span class="grove-trunk"></span>
+          <span class="grove-branch grove-branch--one"></span>
+          <span class="grove-branch grove-branch--two"></span>
+          <span class="grove-leaf grove-leaf--crown grove-leaf--one"></span>
+          <span class="grove-leaf grove-leaf--crown grove-leaf--two"></span>
+          <span class="grove-leaf grove-leaf--crown grove-leaf--three"></span>
+          <span class="grove-leaf grove-leaf--float grove-leaf--drift-one"></span>
+          <span class="grove-leaf grove-leaf--float grove-leaf--drift-two"></span>
+          <span class="grove-leaf grove-leaf--float grove-leaf--drift-three"></span>
+          <span class="grove-leaf grove-leaf--float grove-leaf--drift-four"></span>
+        </div>
+      </div>
+    </aside>
   </section>
 </Base>

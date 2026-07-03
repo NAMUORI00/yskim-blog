@@ -142,7 +142,7 @@ button:focus-visible {
 .back-to-top {
   position: fixed;
   right: 1.25rem;
-  bottom: 1.25rem;
+  bottom: calc(var(--footer-reserved, 0px) + 1rem);
   width: 44px;
   height: 44px;
   border-radius: 999px;
