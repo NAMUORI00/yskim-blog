@@ -2111,6 +2111,10 @@ body.theme-dark .chroma .s {
     max-height: 240px;
   }
 
+  .knowledge-graph-canvas {
+    touch-action: pan-y;
+  }
+
   .knowledge-scene {
     display: none;
   }
