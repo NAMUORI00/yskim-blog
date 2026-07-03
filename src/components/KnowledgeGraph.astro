@@ -1,49 +1,23 @@
 ---
 import { SITE, ASSET_VERSION } from "../config";
 import { getPublishedPosts, postUrl, tagUrl, slugifyTerm } from "../lib/posts";
-
-type Node = { id: string; label: string; type: string; url: string; active?: boolean };
-type Link = { source: string; target: string };
-
-const nodes: Node[] = [];
-const links: Link[] = [];
-const seen = new Set<string>();
-const addNode = (n: Node) => {
-  if (!seen.has(n.id)) {
-    seen.add(n.id);
-    nodes.push(n);
-  }
-};
+import { buildKnowledgeGraph, createVisualGraphSubset } from "../lib/knowledge-graph-data.mjs";
 
 const allPosts = await getPublishedPosts();
-
-// 현재 보고 있는 글(있으면 그래프에서 강조)
 const match = Astro.url.pathname.match(/^\/posts\/([^/]+)\/?$/);
 const currentSlug = match ? decodeURIComponent(match[1]) : undefined;
 
-// 항상 동일한 3단 구조: 닉네임 → 블로그글 → 글의 태그
-const rootId = `profile:${slugifyTerm(SITE.handle)}`;
-addNode({ id: rootId, label: SITE.handle, type: "main", url: "/" });
-
-for (const post of allPosts) {
-  const postId = `post:${post.data.slug}`;
-  addNode({
-    id: postId,
-    label: post.data.title,
-    type: "post",
-    url: postUrl(post.data.slug),
-    active: post.data.slug === currentSlug,
-  });
-  links.push({ source: rootId, target: postId });
-  for (const tag of post.data.tags) {
-    const tagId = `tag:${slugifyTerm(tag)}`;
-    addNode({ id: tagId, label: tag, type: "tag", url: tagUrl(tag) });
-    links.push({ source: postId, target: tagId });
-  }
-}
-
-const graph = JSON.stringify({ nodes, links });
-const hasGraph = nodes.length > 1;
+const fullGraph = buildKnowledgeGraph({
+  posts: allPosts,
+  handle: SITE.handle,
+  currentSlug,
+  postUrl,
+  tagUrl,
+  slugifyTerm,
+});
+const graphObject = createVisualGraphSubset(fullGraph, { maxNodes: 72 });
+const graph = JSON.stringify(graphObject);
+const hasGraph = graphObject.nodes.length > 1;
 ---
 
 {hasGraph && (
