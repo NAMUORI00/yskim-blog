@@ -4,11 +4,9 @@
   export let graph = { nodes: [], links: [] };
   export let label = "지식 그래프 3D 레이어";
 
+  let sceneElement;
   let canvas;
   let status = "idle";
-
-  const prefersReducedMotion = () =>
-    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   const cssColor = (name, fallback) =>
     getComputedStyle(document.documentElement).getPropertyValue(name).trim() || fallback;
@@ -16,19 +14,89 @@
   onMount(() => {
     let disposed = false;
     let frame = 0;
-    let cleanup = () => {};
+    let renderer;
+    let scene;
+    let camera;
+    let root;
+    let resizeObserver;
+    let intersectionObserver;
+    let reducedMotionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let isOnScreen = false;
+    let isDocumentVisible = document.visibilityState === "visible";
+    let renderFrame = () => {};
+    let syncAnimation = () => {};
+    let handleThemeChange = () => {};
+    let handleVisibilityChange = () => {};
+    let handleReducedMotionChange = () => {};
+    const nodeMap = new Map();
+    const disposedMaterials = new Set();
+
+    const disposeMaterial = (material) => {
+      const materials = Array.isArray(material) ? material : [material];
+      for (const item of materials) {
+        if (item && !disposedMaterials.has(item)) {
+          item.dispose();
+          disposedMaterials.add(item);
+        }
+      }
+    };
+
+    const stopAnimation = () => {
+      if (frame) {
+        cancelAnimationFrame(frame);
+        frame = 0;
+      }
+    };
+
+    const renderSingleFrameIfPaused = () => {
+      if (!frame) renderFrame();
+    };
+
+    const removeReducedMotionListener = () => {
+      if (!reducedMotionQuery) return;
+      if (reducedMotionQuery.removeEventListener) {
+        reducedMotionQuery.removeEventListener("change", handleReducedMotionChange);
+      } else {
+        reducedMotionQuery.removeListener(handleReducedMotionChange);
+      }
+    };
+
+    const disposeScene = () => {
+      stopAnimation();
+      resizeObserver?.disconnect();
+      intersectionObserver?.disconnect();
+      window.removeEventListener("yskim:theme-change", handleThemeChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      removeReducedMotionListener();
+
+      if (root) {
+        for (const child of root.children) {
+          if (child.geometry) child.geometry.dispose();
+          if (child.material) disposeMaterial(child.material);
+        }
+        root.clear();
+      }
+
+      if (renderer) renderer.dispose();
+      renderer = undefined;
+      scene = undefined;
+      camera = undefined;
+      root = undefined;
+      resizeObserver = undefined;
+      intersectionObserver = undefined;
+      reducedMotionQuery = undefined;
+      nodeMap.clear();
+      disposedMaterials.clear();
+    };
 
     const start = async () => {
-      if (!canvas || prefersReducedMotion()) {
-        status = "reduced";
-        return;
-      }
+      if (!canvas || !sceneElement) return;
 
       try {
         const THREE = await import("three");
         if (disposed) return;
 
-        const renderer = new THREE.WebGLRenderer({
+        renderer = new THREE.WebGLRenderer({
           canvas,
           alpha: true,
           antialias: true,
@@ -36,22 +104,12 @@
         });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
+        scene = new THREE.Scene();
+        camera = new THREE.PerspectiveCamera(38, 1, 0.1, 100);
         camera.position.set(0, 0, 9);
 
-        const root = new THREE.Group();
+        root = new THREE.Group();
         scene.add(root);
-        const disposedMaterials = new Set();
-        const disposeMaterial = (material) => {
-          const materials = Array.isArray(material) ? material : [material];
-          for (const item of materials) {
-            if (item && !disposedMaterials.has(item)) {
-              item.dispose();
-              disposedMaterials.add(item);
-            }
-          }
-        };
 
         const materialFor = (node) => {
           const color =
@@ -69,7 +127,6 @@
           });
         };
 
-        const nodeMap = new Map();
         const countByLevel = new Map();
         const nextIndex = new Map();
         const levelOf = (node) => (node.type === "main" ? 0 : node.type === "post" ? 1 : 2);
@@ -110,13 +167,18 @@
           root.add(new THREE.Line(geometry, linkMaterial));
         }
 
-        const resize = () => {
+        renderFrame = () => {
+          if (renderer && scene && camera) renderer.render(scene, camera);
+        };
+
+        const resizeScene = () => {
           const rect = canvas.getBoundingClientRect();
           const width = Math.max(1, rect.width);
           const height = Math.max(1, rect.height);
           renderer.setSize(width, height, false);
           camera.aspect = width / height;
           camera.updateProjectionMatrix();
+          renderSingleFrameIfPaused();
         };
 
         const refreshTheme = () => {
@@ -129,44 +191,89 @@
             }
           }
           linkMaterial.color.set(cssColor("--accent", "#275f47"));
+          renderSingleFrameIfPaused();
         };
 
+        const canAnimate = () =>
+          !disposed &&
+          isOnScreen &&
+          isDocumentVisible &&
+          !reducedMotionQuery?.matches &&
+          renderer &&
+          scene &&
+          camera &&
+          root;
+
         const animate = () => {
-          if (disposed) return;
+          frame = 0;
+          if (!canAnimate()) {
+            syncAnimation();
+            return;
+          }
+
           root.rotation.z += 0.0018;
           root.rotation.x = Math.sin(performance.now() / 4200) * 0.08;
-          renderer.render(scene, camera);
+          renderFrame();
           frame = requestAnimationFrame(animate);
         };
 
-        const openFocusedNode = (event) => {
-          const active = graph.nodes.find((node) => node.active);
-          if (active?.url && event.detail === 2) window.location.href = active.url;
-        };
-
-        resize();
-        refreshTheme();
-        animate();
-        status = "ready";
-
-        const resizeObserver = new ResizeObserver(resize);
-        resizeObserver.observe(canvas);
-        window.addEventListener("yskim:theme-change", refreshTheme);
-        canvas.addEventListener("click", openFocusedNode);
-
-        cleanup = () => {
-          cancelAnimationFrame(frame);
-          resizeObserver.disconnect();
-          window.removeEventListener("yskim:theme-change", refreshTheme);
-          canvas.removeEventListener("click", openFocusedNode);
-          renderer.dispose();
-          for (const child of root.children) {
-            if (child.geometry) child.geometry.dispose();
-            if (child.material) disposeMaterial(child.material);
+        syncAnimation = () => {
+          if (disposed) {
+            stopAnimation();
+            return;
           }
+
+          if (canAnimate()) {
+            status = "ready";
+            if (!frame) frame = requestAnimationFrame(animate);
+            return;
+          }
+
+          stopAnimation();
+          status = reducedMotionQuery?.matches ? "reduced" : "paused";
         };
+
+        handleThemeChange = () => {
+          refreshTheme();
+        };
+
+        handleVisibilityChange = () => {
+          isDocumentVisible = document.visibilityState === "visible";
+          syncAnimation();
+        };
+
+        handleReducedMotionChange = () => {
+          syncAnimation();
+          renderSingleFrameIfPaused();
+        };
+
+        resizeObserver = new ResizeObserver(() => {
+          resizeScene();
+        });
+        resizeObserver.observe(canvas);
+
+        intersectionObserver = new IntersectionObserver((entries) => {
+          isOnScreen = entries.some((entry) => entry.isIntersecting);
+          syncAnimation();
+          renderSingleFrameIfPaused();
+        });
+        intersectionObserver.observe(sceneElement);
+
+        window.addEventListener("yskim:theme-change", handleThemeChange);
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        if (reducedMotionQuery.addEventListener) {
+          reducedMotionQuery.addEventListener("change", handleReducedMotionChange);
+        } else {
+          reducedMotionQuery.addListener(handleReducedMotionChange);
+        }
+
+        resizeScene();
+        refreshTheme();
+        renderFrame();
+        syncAnimation();
       } catch {
-        status = "fallback";
+        disposeScene();
+        if (!disposed) status = "fallback";
       }
     };
 
@@ -174,11 +281,11 @@
 
     return () => {
       disposed = true;
-      cleanup();
+      disposeScene();
     };
   });
 </script>
 
-<div class="knowledge-scene" data-state={status} aria-label={label}>
+<div bind:this={sceneElement} class="knowledge-scene" data-state={status} aria-label={label}>
   <canvas bind:this={canvas} class="knowledge-scene__canvas" aria-hidden="true"></canvas>
 </div>

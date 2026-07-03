@@ -21,6 +21,18 @@ test("three is a runtime dependency and the scene imports it lazily", async () =
   assert.match(scene, /yskim:theme-change/);
 });
 
+test("3d scene pauses when inactive and cleans up resources", async () => {
+  const scene = await readFile(files.scene, "utf8");
+
+  assert.match(scene, /IntersectionObserver/);
+  assert.match(scene, /visibilitychange/);
+  assert.match(scene, /cancelAnimationFrame/);
+  assert.match(scene, /renderer\.dispose\(\)/);
+  assert.match(scene, /child\.geometry\.dispose\(\)/);
+  assert.match(scene, /disposeMaterial/);
+  assert.doesNotMatch(scene, /canvas\.addEventListener\("click"/);
+});
+
 test("knowledge graph keeps the 2d canvas fallback while adding the 3d island", async () => {
   const graph = await readFile(files.graph, "utf8");
 
@@ -54,6 +66,9 @@ test("css defines stable scene dimensions and fallback layering", async () => {
 
   assert.match(css, /\.knowledge-scene/);
   assert.match(css, /aspect-ratio:\s*1\s*\/\s*1/);
+  assert.match(css, /\.knowledge-scene\s*\{[^}]*z-index:\s*1/s);
+  assert.match(css, /\.knowledge-scene\s*\{[^}]*pointer-events:\s*none/s);
   assert.match(css, /\.knowledge-scene__canvas/);
   assert.match(css, /\.knowledge-graph-canvas/);
+  assert.match(css, /\.knowledge-graph-canvas\s*\{[^}]*z-index:\s*2/s);
 });
