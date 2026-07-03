@@ -23,7 +23,7 @@ const posts = defineCollection({
   }),
 });
 
-// Authored static pages (about, privacy, contact, disclaimer) live in content/pages.
+// Static pages can be authored in-repo or generated from Notion page records.
 const pages = defineCollection({
   loader: glob({ pattern: "**/[^_]*.md", base: "./content/pages" }),
   schema: z.object({
@@ -34,6 +34,10 @@ const pages = defineCollection({
     tags: z.array(z.string()).default([]),
     summary: z.string().optional().default(""),
     comments: z.boolean().default(false),
+    notion_id: z.string().optional(),
+    generated_by: z.string().optional(),
+    translationKey: z.string().optional(),
+    math: z.boolean().optional(),
   }),
 });
 

@@ -1,4 +1,4 @@
-import { mkdir, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, unlink, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -15,11 +15,30 @@ const DEFAULT_PROPERTIES = {
   cover: "Cover",
   canonical: "Canonical",
   comments: "Comments",
+  type: "Type",
 };
 
 const GENERATED_POSTS_DIR = path.join("content", "posts");
+const GENERATED_PAGES_DIR = path.join("content", "pages");
 const GENERATED_NOTION_IMAGES_DIR = path.join("static", "images", "notion");
 const GENERATED_NOTION_FILES_DIR = path.join("static", "files", "notion");
+const STATIC_PAGE_TYPES = new Set(["page", "static", "static page", "home", "about", "readme"]);
+
+export function pageToContentType(page, propertyNames = DEFAULT_PROPERTIES) {
+  const properties = page.properties ?? {};
+  const rawType =
+    readSelect(properties[propertyNames.type]) ||
+    readPlainText(properties[propertyNames.type]);
+  const normalized = rawType.trim().toLowerCase();
+  if (STATIC_PAGE_TYPES.has(normalized)) {
+    return "page";
+  }
+  return "post";
+}
+
+export function isStaticPageRecord(page, propertyNames = DEFAULT_PROPERTIES) {
+  return pageToContentType(page, propertyNames) === "page";
+}
 
 export function pageToPost(page, propertyNames = DEFAULT_PROPERTIES) {
   const properties = page.properties ?? {};
@@ -80,6 +99,62 @@ export function buildPostDocument(post, markdownBody) {
   return `${frontMatter.join("\n")}${markdownBody.trim()}\n`;
 }
 
+export function pageToStaticPage(page, propertyNames = DEFAULT_PROPERTIES) {
+  const properties = page.properties ?? {};
+  const staticPage = {
+    notionId: page.id,
+    title: readPlainText(properties[propertyNames.title]),
+    status: readSelect(properties[propertyNames.status]),
+    slug: readPlainText(properties[propertyNames.slug]),
+    date: readDate(properties[propertyNames.date]),
+    tags: readMultiSelect(properties[propertyNames.tags]),
+    summary: readPlainText(properties[propertyNames.summary]),
+    comments: readCheckbox(properties[propertyNames.comments], false),
+  };
+
+  const missing = [];
+  for (const field of ["title", "slug"]) {
+    if (!staticPage[field]) {
+      missing.push(field);
+    }
+  }
+  if (missing.length > 0) {
+    throw new Error(`Notion static page ${page.id} is missing required fields: ${missing.join(", ")}`);
+  }
+
+  return staticPage;
+}
+
+export function buildStaticPageDocument(staticPage, markdownBody) {
+  const frontMatter = [
+    "---",
+    `title: ${yamlString(staticPage.title)}`,
+  ];
+
+  if (staticPage.date) {
+    frontMatter.push(`date: ${staticPage.date}`);
+  }
+
+  frontMatter.push(
+    "draft: false",
+    `slug: ${yamlString(staticPage.slug)}`,
+    "tags:",
+    ...staticPage.tags.map((tag) => `  - ${yamlString(tag)}`),
+    `summary: ${yamlString(staticPage.summary)}`,
+    `comments: ${staticPage.comments ? "true" : "false"}`,
+    `notion_id: ${yamlString(staticPage.notionId)}`,
+    `generated_by: ${yamlString("notion")}`,
+    `translationKey: ${yamlString(staticPage.slug)}`,
+  );
+
+  if (containsMath(markdownBody)) {
+    frontMatter.push("math: true");
+  }
+
+  frontMatter.push("---", "");
+  return `${frontMatter.join("\n")}${markdownBody.trim()}\n`;
+}
+
 export function hasTemporaryNotionUrl(markdown) {
   return /https?:\/\/[^\s)"]*(notion-static\.com|notion\.site|amazonaws\.com)[^\s)"]*(X-Amz-|notion|secure)/i.test(
     markdown,
@@ -119,9 +194,34 @@ export async function prepareGeneratedContent(root) {
   await rm(path.join(root, GENERATED_POSTS_DIR), { recursive: true, force: true });
   await rm(path.join(root, GENERATED_NOTION_IMAGES_DIR), { recursive: true, force: true });
   await rm(path.join(root, GENERATED_NOTION_FILES_DIR), { recursive: true, force: true });
+  await removeGeneratedStaticPages(path.join(root, GENERATED_PAGES_DIR));
   await mkdir(path.join(root, GENERATED_POSTS_DIR), { recursive: true });
+  await mkdir(path.join(root, GENERATED_PAGES_DIR), { recursive: true });
   await mkdir(path.join(root, GENERATED_NOTION_IMAGES_DIR), { recursive: true });
   await mkdir(path.join(root, GENERATED_NOTION_FILES_DIR), { recursive: true });
+}
+
+async function removeGeneratedStaticPages(pagesDir) {
+  let entries = [];
+  try {
+    entries = await readdir(pagesDir, { withFileTypes: true });
+  } catch (error) {
+    if (error.code === "ENOENT") {
+      return;
+    }
+    throw error;
+  }
+
+  await Promise.all(entries.map(async (entry) => {
+    if (!entry.isFile() || path.extname(entry.name).toLowerCase() !== ".md") {
+      return;
+    }
+    const filePath = path.join(pagesDir, entry.name);
+    const content = await readFile(filePath, "utf8");
+    if (/^generated_by:\s*["']?notion["']?\s*$/m.test(content)) {
+      await unlink(filePath);
+    }
+  }));
 }
 
 export async function fetchNotionContent(options = {}) {
@@ -154,9 +254,22 @@ export async function fetchNotionContent(options = {}) {
   await prepareGeneratedContent(root);
   await ensureBaseContent(root);
   const pages = await queryPublishedPages(notion, databaseId, propertyNames, status);
-  const exported = [];
+  const exportedPosts = [];
+  const exportedPages = [];
 
   for (const page of pages) {
+    if (isStaticPageRecord(page, propertyNames)) {
+      const staticPage = pageToStaticPage(page, propertyNames);
+      const rawMarkdown = await convertPageToMarkdown(n2m, page.id);
+      const bodyWithAssets = await downloadAndRewriteAssets(rawMarkdown, staticPage, root, mediaMode);
+      assertNoUnsupportedGeneratedMarkdown(bodyWithAssets, staticPage.slug);
+      const pageDocument = buildStaticPageDocument(staticPage, bodyWithAssets);
+      const pagePath = path.join(root, GENERATED_PAGES_DIR, `${staticPage.slug}.md`);
+      await writeFile(pagePath, pageDocument, "utf8");
+      exportedPages.push(staticPage);
+      continue;
+    }
+
     const post = pageToPost(page, propertyNames);
     const rawMarkdown = await convertPageToMarkdown(n2m, page.id);
     const bodyWithAssets = await downloadAndRewriteAssets(rawMarkdown, post, root, mediaMode);
@@ -165,7 +278,7 @@ export async function fetchNotionContent(options = {}) {
     const postDocument = buildPostDocument({ ...post, cover: cover || post.cover }, bodyWithAssets);
     const postPath = path.join(root, GENERATED_POSTS_DIR, `${post.slug}.md`);
     await writeFile(postPath, postDocument, "utf8");
-    exported.push(post);
+    exportedPosts.push(post);
   }
 
   await organizePostsByCategory(path.join(root, GENERATED_POSTS_DIR));
@@ -173,11 +286,12 @@ export async function fetchNotionContent(options = {}) {
     provider: "notion",
     databaseId,
     status,
-    exportedCount: exported.length,
+    exportedCount: exportedPosts.length,
+    exportedPagesCount: exportedPages.length,
     fetchedAt: new Date().toISOString(),
   });
 
-  return { exportedCount: exported.length, posts: exported };
+  return { exportedCount: exportedPosts.length, exportedPagesCount: exportedPages.length, posts: exportedPosts, pages: exportedPages };
 }
 
 async function ensureBaseContent(root) {
@@ -690,9 +804,11 @@ async function writeContentSourceMeta(root, meta) {
     `database_id: ${yamlString(meta.databaseId)}`,
     `status: ${yamlString(meta.status)}`,
     `exported_count: ${meta.exportedCount}`,
+    `exported_pages_count: ${meta.exportedPagesCount ?? 0}`,
     `fetched_at: ${yamlString(meta.fetchedAt)}`,
     "paths:",
     `  - ${yamlString("content/posts")}`,
+    `  - ${yamlString("content/pages")}`,
     `  - ${yamlString("static/images/notion")}`,
     `  - ${yamlString("static/files/notion")}`,
     "",
@@ -784,7 +900,7 @@ async function runCli() {
   const rootIndex = args.indexOf("--root");
   const root = rootIndex === -1 ? process.cwd() : args[rootIndex + 1];
   const result = await fetchNotionContent({ root });
-  console.log(`Fetched ${result.exportedCount} published Notion posts.`);
+  console.log(`Fetched ${result.exportedCount} published Notion posts and ${result.exportedPagesCount} static pages.`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href) {

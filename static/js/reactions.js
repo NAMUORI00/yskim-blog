@@ -1,8 +1,15 @@
 (() => {
-  const reactionKeys = ["like", "useful", "reread"];
+  const defaultReactionKeys = ["like", "useful", "reread"];
   const containers = document.querySelectorAll("[data-post-reactions]");
 
-  const readStoredReaction = (key) => {
+  const getReactionKeys = (container) => {
+    const keys = [...container.querySelectorAll("[data-reaction-button]")]
+      .map((button) => button.dataset.reaction)
+      .filter(Boolean);
+    return keys.length > 0 ? [...new Set(keys)] : defaultReactionKeys;
+  };
+
+  const readStoredReaction = (key, reactionKeys) => {
     try {
       const value = localStorage.getItem(key);
       return reactionKeys.includes(value) ? value : "";
@@ -23,18 +30,51 @@
     }
   };
 
-  const emptyCounts = () =>
+  const emptyCountsFor = (reactionKeys) =>
     Object.fromEntries(reactionKeys.map((key) => [key, 0]));
 
-  const applyLocalSelection = (counts, selected) => {
-    const nextCounts = { ...emptyCounts(), ...counts };
+  const normalizeCounts = (counts, reactionKeys) => ({
+    ...emptyCountsFor(reactionKeys),
+    ...Object.fromEntries(
+      Object.entries(counts || {})
+        .filter(([key]) => reactionKeys.includes(key))
+        .map(([key, value]) => [key, Math.max(0, Number(value) || 0)]),
+    ),
+  });
+
+  const applyLocalSelection = (counts, selected, reactionKeys) => {
+    const nextCounts = normalizeCounts(counts, reactionKeys);
     if (selected) {
       nextCounts[selected] = Math.max(0, (Number(nextCounts[selected]) || 0) + 1);
     }
     return nextCounts;
   };
 
-  const render = (container, counts, selected) => {
+  const applyReactionDelta = (counts, previousReaction, nextReaction, reactionKeys) => {
+    const nextCounts = normalizeCounts(counts, reactionKeys);
+    if (previousReaction && previousReaction !== nextReaction) {
+      nextCounts[previousReaction] = Math.max(0, (Number(nextCounts[previousReaction]) || 0) - 1);
+    }
+    if (nextReaction && previousReaction !== nextReaction) {
+      nextCounts[nextReaction] = Math.max(0, (Number(nextCounts[nextReaction]) || 0) + 1);
+    }
+    return nextCounts;
+  };
+
+  const setStatus = (container, label) => {
+    const status = container.querySelector("[data-reaction-status]");
+    if (status) {
+      status.textContent = label || "";
+    }
+  };
+
+  const setBusy = (container, isBusy) => {
+    container.classList.toggle("is-saving", isBusy);
+    container.setAttribute("aria-busy", String(isBusy));
+  };
+
+  const render = (container, counts, selected, reactionKeys) => {
+    const nextCounts = normalizeCounts(counts, reactionKeys);
     container.querySelectorAll("[data-reaction-button]").forEach((button) => {
       const reaction = button.dataset.reaction;
       const active = reaction === selected;
@@ -42,12 +82,17 @@
       button.classList.toggle("is-active", active);
       button.setAttribute("aria-pressed", String(active));
       if (count) {
-        count.textContent = String(Math.max(0, Number(counts[reaction]) || 0));
+        count.textContent = String(nextCounts[reaction] || 0);
       }
     });
+    const total = container.querySelector("[data-reaction-total]");
+    if (total) {
+      total.textContent = String(reactionKeys.reduce((sum, key) => sum + (nextCounts[key] || 0), 0));
+    }
   };
 
-  const loadCounts = async (container, selected) => {
+  const loadCounts = async (container, selected, reactionKeys) => {
+    setStatus(container, container.dataset.loadingLabel);
     const response = await fetch(`/api/reactions?path=${encodeURIComponent(container.dataset.path)}`, {
       headers: { "Accept": "application/json" },
     });
@@ -55,7 +100,18 @@
       throw new Error("Failed to load reactions");
     }
     const payload = await response.json();
-    return applyLocalSelection(payload.reactions || emptyCounts(), payload.mode === "local" ? selected : "");
+    if (payload.mode === "local") {
+      setStatus(container, container.dataset.localLabel);
+      return {
+        counts: applyLocalSelection(emptyCountsFor(reactionKeys), selected, reactionKeys),
+        mode: "local",
+      };
+    }
+    setStatus(container, container.dataset.sharedLabel);
+    return {
+      counts: normalizeCounts(payload.reactions, reactionKeys),
+      mode: "shared",
+    };
   };
 
   const saveReaction = async (container, previousReaction, reaction) => {
@@ -78,16 +134,21 @@
   };
 
   const init = async (container) => {
+    const reactionKeys = getReactionKeys(container);
     const storageKey = container.dataset.storageKey;
-    let selected = readStoredReaction(storageKey);
-    let counts = applyLocalSelection(emptyCounts(), selected);
-    render(container, counts, selected);
+    let selected = readStoredReaction(storageKey, reactionKeys);
+    let counts = applyLocalSelection(emptyCountsFor(reactionKeys), selected, reactionKeys);
+    let mode = "local";
+    render(container, counts, selected, reactionKeys);
 
     try {
-      counts = await loadCounts(container, selected);
-      render(container, counts, selected);
+      const payload = await loadCounts(container, selected, reactionKeys);
+      counts = payload.counts;
+      mode = payload.mode;
+      render(container, counts, selected, reactionKeys);
     } catch {
-      render(container, counts, selected);
+      setStatus(container, container.dataset.offlineLabel);
+      render(container, counts, selected, reactionKeys);
     }
 
     container.querySelectorAll("[data-reaction-button]").forEach((button) => {
@@ -96,17 +157,24 @@
         const nextReaction = previousReaction === button.dataset.reaction ? "" : button.dataset.reaction;
         selected = nextReaction;
         writeStoredReaction(storageKey, selected);
-        counts = applyLocalSelection(emptyCounts(), selected);
-        render(container, counts, selected);
+        counts = applyReactionDelta(counts, previousReaction, nextReaction, reactionKeys);
+        render(container, counts, selected, reactionKeys);
+        setStatus(container, container.dataset.savingLabel);
+        setBusy(container, true);
 
         try {
           const payload = await saveReaction(container, previousReaction, nextReaction);
-          counts = payload.mode === "local"
-            ? applyLocalSelection(emptyCounts(), selected)
-            : payload.reactions || counts;
-          render(container, counts, selected);
+          mode = payload.mode || mode;
+          counts = mode === "local"
+            ? applyLocalSelection(emptyCountsFor(reactionKeys), selected, reactionKeys)
+            : normalizeCounts(payload.reactions, reactionKeys);
+          render(container, counts, selected, reactionKeys);
+          setStatus(container, mode === "local" ? container.dataset.localLabel : container.dataset.savedLabel);
         } catch {
-          render(container, counts, selected);
+          render(container, counts, selected, reactionKeys);
+          setStatus(container, container.dataset.offlineLabel);
+        } finally {
+          setBusy(container, false);
         }
       });
     });

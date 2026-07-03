@@ -56,7 +56,9 @@ test("home still renders Notion about content and recent posts", async () => {
   const home = await readFile(files.home, "utf8");
 
   assert.match(home, /getCollection\("pages"/);
-  assert.match(home, /await render\(about\)/);
+  assert.match(home, /findPage\("home"\)/);
+  assert.match(home, /findPage\("readme"\) \?\? findPage\("about"\)/);
+  assert.match(home, /await render\(readmePage\)/);
   assert.match(home, /getPublishedPosts\(\)/);
   assert.match(home, /<PostCard/);
 });

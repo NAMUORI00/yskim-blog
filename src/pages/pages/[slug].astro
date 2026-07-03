@@ -15,7 +15,7 @@ const gh = getGithubProfile();
 const isAbout = d.slug === "about";
 ---
 
-<Base title={d.title} description={d.summary} type="website">
+<Base title={d.title} description={d.summary} type="website" math={d.math}>
   <article class="readme-card post">
     <div class="filebar">
       <span></span><span></span><span></span>

@@ -9,7 +9,8 @@ GitHub repository used for production publishing.
 ## Stack
 
 - **Astro 6** static site (`src/`) with **Svelte 5** islands for interactivity.
-- **Notion** as the CMS (single source of truth for post content).
+- **Notion** as the CMS (single source of truth for posts and selected
+  static pages).
 - **Cloudflare Pages** hosting + Pages Functions (`functions/`) for reactions,
   comments, and the optional media proxy.
 
@@ -21,7 +22,8 @@ GitHub repository used for production publishing.
   `content/`, Notion-hosted images, and generated data here before deploying.
 
 Do not edit generated Markdown or Notion images by hand. Notion is the source
-of truth for post content.
+of truth for post content and any static page generated with
+`generated_by: "notion"`.
 
 ## Publishing flow
 
@@ -61,7 +63,9 @@ npm run build    # outputs to dist/
 
 Generated `content/` and `static/images/` are ignored on `main`. They are
 force-added only by the production publishing workflow. `content/pages/`
-(소개·개인정보처리방침·연락처·면책조항) is committed source.
+keeps committed source pages such as privacy/contact/disclaimer, while Notion
+rows with `Type=Page` can generate `home`, `readme`, `about`, or other static
+pages in the same folder.
 
 Site configuration (title, author, giscus, search-engine verification codes,
 AdSense publisher id) lives in `src/config.ts`. The deployment URL is set as
@@ -74,7 +78,9 @@ Post pages support:
 - GitHub-authenticated comments through Giscus and GitHub Discussions.
 - Optional anonymous comments through Cloudflare Pages Functions, Turnstile,
   and D1.
-- Post reactions (좋아요 / 유용해요 / 다시 읽기) via a Pages Function.
+- Post reactions (좋아요 / 유용해요 / 다시 읽기) via a Pages Function with
+  shared D1 counts when `COMMENTS_DB` is bound and local browser fallback when
+  it is not.
 
 Giscus is enabled through the `General` discussion category (configured in
 `src/config.ts`). Anonymous comments stay disabled until the Cloudflare D1 and

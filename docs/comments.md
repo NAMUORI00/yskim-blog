@@ -37,6 +37,9 @@ buttons are managed by `static/js/reactions.js` and the Pages Function at
   local storage and the API reports `mode: "local"`.
 - With a `COMMENTS_DB` binding, the same API stores shared counts in the
   `reactions` table from `schema/comments.sql` and reports `mode: "shared"`.
+- The UI shows the total reaction count, the current selected button, and a
+  short loading/saved/local/offline status so a failed network request does not
+  leave the controls looking broken.
 
 The public reaction API is:
 
