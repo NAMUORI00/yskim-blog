@@ -24,74 +24,83 @@
   --rail-width: 220px;
   --sidebar-width: 280px;
   --shell-max: 1280px;
+  --font-sans: "Pretendard Variable", Pretendard, "Nanum Gothic", -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+  --font-serif: "Noto Serif KR", Georgia, serif;
+  --font-mono: "JetBrains Mono", "Fira Code", "Cascadia Code", ui-monospace, SFMono-Regular, monospace;
 }
 
 :root,
 html.theme-light,
 body.theme-light {
   color-scheme: light;
-  --bg: #f7f7f5;
+  --bg: #f7f7f3;
   --panel: #ffffff;
-  --panel-soft: #f3f3f1;
-  --panel-glass: rgba(255, 255, 255, 0.82);
-  --panel-glass-soft: rgba(255, 255, 255, 0.62);
-  --text: #1f241f;
-  --heading: #222822;
-  --muted: #71786f;
-  --faint: #9aa197;
-  --line: #dedede;
+  --panel-soft: #f2f5ef;
+  --surface-muted: #f3f3f1;
+  --panel-glass: rgba(255, 255, 255, 0.86);
+  --panel-glass-soft: rgba(255, 255, 255, 0.68);
+  --text: #171a17;
+  --heading: #171a17;
+  --muted: #626a60;
+  --faint: #8a9286;
+  --line: #deded6;
   --border: var(--line);
-  --line-soft: #eeeeea;
-  --line-strong: #cfd2c8;
-  --shadow-soft: 0 1px 0 rgba(31, 36, 31, 0.04);
-  --accent: #305c47;
-  --accent-strong: #162f25;
-  --accent-soft: #edf3ed;
-  --accent-border: #d9e0d4;
-  --success: #91ccaa;
-  --warning: #f0ad4e;
-  --code-bg: #f9f2f4;
+  --line-soft: #ecece5;
+  --line-strong: #c9cec2;
+  --shadow-soft: 0 14px 36px -28px rgba(23, 26, 23, 0.28);
+  --accent: #275f47;
+  --accent-strong: #17402f;
+  --accent-light: #3f8a65;
+  --accent-soft: #e7f1ea;
+  --accent-border: #cddfd2;
+  --success: #3f8a65;
+  --warning: #a36b1f;
+  --danger: #8a3434;
+  --code-bg: #f4e5e5;
   --code-text: #7c2948;
   --code-border: #eadce2;
-  --code-block-bg: #f5f5f3;
-  --code-block-text: #1f241f;
-  --code-block-border: #dedede;
-  --grid-line: rgba(31, 36, 31, 0.012);
-  --grid-line-soft: rgba(31, 36, 31, 0.009);
+  --code-block-bg: #f3f3f1;
+  --code-block-text: #171a17;
+  --code-block-border: #deded6;
+  --grid-line: rgba(39, 95, 71, 0.018);
+  --grid-line-soft: rgba(39, 95, 71, 0.012);
 }
 
 :root[data-theme="dark"],
 html.theme-dark,
 body.theme-dark {
   color-scheme: dark;
-  --bg: #1e1e1e;
-  --panel: #252525;
-  --panel-soft: #2b2b2b;
-  --panel-glass: rgba(37, 37, 37, 0.88);
-  --panel-glass-soft: rgba(43, 43, 43, 0.68);
-  --text: #e7e4da;
-  --heading: #f3f1e8;
-  --muted: #aaa79b;
-  --faint: #7f8479;
-  --line: #3a3a3a;
+  --bg: #171a17;
+  --panel: #20251f;
+  --panel-soft: #1f3328;
+  --surface-muted: #232923;
+  --panel-glass: rgba(32, 37, 31, 0.9);
+  --panel-glass-soft: rgba(32, 37, 31, 0.72);
+  --text: #f0eee8;
+  --heading: #f0eee8;
+  --muted: #a7b0a4;
+  --faint: #7f8a7c;
+  --line: #343b33;
   --border: var(--line);
-  --line-soft: #323232;
-  --line-strong: #4a4a4a;
-  --shadow-soft: 0 1px 0 rgba(0, 0, 0, 0.24);
-  --accent: #91ccaa;
-  --accent-strong: #d6ead8;
-  --accent-soft: #203328;
+  --line-soft: #293128;
+  --line-strong: #4a5548;
+  --shadow-soft: 0 18px 44px -30px rgba(0, 0, 0, 0.7);
+  --accent: #74c69d;
+  --accent-strong: #95d8b4;
+  --accent-light: #95d8b4;
+  --accent-soft: #1f3328;
   --accent-border: #375444;
-  --success: #a3d4b8;
+  --success: #95d8b4;
   --warning: #f5be6a;
-  --code-bg: #2c2028;
-  --code-text: #f0bfd4;
-  --code-border: #513545;
-  --code-block-bg: #1a1a1a;
-  --code-block-text: #e7e4da;
-  --code-block-border: #3a3a3a;
-  --grid-line: rgba(231, 228, 218, 0.013);
-  --grid-line-soft: rgba(231, 228, 218, 0.009);
+  --danger: #ff9a9a;
+  --code-bg: #3a2424;
+  --code-text: #ffc3d6;
+  --code-border: #56323f;
+  --code-block-bg: #111511;
+  --code-block-text: #f0eee8;
+  --code-block-border: #343b33;
+  --grid-line: rgba(116, 198, 157, 0.026);
+  --grid-line-soft: rgba(116, 198, 157, 0.014);
 }
 
 * {
@@ -110,7 +119,7 @@ body {
     linear-gradient(90deg, var(--grid-line-soft) 1px, transparent 1px);
   background-size: 24px 24px;
   color: var(--text);
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  font-family: var(--font-sans);
   font-size: var(--font-base);
   line-height: 1.68;
   word-break: keep-all;
@@ -133,7 +142,12 @@ code {
   background: var(--code-bg);
   border: 1px solid var(--code-border);
   border-radius: 3px;
+  font-family: var(--font-mono);
   font-size: 0.92em;
+}
+
+pre {
+  font-family: var(--font-mono);
 }
 
 .top-bar {
@@ -379,6 +393,7 @@ body.theme-dark .theme-icon-moon {
 .sidebar-title {
   margin: 0 0 var(--space-2);
   color: var(--accent);
+  font-family: var(--font-mono);
   font-size: var(--font-xs);
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -444,6 +459,7 @@ body.theme-dark .theme-icon-moon {
 .rail-section-title {
   margin: 0;
   color: var(--faint);
+  font-family: var(--font-mono);
   font-size: var(--font-xs);
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -481,6 +497,7 @@ body.theme-dark .theme-icon-moon {
 .rail-category-list strong {
   min-width: 1.25rem;
   color: var(--faint);
+  font-family: var(--font-mono);
   font-size: var(--font-xs);
   font-weight: 600;
   text-align: right;
@@ -644,7 +661,7 @@ body.theme-dark .theme-icon-moon {
   background: var(--code-block-bg);
   border: 1px solid var(--code-block-border);
   border-radius: var(--radius-md);
-  font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+  font-family: var(--font-mono);
   font-size: var(--font-sm);
   line-height: 1.55;
   -webkit-overflow-scrolling: touch;
@@ -714,6 +731,7 @@ body.theme-dark .theme-icon-moon {
 .page-header-count {
   margin: 0;
   color: var(--faint);
+  font-family: var(--font-mono);
   font-size: var(--font-sm);
 }
 
@@ -793,6 +811,7 @@ body.theme-dark .theme-icon-moon {
 }
 
 .post-card-meta time {
+  font-family: var(--font-mono);
   white-space: nowrap;
 }
 
@@ -1277,6 +1296,7 @@ body.theme-dark .chroma .s {
 .post-reaction-buttons strong {
   min-width: 1.75rem;
   color: var(--accent);
+  font-family: var(--font-mono);
   font-size: var(--font-xs);
   font-weight: 800;
   text-align: right;
@@ -1362,6 +1382,7 @@ body.theme-dark .chroma .s {
 
 .anonymous-comment time {
   color: var(--faint);
+  font-family: var(--font-mono);
   font-size: var(--font-xs);
 }
 
@@ -1505,6 +1526,7 @@ body.theme-dark .chroma .s {
 .sidebar-post time {
   margin-top: var(--space-1);
   color: var(--faint);
+  font-family: var(--font-mono);
   font-size: var(--font-xs);
 }
 
