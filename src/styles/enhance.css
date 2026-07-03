@@ -2,8 +2,22 @@
    adds depth, motion, and polish on top of the base site.css. */
 
 @media (prefers-reduced-motion: no-preference) {
+  .home-hero__signal {
+    animation: signal-drift 18s linear infinite;
+  }
+
+  .signal-orbit {
+    animation: signal-pulse 3.8s ease-in-out infinite;
+  }
+
+  .signal-orbit--two {
+    animation-duration: 5.4s;
+  }
+
   .post-card,
   .sidebar-post,
+  .sidebar-card,
+  .profile-rail,
   .rail-category-list a,
   .sidebar-tags a,
   .top-bar-nav a,
@@ -39,6 +53,11 @@
     transform: translateY(-1px);
   }
 
+  .sidebar-card:hover,
+  .profile-rail:hover {
+    border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
+  }
+
   .post-list > * {
     animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
@@ -61,6 +80,16 @@
       transform: translateY(0);
     }
   }
+
+  @keyframes signal-drift {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes signal-pulse {
+    0%, 100% { opacity: 0.46; transform: scale(1); }
+    50% { opacity: 0.82; transform: scale(1.025); }
+  }
 }
 
 /* Clearer keyboard focus across interactive elements. */
@@ -72,6 +101,14 @@ button:focus-visible {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+
   .knowledge-scene {
     display: none;
   }
