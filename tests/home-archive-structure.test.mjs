@@ -43,7 +43,8 @@ test("home page renders one Notion-managed intro without readme or recent posts"
   assert.match(home, /<section class="home-hero" aria-labelledby="home-title">/);
   assert.match(home, /<article class="readme-card home-intro-window" aria-label="나무가든 소개" data-content-window>/);
   assert.match(home, /class="filebar home-intro-window__bar"/);
-  assert.match(home, /data-window-action="move"/);
+  assert.doesNotMatch(home, /data-window-action="move"/);
+  assert.doesNotMatch(home, /filebar-control--move/);
   assert.match(home, /<p class="eyebrow">NAMUORI\.LOG<\/p>/);
   assert.match(home, /const homePage = findPage\("home"\)/);
   assert.match(home, /const HomeContent = homePage \? \(await render\(homePage\)\)\.Content : null/);
@@ -51,7 +52,6 @@ test("home page renders one Notion-managed intro without readme or recent posts"
   assert.doesNotMatch(home, /homeSource|home-hero__metrics|<dt>Source<\/dt>|<dt>Pages<\/dt>|<dt>Categories<\/dt>/);
   assert.match(home, /<aside class="readme-card home-grove-window" aria-label="나무 애니메이션 창" data-content-window>/);
   assert.match(home, /class="filebar home-grove-window__bar"/);
-  assert.match(home, /data-window-action="move"/);
   assert.match(home, /<strong>garden\.motion<\/strong>/);
   assert.match(home, /<div class="home-hero__grove" aria-hidden="true">/);
   assert.match(home, /class="grove-leaf grove-leaf--float grove-leaf--drift-four"/);
