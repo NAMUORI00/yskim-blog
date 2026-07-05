@@ -760,10 +760,6 @@ body.has-window-drag-mode:not(.is-rail-right-open):not(.is-rail-right-peeking) .
   box-shadow: none;
 }
 
-.readme-card.is-drag-armed > .filebar {
-  cursor: grab;
-}
-
 .readme-card.is-dragging {
   z-index: 70;
   border-color: var(--accent-border);
@@ -1362,7 +1358,9 @@ body.has-maximized-content-window {
   color: var(--muted);
   background: var(--panel-soft);
   border-bottom: 1px solid var(--line);
+  cursor: grab;
   font-size: var(--font-xs);
+  user-select: none;
 }
 
 .post-card-meta,
@@ -1400,25 +1398,6 @@ body.has-maximized-content-window {
 
 .filebar-control--close {
   background: #d2685f;
-}
-
-.filebar-control--move {
-  position: relative;
-  background: var(--accent);
-}
-
-.filebar-control--move::before,
-.filebar-control--move::after {
-  content: "";
-  position: absolute;
-  inset: 3px;
-  border-top: 1px solid color-mix(in srgb, var(--panel) 82%, transparent);
-  border-left: 1px solid color-mix(in srgb, var(--panel) 82%, transparent);
-  transform: rotate(45deg);
-}
-
-.filebar-control--move::after {
-  transform: rotate(225deg);
 }
 
 .filebar-control--minimize {

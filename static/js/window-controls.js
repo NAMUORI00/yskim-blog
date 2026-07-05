@@ -6,15 +6,17 @@
   const railToggles = [...document.querySelectorAll("[data-drag-rail-toggle]")];
   const maximizeClass = "is-maximized";
   const minimizeClass = "is-minimized";
-  const moveClass = "is-drag-armed";
   const draggingClass = "is-dragging";
   const draggedClass = "is-dragged";
   const dragModeClass = "has-window-drag-mode";
+  const maximizedBodyClass = "has-maximized-content-window";
   const leftRailOpenClass = "is-rail-left-open";
   const rightRailOpenClass = "is-rail-right-open";
   const leftRailPeekClass = "is-rail-left-peeking";
   const rightRailPeekClass = "is-rail-right-peeking";
   const dragState = new WeakMap();
+  const dragThreshold = 4;
+  let pendingDrag = null;
   let activeDrag = null;
 
   const stateFor = (card) => {
@@ -47,14 +49,14 @@
   const updateDragReset = () => {
     if (!dragReset) return;
     const active = windows.some(
-      (card) => card.classList.contains(moveClass) || card.classList.contains(draggingClass) || hasMoved(card),
+      (card) => card.classList.contains(draggingClass) || hasMoved(card),
     );
     dragReset.hidden = !active;
   };
 
   const updateDragMode = () => {
     const active = windows.some(
-      (card) => card.classList.contains(moveClass) || card.classList.contains(draggingClass) || hasMoved(card),
+      (card) => card.classList.contains(maximizeClass) || card.classList.contains(draggingClass) || hasMoved(card),
     );
     document.body.classList.toggle(dragModeClass, active);
     if (!active) {
@@ -64,15 +66,11 @@
     updateRailButtons();
   };
 
-  const setMoveArmed = (card, armed) => {
-    windows.forEach((item) => {
-      const isActive = item === card && armed;
-      item.classList.toggle(moveClass, isActive);
-      item.querySelectorAll('[data-window-action="move"]').forEach((button) => {
-        button.setAttribute("aria-pressed", String(isActive));
-      });
-    });
-    updateDragMode();
+  const updateMaximizedBodyState = () => {
+    document.body.classList.toggle(
+      maximizedBodyClass,
+      windows.some((card) => card.classList.contains(maximizeClass)),
+    );
   };
 
   const resetWindowPosition = (card) => {
@@ -81,14 +79,12 @@
     state.y = 0;
     card.style.setProperty("--window-drag-x", "0px");
     card.style.setProperty("--window-drag-y", "0px");
-    card.classList.remove(draggedClass, draggingClass, moveClass);
-    card.querySelectorAll('[data-window-action="move"]').forEach((button) => {
-      button.setAttribute("aria-pressed", "false");
-    });
+    card.classList.remove(draggedClass, draggingClass);
   };
 
   const resetDraggedWindows = () => {
     windows.forEach(resetWindowPosition);
+    pendingDrag = null;
     activeDrag = null;
     clearRailState();
     updateDragMode();
@@ -126,26 +122,63 @@
 
   const startDrag = (card, event) => {
     if (event.button !== undefined && event.button !== 0) return;
-    if (card.classList.contains(maximizeClass)) return;
-    const state = stateFor(card);
-    activeDrag = {
+    pendingDrag = {
       card,
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
-      originX: state.x,
-      originY: state.y,
       target: event.currentTarget,
     };
-    card.classList.add(draggingClass);
     if (event.currentTarget?.setPointerCapture) {
       event.currentTarget.setPointerCapture(event.pointerId);
     }
     event.preventDefault();
+  };
+
+  const restoreMaximizedForDrag = (card, event) => {
+    if (!card.classList.contains(maximizeClass)) return;
+
+    const maximizedRect = card.getBoundingClientRect();
+    const pointerRatioX = (event.clientX - maximizedRect.left) / Math.max(maximizedRect.width, 1);
+    const pointerOffsetY = Math.min(42, Math.max(18, event.clientY - maximizedRect.top));
+    card.classList.remove(maximizeClass);
+    updateMaximizedBodyState();
+    setExpandedState(card);
+
+    const state = stateFor(card);
+    const rect = card.getBoundingClientRect();
+    const pointerOffsetX = Math.min(rect.width - 72, Math.max(72, rect.width * pointerRatioX));
+    const next = clampPosition(
+      card,
+      state.x + event.clientX - pointerOffsetX - rect.left,
+      state.y + event.clientY - pointerOffsetY - rect.top,
+    );
+    applyPosition(card, next.x, next.y);
+  };
+
+  const activatePendingDrag = (event) => {
+    if (!pendingDrag || event.pointerId !== pendingDrag.pointerId) return;
+    const distance = Math.hypot(event.clientX - pendingDrag.startX, event.clientY - pendingDrag.startY);
+    if (distance < dragThreshold) return;
+
+    restoreMaximizedForDrag(pendingDrag.card, event);
+    const state = stateFor(pendingDrag.card);
+    activeDrag = {
+      card: pendingDrag.card,
+      pointerId: pendingDrag.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      originX: state.x,
+      originY: state.y,
+      target: pendingDrag.target,
+    };
+    pendingDrag.card.classList.add(draggingClass);
+    pendingDrag = null;
     updateDragMode();
   };
 
   const moveActiveDrag = (event) => {
+    activatePendingDrag(event);
     if (!activeDrag || event.pointerId !== activeDrag.pointerId) return;
     const next = clampPosition(
       activeDrag.card,
@@ -156,25 +189,27 @@
   };
 
   const stopActiveDrag = (event) => {
-    if (!activeDrag || event.pointerId !== activeDrag.pointerId) return;
-    activeDrag.card.classList.remove(draggingClass);
-    setMoveArmed(activeDrag.card, false);
-    if (activeDrag.target?.releasePointerCapture) {
-      activeDrag.target.releasePointerCapture(event.pointerId);
+    if (pendingDrag && event.pointerId === pendingDrag.pointerId) {
+      if (pendingDrag.target?.releasePointerCapture) {
+        pendingDrag.target.releasePointerCapture(event.pointerId);
+      }
+      pendingDrag = null;
     }
-    activeDrag = null;
-    updateDragMode();
+    if (activeDrag && event.pointerId === activeDrag.pointerId) {
+      activeDrag.card.classList.remove(draggingClass);
+      if (activeDrag.target?.releasePointerCapture) {
+        activeDrag.target.releasePointerCapture(event.pointerId);
+      }
+      activeDrag = null;
+      updateDragMode();
+    }
   };
 
   const updateRailPeek = (event) => {
-    if (!document.body.classList.contains(dragModeClass) || activeDrag) return;
+    if (!document.body.classList.contains(dragModeClass) || activeDrag || pendingDrag) return;
     const threshold = 48;
     document.body.classList.toggle(leftRailPeekClass, event.clientX <= threshold);
     document.body.classList.toggle(rightRailPeekClass, window.innerWidth - event.clientX <= threshold);
-  };
-
-  const toggleMove = (card) => {
-    setMoveArmed(card, !card.classList.contains(moveClass));
   };
 
   const setExpandedState = (card) => {
@@ -183,9 +218,6 @@
     card.setAttribute("aria-expanded", String(!minimized));
     card.querySelectorAll("[data-window-action]").forEach((button) => {
       const action = button.dataset.windowAction;
-      if (action === "move") {
-        button.setAttribute("aria-pressed", String(card.classList.contains(moveClass)));
-      }
       if (action === "maximize") {
         button.setAttribute("aria-pressed", String(maximized));
       }
@@ -202,23 +234,23 @@
         setExpandedState(card);
       }
     });
-    document.body.classList.toggle(
-      "has-maximized-content-window",
-      windows.some((card) => card.classList.contains(maximizeClass)),
-    );
+    updateMaximizedBodyState();
+    updateDragMode();
   };
 
   const minimize = (card) => {
     card.classList.remove(maximizeClass);
     card.classList.add(minimizeClass);
-    document.body.classList.remove("has-maximized-content-window");
+    updateMaximizedBodyState();
     setExpandedState(card);
+    updateDragMode();
   };
 
   const restore = (card) => {
     card.classList.remove(maximizeClass, minimizeClass);
-    document.body.classList.remove("has-maximized-content-window");
+    updateMaximizedBodyState();
     setExpandedState(card);
+    updateDragMode();
   };
 
   const toggleMinimize = (card) => {
@@ -234,15 +266,17 @@
     clearMaximized(card);
     card.classList.remove(minimizeClass);
     card.classList.toggle(maximizeClass, !wasMaximized);
-    document.body.classList.toggle("has-maximized-content-window", !wasMaximized);
+    updateMaximizedBodyState();
     setExpandedState(card);
+    updateDragMode();
   };
 
   const close = (card) => {
     if (card.classList.contains(maximizeClass)) {
       card.classList.remove(maximizeClass);
-      document.body.classList.remove("has-maximized-content-window");
+      updateMaximizedBodyState();
       setExpandedState(card);
+      updateDragMode();
       return;
     }
     minimize(card);
@@ -268,7 +302,6 @@
       const button = event.target instanceof Element ? event.target.closest("[data-window-action]") : null;
       if (!button || !card.contains(button)) return;
       const action = button.dataset.windowAction;
-      if (action === "move") toggleMove(card);
       if (action === "minimize") toggleMinimize(card);
       if (action === "maximize") maximize(card);
       if (action === "close") close(card);
@@ -278,7 +311,6 @@
     filebar?.addEventListener("pointerdown", (event) => {
       const target = event.target;
       if (target instanceof Element && target.closest("[data-window-action]")) return;
-      if (!card.classList.contains(moveClass)) return;
       startDrag(card, event);
     });
   });
@@ -293,7 +325,7 @@
 
   document.addEventListener("keydown", (event) => {
     if (event.key !== "Escape") return;
-    if (document.body.classList.contains(dragModeClass) && !document.body.classList.contains("has-maximized-content-window")) {
+    if (document.body.classList.contains(dragModeClass) && !document.body.classList.contains(maximizedBodyClass)) {
       resetDraggedWindows();
       return;
     }
