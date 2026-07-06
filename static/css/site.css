@@ -1024,6 +1024,10 @@ body.has-maximized-content-window {
   box-shadow: none;
 }
 
+body.has-window-drag-mode .home-hero {
+  overflow: visible;
+}
+
 .home-hero::before {
   content: none;
 }

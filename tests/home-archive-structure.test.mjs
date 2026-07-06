@@ -110,7 +110,9 @@ test("site css adds home hero and archive structure with tablet overrides", asyn
   assert.match(homeHeroRule, /gap:\s*var\(--space-4\)/);
   assert.match(homeHeroRule, /min-height:\s*clamp\(280px,\s*38vh,\s*420px\)/);
   assert.match(homeHeroRule, /align-items:\s*start/);
+  assert.match(homeHeroRule, /overflow:\s*hidden/);
   assert.match(homeHeroRule, /background:\s*transparent/);
+  assert.match(ruleContaining(css, "body.has-window-drag-mode .home-hero"), /overflow:\s*visible/);
   assert.doesNotMatch(homeHeroRule, /radial-gradient/);
   assert.match(homeHeroTitleRule, /font-size:\s*2\.2rem/);
   assert.match(homeHeroTitleRule, /font-family:\s*var\(--font-sans\)/);
