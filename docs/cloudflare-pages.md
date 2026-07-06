@@ -45,12 +45,14 @@ Register these in GitHub -> `yskim-blog` -> Settings -> Secrets and variables
 
 Register these repository variables in the same settings area:
 
-| Variable             | Purpose                                                   |
-| -------------------- | --------------------------------------------------------- |
-| `CONTENT_SOURCE`     | Set to `notion`                                           |
-| `NOTION_DATABASE_ID` | Private Notion CMS database id used by the Notion fetcher |
-| `NOTION_STATUS`      | Optional Notion status filter. Defaults to `Published`    |
-| `PUBLISH_BRANCH`     | Optional deploy branch. Defaults to `production`          |
+| Variable                   | Purpose                                                            |
+| -------------------------- | ------------------------------------------------------------------ |
+| `CONTENT_SOURCE`           | Set to `notion`                                                    |
+| `NOTION_POSTS_DATABASE_ID` | Private Notion Posts DB id for blog posts                          |
+| `NOTION_SITE_DATABASE_ID`  | Private Notion Site DB id for home/profile/links/legal pages       |
+| `NOTION_DATABASE_ID`       | Legacy single CMS database id; keep only while migrating if needed |
+| `NOTION_STATUS`            | Optional Notion status filter. Defaults to `Published`             |
+| `PUBLISH_BRANCH`           | Optional deploy branch. Defaults to `production`                   |
 
 `NOTION_MEDIA_MODE` is an optional variable: `download` (default) self-hosts
 media, while `proxy` serves heavy media from Notion via the media Function.

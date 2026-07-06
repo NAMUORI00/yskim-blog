@@ -26,8 +26,22 @@ export function summarizeNotionSetup({ repo = DEFAULT_REPO, secrets, variables }
   const nextSteps = [];
   const productionSource = variables.get("CONTENT_SOURCE") || "notion";
   const publishBranch = variables.get("PUBLISH_BRANCH") || "production";
+  const hasLegacyDatabase = variables.has("NOTION_DATABASE_ID");
+  const hasPostsDatabase = variables.has("NOTION_POSTS_DATABASE_ID");
+  const hasSiteDatabase = variables.has("NOTION_SITE_DATABASE_ID");
+  const hasAnySplitDatabase = hasPostsDatabase || hasSiteDatabase;
+  const hasSplitDatabases = hasPostsDatabase && hasSiteDatabase;
 
-  if (!variables.has("NOTION_DATABASE_ID")) {
+  if (hasAnySplitDatabase && !hasSplitDatabases) {
+    if (!hasPostsDatabase) {
+      missing.push("NOTION_POSTS_DATABASE_ID");
+      nextSteps.push(`gh variable set NOTION_POSTS_DATABASE_ID --body <posts-database-id> --repo ${repo}`);
+    }
+    if (!hasSiteDatabase) {
+      missing.push("NOTION_SITE_DATABASE_ID");
+      nextSteps.push(`gh variable set NOTION_SITE_DATABASE_ID --body <site-database-id> --repo ${repo}`);
+    }
+  } else if (!hasLegacyDatabase && !hasSplitDatabases) {
     missing.push("NOTION_DATABASE_ID");
     nextSteps.push(`gh variable set NOTION_DATABASE_ID --body 2e8cf325d81c4acdb302800e2dcfc4df --repo ${repo}`);
   }

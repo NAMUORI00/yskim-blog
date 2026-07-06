@@ -30,3 +30,12 @@ test("workflow keeps generated Notion content out of style-only Markdown lint", 
   assert.match(workflow, /markdownlint-cli2 "README\.md" "docs\/\*\*\/\*\.md"/);
   assert.doesNotMatch(workflow, /markdownlint-cli2 "content\/\*\*\/\*\.md"/);
 });
+
+test("workflow accepts either legacy or split Notion database variables", async () => {
+  const workflow = await readFile(workflowUrl, "utf8");
+
+  assert.match(workflow, /NOTION_DATABASE_ID:/);
+  assert.match(workflow, /NOTION_POSTS_DATABASE_ID:/);
+  assert.match(workflow, /NOTION_SITE_DATABASE_ID:/);
+  assert.match(workflow, /NOTION_DATABASE_ID or both NOTION_POSTS_DATABASE_ID and NOTION_SITE_DATABASE_ID/);
+});
