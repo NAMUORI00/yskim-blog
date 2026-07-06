@@ -32,6 +32,8 @@ import {
   mermaidTag,
   collectRemoteMarkdownAssets,
   normalizeCustomFrontMatter,
+  POST_DB_PROPERTIES,
+  SITE_DB_PROPERTIES,
 } from "../scripts/notion-content.mjs";
 
 const notionPage = {
@@ -122,6 +124,56 @@ test("maps Notion page properties to Hugo post metadata", () => {
   });
 });
 
+test("maps B-schema Posts DB columns to Hugo post metadata", () => {
+  const postPage = {
+    id: "post-b-schema",
+    properties: {
+      Title: {
+        type: "title",
+        title: [{ plain_text: "B schema post" }],
+      },
+      Status: { type: "select", select: { name: "Published" } },
+      Slug: {
+        type: "rich_text",
+        rich_text: [{ plain_text: "b-schema-post" }],
+      },
+      PublishedAt: { type: "date", date: { start: "2026-07-06" } },
+      Category: { type: "select", select: { name: "운영 노트" } },
+      Tags: {
+        type: "multi_select",
+        multi_select: [{ name: "notion" }, { name: "schema" }],
+      },
+      Excerpt: {
+        type: "rich_text",
+        rich_text: [{ plain_text: "B schema excerpt." }],
+      },
+      CanonicalUrl: { type: "url", url: "https://blog.namuori.net/posts/b-schema-post/" },
+      CommentsEnabled: { type: "checkbox", checkbox: false },
+      Featured: { type: "checkbox", checkbox: true },
+      Series: {
+        type: "rich_text",
+        rich_text: [{ plain_text: "CMS notes" }],
+      },
+    },
+  };
+
+  const post = pageToPost(postPage, POST_DB_PROPERTIES);
+
+  assert.deepEqual(post, {
+    notionId: "post-b-schema",
+    title: "B schema post",
+    status: "Published",
+    slug: "b-schema-post",
+    date: "2026-07-06",
+    category: "운영 노트",
+    tags: ["notion", "schema"],
+    summary: "B schema excerpt.",
+    cover: "",
+    canonical: "https://blog.namuori.net/posts/b-schema-post/",
+    comments: false,
+  });
+});
+
 test("renders Hugo frontmatter without allowing Markdown edits to become source of truth", () => {
   const post = pageToPost(notionPage);
   const document = buildPostDocument(post, "Body with math:\n\n$$E = mc^2$$\n");
@@ -187,6 +239,111 @@ test("maps split Site DB Meta column to static page frontmatter", () => {
 
   const document = buildStaticPageDocument(staticPage, "Body");
   assert.match(document, /tags: \[\]/);
+});
+
+test("maps B-schema Site DB profile columns to static page frontmatter", () => {
+  const profilePage = {
+    id: "site-profile-b-schema",
+    properties: {
+      Title: {
+        type: "title",
+        title: [{ plain_text: "Profile" }],
+      },
+      Status: { type: "select", select: { name: "Published" } },
+      Key: {
+        type: "rich_text",
+        rich_text: [{ plain_text: "profile" }],
+      },
+      Kind: { type: "select", select: { name: "Profile" } },
+      Slot: { type: "select", select: { name: "sidebar.profile" } },
+      Label: {
+        type: "rich_text",
+        rich_text: [{ plain_text: "KIM YUSEOK" }],
+      },
+      Value: {
+        type: "rich_text",
+        rich_text: [{ plain_text: "World Calling" }],
+      },
+      URL: { type: "url", url: "https://github.com/NAMUORI00" },
+      Order: { type: "number", number: 10 },
+      IconKey: {
+        type: "rich_text",
+        rich_text: [{ plain_text: "profile" }],
+      },
+      Config: {
+        type: "rich_text",
+        rich_text: [{
+          plain_text: [
+            'profile_handle: "namuori"',
+            'profile_address: "Seoul, Korea"',
+            'profile_avatar: "https://avatars.githubusercontent.com/u/46620366?v=4"',
+          ].join("\n"),
+        }],
+      },
+    },
+  };
+
+  const staticPage = pageToStaticPage(profilePage, SITE_DB_PROPERTIES);
+
+  assert.equal(staticPage.slug, "profile");
+  assert.equal(staticPage.summary, "World Calling");
+  assert.equal(
+    staticPage.customFrontMatter,
+    [
+      'profile_name: "KIM YUSEOK"',
+      'profile_url: "https://github.com/NAMUORI00"',
+      'profile_handle: "namuori"',
+      'profile_address: "Seoul, Korea"',
+      'profile_avatar: "https://avatars.githubusercontent.com/u/46620366?v=4"',
+    ].join("\n"),
+  );
+});
+
+test("maps B-schema Site DB link rows into the links static page frontmatter", () => {
+  const linksPage = {
+    id: "site-links-page",
+    properties: {
+      Title: { type: "title", title: [{ plain_text: "Links" }] },
+      Status: { type: "select", select: { name: "Published" } },
+      Key: { type: "rich_text", rich_text: [{ plain_text: "links" }] },
+      Kind: { type: "select", select: { name: "Page" } },
+      Slot: { type: "select", select: { name: "sidebar.links" } },
+      Label: { type: "rich_text", rich_text: [{ plain_text: "Links" }] },
+      Value: { type: "rich_text", rich_text: [{ plain_text: "나무가든 프로필 링크" }] },
+      URL: { type: "url", url: null },
+      Order: { type: "number", number: 40 },
+      IconKey: { type: "rich_text", rich_text: [{ plain_text: "link" }] },
+      Config: { type: "rich_text", rich_text: [] },
+    },
+  };
+  const portfolioLink = {
+    id: "site-link-portfolio",
+    properties: {
+      Title: { type: "title", title: [{ plain_text: "Portfolio" }] },
+      Status: { type: "select", select: { name: "Published" } },
+      Key: { type: "rich_text", rich_text: [{ plain_text: "portfolio" }] },
+      Kind: { type: "select", select: { name: "Link" } },
+      Slot: { type: "select", select: { name: "sidebar.links" } },
+      Label: { type: "rich_text", rich_text: [{ plain_text: "Portfolio" }] },
+      Value: { type: "rich_text", rich_text: [{ plain_text: "namuori.net" }] },
+      URL: { type: "url", url: "https://namuori.net/" },
+      Order: { type: "number", number: 10 },
+      IconKey: { type: "rich_text", rich_text: [{ plain_text: "portfolio" }] },
+      Config: { type: "rich_text", rich_text: [] },
+    },
+  };
+
+  const staticPage = pageToStaticPage(linksPage, SITE_DB_PROPERTIES, [portfolioLink]);
+
+  assert.equal(
+    staticPage.customFrontMatter,
+    [
+      "links:",
+      '  - label: "Portfolio"',
+      '    href: "https://namuori.net/"',
+      '    note: "namuori.net"',
+    ].join("\n"),
+  );
 });
 
 test("renders Notion-managed static page frontmatter", () => {
