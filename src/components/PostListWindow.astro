@@ -11,7 +11,7 @@ interface Props {
 }
 
 const { label, title, posts, emptyText = UI.noPostsYet } = Astro.props;
-const postsPerPage = 6;
+const postsPerPage = 2;
 const pages = posts.reduce<Post[][]>((groups, post, index) => {
   const pageIndex = Math.floor(index / postsPerPage);
   if (!groups[pageIndex]) groups[pageIndex] = [];

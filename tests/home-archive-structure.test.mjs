@@ -79,7 +79,7 @@ test("archive pages render post lists inside content-window controls", async () 
   assert.match(postListWindow, /data-window-action="close"/);
   assert.match(postListWindow, /data-window-action="minimize"/);
   assert.match(postListWindow, /data-window-action="maximize"/);
-  assert.match(postListWindow, /const postsPerPage = 6/);
+  assert.match(postListWindow, /const postsPerPage = 2/);
   assert.match(postListWindow, /data-archive-window/);
   assert.match(postListWindow, /data-archive-page/);
   assert.match(postListWindow, /data-archive-pagination/);
