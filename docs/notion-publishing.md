@@ -141,13 +141,13 @@ Do not do partial updates at first. Full rebuild keeps unpublished, deleted, or 
 ## Needed before implementation
 
 - Notion integration token stored as a GitHub Actions secret.
-- Split Notion database ids for Posts and Site content, or the legacy single database id during migration.
+- Split Notion database ids for Posts and Site content.
 - Exact database property names for status, slug, category, tags, summary, cover, canonical, comments, and site metadata.
 
 ## Current CMS setup
 
-The Notion CMS databases are configured outside this public repository. The
-recommended structure uses two databases:
+The Notion CMS databases are configured outside this public repository under
+`퍼블리시 중인 페이지` -> `블로그 DB 관리`. The structure uses two databases:
 
 - Posts DB: public blog posts.
 - Site DB: home intro, profile, address, links, privacy, disclaimer, contact,
@@ -175,7 +175,6 @@ Site DB columns:
 GitHub Actions expects these values:
 
 - repository variables `NOTION_POSTS_DATABASE_ID` and `NOTION_SITE_DATABASE_ID`;
-- legacy repository variable `NOTION_DATABASE_ID` only while migrating from the old single DB;
 - repository secret `NOTION_TOKEN`;
 - repository variable `CONTENT_SOURCE=notion`;
 - optional repository variable `NOTION_STATUS=Published` if the default should be explicit.

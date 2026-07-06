@@ -25,7 +25,8 @@ test("reports the exact missing Notion token handoff when the secret is absent",
     ]),
     variables: new Map([
       ["CONTENT_SOURCE", "notion"],
-      ["NOTION_DATABASE_ID", "2e8cf325d81c4acdb302800e2dcfc4df"],
+      ["NOTION_POSTS_DATABASE_ID", "posts-db"],
+      ["NOTION_SITE_DATABASE_ID", "site-db"],
       ["NOTION_STATUS", "Published"],
     ]),
   });
@@ -35,7 +36,7 @@ test("reports the exact missing Notion token handoff when the secret is absent",
   assert.match(summary.nextSteps.join("\n"), /gh secret set NOTION_TOKEN --repo NAMUORI00\/yskim-blog/);
 });
 
-test("reports dry-run commands once the Notion token and database id exist", () => {
+test("requires split Notion database variables even if the legacy database id exists", () => {
   const summary = summarizeNotionSetup({
     repo: "NAMUORI00/yskim-blog",
     secrets: new Map([["NOTION_TOKEN", "2026-06-12T07:30:00Z"]]),
@@ -47,16 +48,11 @@ test("reports dry-run commands once the Notion token and database id exist", () 
     ]),
   });
 
-  assert.equal(summary.readyForNotionDryRun, true);
-  assert.deepEqual(summary.missing, []);
-  assert.match(summary.nextSteps.join("\n"), /gh workflow run validate-and-build\.yml/);
-  assert.match(summary.nextSteps.join("\n"), /content_source=notion/);
-  assert.match(summary.nextSteps.join("\n"), /notion_status=Ready/);
-  assert.equal(summary.productionSource, "notion");
-  assert.equal(summary.publishBranch, "production");
+  assert.equal(summary.readyForNotionDryRun, false);
+  assert.deepEqual(summary.missing, ["NOTION_POSTS_DATABASE_ID", "NOTION_SITE_DATABASE_ID"]);
 });
 
-test("accepts split Notion database variables instead of the legacy database id", () => {
+test("reports dry-run commands once split Notion database ids exist", () => {
   const summary = summarizeNotionSetup({
     repo: "NAMUORI00/yskim-blog",
     secrets: new Map([["NOTION_TOKEN", "2026-06-12T07:30:00Z"]]),
@@ -72,6 +68,11 @@ test("accepts split Notion database variables instead of the legacy database id"
   assert.equal(summary.readyForNotionDryRun, true);
   assert.deepEqual(summary.missing, []);
   assert.doesNotMatch(summary.nextSteps.join("\n"), /NOTION_DATABASE_ID --body/);
+  assert.match(summary.nextSteps.join("\n"), /gh workflow run validate-and-build\.yml/);
+  assert.match(summary.nextSteps.join("\n"), /content_source=notion/);
+  assert.match(summary.nextSteps.join("\n"), /notion_status=Ready/);
+  assert.equal(summary.productionSource, "notion");
+  assert.equal(summary.publishBranch, "production");
 });
 
 test("requires both split Notion database variables when split mode is started", () => {

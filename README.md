@@ -41,8 +41,8 @@ See `docs/notion-publishing.md` for Notion rules and
 ## Local development
 
 Authenticate with GitHub (`gh auth login`) and provide `NOTION_TOKEN` plus
-either the legacy `NOTION_DATABASE_ID` or both split database ids
-(`NOTION_POSTS_DATABASE_ID` and `NOTION_SITE_DATABASE_ID`) to fetch content.
+both split database ids (`NOTION_POSTS_DATABASE_ID` and
+`NOTION_SITE_DATABASE_ID`) to fetch content.
 
 ```powershell
 npm install
@@ -105,16 +105,18 @@ Required GitHub Actions secrets:
 Required repository variables:
 
 - `CONTENT_SOURCE=notion`
-- `NOTION_POSTS_DATABASE_ID` and `NOTION_SITE_DATABASE_ID` for the split CMS
-  setup, or legacy `NOTION_DATABASE_ID` while migrating
+- `NOTION_POSTS_DATABASE_ID`
+- `NOTION_SITE_DATABASE_ID`
 - `NOTION_STATUS=Published`
 - `PUBLISH_BRANCH=production` (optional; workflow default is `production`)
 - `NOTION_MEDIA_MODE` (`download` default, or `proxy`)
 
 Recommended Notion CMS structure:
 
-- Posts DB: `Title`, `Status`, `Slug`, `Date`, `Category`, `Tags`, `Summary`.
-- Site DB: `Title`, `Status`, `Slug`, `Summary`, `Meta`.
+- `퍼블리시 중인 페이지` -> `블로그 DB 관리` -> Posts DB:
+  `Title`, `Status`, `Slug`, `Date`, `Category`, `Tags`, `Summary`.
+- `퍼블리시 중인 페이지` -> `블로그 DB 관리` -> Site DB:
+  `Title`, `Status`, `Slug`, `Summary`, `Meta`.
 
 Optional post columns such as `Cover`, `Canonical`, and `Comments` are still
 recognized when present.
