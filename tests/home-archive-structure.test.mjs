@@ -79,13 +79,17 @@ test("archive pages render post lists inside content-window controls", async () 
   assert.match(postListWindow, /data-window-action="close"/);
   assert.match(postListWindow, /data-window-action="minimize"/);
   assert.match(postListWindow, /data-window-action="maximize"/);
-  assert.match(postListWindow, /const postsPerPage = 2/);
+  assert.match(postListWindow, /const postsPerPage = 5/);
+  assert.match(postListWindow, /const postPages = posts\.reduce<Post\[\]\[\]>/);
+  assert.match(postListWindow, /const pages = postPages\.length > 0 \? postPages : \[\[\]\]/);
+  assert.doesNotMatch(postListWindow, /\{pageCount > 1 && \(/);
   assert.match(postListWindow, /data-archive-window/);
   assert.match(postListWindow, /data-archive-page/);
   assert.match(postListWindow, /data-archive-pagination/);
   assert.match(postListWindow, /data-archive-page-prev/);
   assert.match(postListWindow, /data-archive-page-next/);
   assert.match(postListWindow, /data-archive-page-button/);
+  assert.match(postListWindow, /disabled=\{pageCount <= 1\}/);
   assert.match(postListWindow, /page\.map\(\(p\) =>/);
   assert.match(search, /class="readme-card search-window"/);
   assert.match(search, /data-search-input/);
