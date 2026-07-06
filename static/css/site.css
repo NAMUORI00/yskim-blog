@@ -415,9 +415,9 @@ pre {
 }
 
 .top-bar-drag-reset {
-  position: absolute;
-  top: calc(100% + var(--space-2));
-  left: 50%;
+  position: fixed;
+  right: var(--space-5);
+  bottom: calc(var(--footer-reserved) + var(--space-3));
   z-index: 135;
   display: inline-flex;
   align-items: center;
@@ -430,7 +430,6 @@ pre {
   border-radius: 999px;
   box-shadow: var(--shadow-soft);
   cursor: pointer;
-  transform: translateX(-50%);
   white-space: nowrap;
 }
 
@@ -549,73 +548,6 @@ body.theme-dark .theme-icon-moon {
   padding: var(--space-6) var(--space-4) var(--space-8);
 }
 
-.rail-dock-layer {
-  position: fixed;
-  inset: calc(51px + var(--space-2)) 0 var(--footer-reserved);
-  z-index: 40;
-  pointer-events: none;
-}
-
-.rail-dock {
-  position: absolute;
-  top: 50%;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  min-width: 34px;
-  min-height: 92px;
-  padding: var(--space-2) var(--space-1);
-  color: var(--accent-strong);
-  background: var(--panel-glass);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-sm);
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(14px);
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: var(--font-xs);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  pointer-events: auto;
-  text-orientation: mixed;
-  text-transform: uppercase;
-  transform: translateY(-50%);
-  transition: background 0.14s ease, border-color 0.14s ease, transform 0.14s ease;
-  writing-mode: vertical-rl;
-}
-
-.rail-dock:hover,
-.rail-dock[aria-expanded="true"] {
-  background: var(--panel);
-  border-color: var(--accent-border);
-}
-
-.rail-dock--left {
-  left: var(--space-2);
-}
-
-.rail-dock--right {
-  right: var(--space-2);
-}
-
-body.has-window-drag-mode .rail-dock {
-  display: inline-flex;
-}
-
-body.has-window-drag-mode.is-rail-left-open .rail-dock--left,
-body.has-window-drag-mode.is-rail-left-peeking .rail-dock--left {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-50%) translateX(-8px);
-}
-
-body.has-window-drag-mode.is-rail-right-open .rail-dock--right,
-body.has-window-drag-mode.is-rail-right-peeking .rail-dock--right {
-  opacity: 0;
-  pointer-events: none;
-  transform: translateY(-50%) translateX(8px);
-}
-
 body.has-window-drag-mode .site-shell {
   --content-column-max: min(1240px, calc(100vw - 96px));
   display: grid;
@@ -652,11 +584,11 @@ body.has-window-drag-mode .blog-sidebar {
   width: var(--sidebar-width);
 }
 
-body.has-window-drag-mode:not(.is-rail-left-open):not(.is-rail-left-peeking) .profile-rail {
+body.has-window-drag-mode:not(.is-rail-left-peeking) .profile-rail {
   transform: translateX(calc(-100% - var(--space-5)));
 }
 
-body.has-window-drag-mode:not(.is-rail-right-open):not(.is-rail-right-peeking) .blog-sidebar {
+body.has-window-drag-mode:not(.is-rail-right-peeking) .blog-sidebar {
   transform: translateX(calc(100% + var(--space-5)));
 }
 
