@@ -11,9 +11,17 @@ interface Props {
 }
 
 const { label, title, posts, emptyText = UI.noPostsYet } = Astro.props;
+const postsPerPage = 6;
+const pages = posts.reduce<Post[][]>((groups, post, index) => {
+  const pageIndex = Math.floor(index / postsPerPage);
+  if (!groups[pageIndex]) groups[pageIndex] = [];
+  groups[pageIndex].push(post);
+  return groups;
+}, []);
+const pageCount = pages.length;
 ---
 
-<article class="readme-card archive-window" aria-label={`${label}: ${title}`} data-content-window>
+<article class="readme-card archive-window" aria-label={`${label}: ${title}`} data-content-window data-archive-window>
   <div class="filebar archive-window__bar">
     <div class="filebar-controls" aria-label="글 목록 창 제어">
       <button type="button" class="filebar-control filebar-control--close" data-window-action="close" aria-label="닫기"></button>
@@ -25,21 +33,93 @@ const { label, title, posts, emptyText = UI.noPostsYet } = Astro.props;
   </div>
   <section class="post-feed archive-window__feed">
     {posts.length > 0 ? (
-      <div class="post-list">
-        {posts.map((p) => (
-          <PostCard
-            href={postUrl(p.data.slug)}
-            title={p.data.title}
-            date={p.data.date}
-            category={p.data.categories[0]}
-            summary={p.data.summary}
-            cover={p.data.cover || undefined}
-            tags={p.data.tags}
-          />
-        ))}
-      </div>
+      pages.map((page, pageIndex) => (
+        <div
+          class="post-list archive-window__page"
+          data-archive-page
+          data-page-index={pageIndex}
+          hidden={pageIndex > 0}
+        >
+          {page.map((p) => (
+            <PostCard
+              href={postUrl(p.data.slug)}
+              title={p.data.title}
+              date={p.data.date}
+              category={p.data.categories[0]}
+              summary={p.data.summary}
+              cover={p.data.cover || undefined}
+              tags={p.data.tags}
+            />
+          ))}
+        </div>
+      ))
     ) : (
       <p class="empty-state">{emptyText}</p>
     )}
   </section>
+  {pageCount > 1 && (
+    <nav class="archive-window__pagination" data-archive-pagination aria-label={`${label}: ${title} 페이지`}>
+      <button type="button" class="archive-window__pagination-button" data-archive-page-prev disabled aria-label="이전 페이지">
+        <span aria-hidden="true">‹</span>
+      </button>
+      <div class="archive-window__pages" aria-label="페이지 목록">
+        {pages.map((_, index) => (
+          <button
+            type="button"
+            class={`archive-window__page-button${index === 0 ? " is-active" : ""}`}
+            data-archive-page-button
+            data-page-index={index}
+            aria-label={`${index + 1}페이지`}
+            aria-current={index === 0 ? "page" : undefined}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
+      <button type="button" class="archive-window__pagination-button" data-archive-page-next aria-label="다음 페이지">
+        <span aria-hidden="true">›</span>
+      </button>
+    </nav>
+  )}
 </article>
+
+{pageCount > 1 && (
+  <script is:inline>
+    (() => {
+      const archives = [...document.querySelectorAll("[data-archive-window]")];
+      archives.forEach((archive) => {
+        if (archive.dataset.archivePaginationReady === "true") return;
+        archive.dataset.archivePaginationReady = "true";
+
+        const pages = [...archive.querySelectorAll("[data-archive-page]")];
+        const buttons = [...archive.querySelectorAll("[data-archive-page-button]")];
+        const previous = archive.querySelector("[data-archive-page-prev]");
+        const next = archive.querySelector("[data-archive-page-next]");
+        if (pages.length <= 1 || buttons.length === 0 || !previous || !next) return;
+
+        let currentPage = 0;
+        const setPage = (index) => {
+          currentPage = Math.max(0, Math.min(pages.length - 1, index));
+          pages.forEach((page, pageIndex) => {
+            page.hidden = pageIndex !== currentPage;
+          });
+          buttons.forEach((button, buttonIndex) => {
+            const isActive = buttonIndex === currentPage;
+            button.classList.toggle("is-active", isActive);
+            button.toggleAttribute("aria-current", isActive);
+            if (isActive) button.setAttribute("aria-current", "page");
+          });
+          previous.disabled = currentPage === 0;
+          next.disabled = currentPage === pages.length - 1;
+        };
+
+        buttons.forEach((button) => {
+          button.addEventListener("click", () => setPage(Number(button.dataset.pageIndex || 0)));
+        });
+        previous.addEventListener("click", () => setPage(currentPage - 1));
+        next.addEventListener("click", () => setPage(currentPage + 1));
+        setPage(0);
+      });
+    })();
+  </script>
+)}

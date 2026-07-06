@@ -750,6 +750,10 @@ body.has-window-drag-mode:not(.is-rail-right-peeking) .blog-sidebar {
   overflow: auto;
 }
 
+.readme-card.is-maximized > .archive-window__pagination {
+  flex: 0 0 auto;
+}
+
 body.has-maximized-content-window {
   overflow: hidden;
 }
@@ -1173,6 +1177,11 @@ body.has-window-drag-mode .home-hero {
   margin-bottom: 0;
 }
 
+.archive-window {
+  display: flex;
+  flex-direction: column;
+}
+
 .archive-window__bar,
 .search-window__bar {
   min-height: 32px;
@@ -1186,6 +1195,67 @@ body.has-window-drag-mode .home-hero {
 
 .archive-window__feed .empty-state {
   margin: 0;
+}
+
+.archive-window__page[hidden] {
+  display: none;
+}
+
+.archive-window__pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--panel-glass-soft);
+  border-top: 1px solid var(--line);
+}
+
+.archive-window__pages {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-1);
+  flex: 1 1 auto;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.archive-window__pagination-button,
+.archive-window__page-button {
+  display: inline-grid;
+  place-items: center;
+  min-width: 30px;
+  height: 30px;
+  padding: 0 var(--space-2);
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: var(--font-xs);
+  font-weight: 700;
+  line-height: 1;
+  transition: color 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+}
+
+.archive-window__pagination-button:hover,
+.archive-window__page-button:hover,
+.archive-window__page-button.is-active {
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border-color: var(--accent-border);
+}
+
+.archive-window__pagination-button:disabled {
+  cursor: default;
+  opacity: 0.42;
+}
+
+.archive-window__pagination-button:disabled:hover {
+  color: var(--muted);
+  background: transparent;
+  border-color: var(--line);
 }
 
 .search-panel {
@@ -1540,6 +1610,10 @@ body.has-window-drag-mode .home-hero {
 
 .post-feed {
   padding: 0 var(--space-5) var(--space-5);
+}
+
+.post-feed.archive-window__feed {
+  padding: var(--space-4);
 }
 
 .post-list {
