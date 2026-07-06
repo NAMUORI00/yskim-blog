@@ -71,6 +71,10 @@ test("window controls drag directly from the filebar and reset without recenteri
   assert.match(script, /--window-drag-y/);
   assert.match(script, /setPointerCapture/);
   assert.match(script, /const resetDraggedWindows = \(\) => \{/);
+  assert.match(script, /const getViewportSafeBounds = \(\) => \{/);
+  assert.match(script, /document\.querySelector\("\.top-bar"\)/);
+  assert.match(script, /document\.querySelector\("\.site-footer"\)/);
+  assert.match(script, /const normalizeRange = \(min, max\) =>/);
   assert.match(script, /const updateDragMode = \(\) => \{/);
   assert.match(script, /card\.classList\.contains\(maximizeClass\)/);
   assert.match(script, /is-rail-left-open/);
@@ -83,8 +87,24 @@ test("window controls drag directly from the filebar and reset without recenteri
   assert.match(script, /startDrag\(card, event\)/);
   assert.match(script, /dragReset\.addEventListener\("click", resetDraggedWindows\)/);
   assert.doesNotMatch(script, /moveClass|is-drag-armed|toggleMove|action === "move"|data-window-action="move"/);
+  assert.doesNotMatch(script, /visibleX|visibleY/);
   const minimizeBody = script.match(/const minimize = \(card\) => \{([\s\S]*?)\n  \};/)?.[1] || "";
   assert.doesNotMatch(minimizeBody, /resetDraggedWindows\(|--window-drag-x|--window-drag-y/);
+});
+
+test("window controls keep peeking rails available until the pointer leaves them", async () => {
+  const script = await readFile(files.script, "utf8");
+
+  assert.match(script, /const rails = \{/);
+  assert.match(script, /left:\s*document\.querySelector\('\[data-drag-rail="left"\]'\)/);
+  assert.match(script, /right:\s*document\.querySelector\('\[data-drag-rail="right"\]'\)/);
+  assert.match(script, /const railContainsPoint = \(rail, event\) => \{/);
+  assert.match(script, /event\.clientX >= rect\.left/);
+  assert.match(script, /event\.clientY <= rect\.bottom/);
+  assert.match(script, /document\.body\.classList\.contains\(leftRailPeekClass\) && railContainsPoint\(rails\.left, event\)/);
+  assert.match(script, /document\.body\.classList\.contains\(rightRailPeekClass\) && railContainsPoint\(rails\.right, event\)/);
+  assert.match(script, /!document\.body\.classList\.contains\(leftRailOpenClass\) && leftActive/);
+  assert.match(script, /!document\.body\.classList\.contains\(rightRailOpenClass\) && rightActive/);
 });
 
 test("window control css defines minimized and maximized states", async () => {
