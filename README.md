@@ -114,12 +114,16 @@ Required repository variables:
 Recommended Notion CMS structure:
 
 - `퍼블리시 중인 페이지` -> `블로그 DB 관리` -> Posts DB:
-  `Title`, `Status`, `Slug`, `Date`, `Category`, `Tags`, `Summary`.
+  `Title`, `Status`, `Slug`, `PublishedAt`, `Category`, `Tags`, `Excerpt`,
+  `Cover`, `CanonicalUrl`, `CommentsEnabled`, `Featured`, `Series`.
 - `퍼블리시 중인 페이지` -> `블로그 DB 관리` -> Site DB:
-  `Title`, `Status`, `Slug`, `Summary`, `Meta`.
+  `Title`, `Status`, `Key`, `Kind`, `Slot`, `Label`, `Value`, `URL`, `Order`,
+  `IconKey`, `Config`.
 
-Optional post columns such as `Cover`, `Canonical`, and `Comments` are still
-recognized when present.
+Posts DB is optimized for public writing. Site DB is optimized for reusable
+site slots such as profile, sidebar links, footer links, legal pages, and home
+copy. Use `Config` only for structured values that do not deserve their own
+column yet.
 
 For the media `proxy` mode, the Pages project also needs a runtime
 `NOTION_TOKEN` secret and the `MEDIA_CACHE` KV binding (see `wrangler.toml`).

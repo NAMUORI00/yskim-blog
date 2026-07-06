@@ -28,29 +28,32 @@ On `main`, generated `content/` and `static/images/` stay ignored. On `productio
 
 ## Preferred Notion shape
 
-Use one private Notion database shared with a read-only Notion integration. The database itself does not need to be public, because it may contain drafts and unpublished notes.
+Use two private Notion databases shared with a read-only Notion integration.
+The databases themselves do not need to be public, because they may contain
+drafts and unpublished notes.
 
 Each post row should provide these database properties:
 
 - `Status`: only `Published` rows are exported.
-- `Type`: optional. Missing or `Post` means a blog post. `Page` means a
-  Notion-managed static page.
 - `Title`
 - `Slug`
-- `Date`
+- `PublishedAt`
 - `Category`
 - `Tags`
-- `Summary`
+- `Excerpt`
 - `Cover`
-- `Canonical`
-- `Comments`
+- `CanonicalUrl`
+- `CommentsEnabled`
+- `Featured`
+- `Series`
 
-Optional properties such as `Series`, `Priority`, or `Featured` can be added later. The simplest stable version is one Notion database row per post, with the post body in the row page.
+The simplest stable version is one Notion database row per post, with the post
+body in the row page.
 
-For `Type=Page` rows, only `Title` and `Slug` are required. `Summary`,
-`Tags`, `Date`, and `Comments` are optional. The home route reads `home` for
-the hero and intro copy. README/about content is not rendered as a separate
-home section, so the introduction should be managed in the `home` row.
+Site rows use typed slot properties instead of the post schema. `Kind=Page` or
+`Kind=Profile` rows are exported as generated static pages. `Kind=Link` rows
+with `Slot=sidebar.links` are folded into the generated `links` page
+frontmatter. The home route reads `Key=home` for the intro copy.
 
 ## Data flow
 
@@ -142,7 +145,7 @@ Do not do partial updates at first. Full rebuild keeps unpublished, deleted, or 
 
 - Notion integration token stored as a GitHub Actions secret.
 - Split Notion database ids for Posts and Site content.
-- Exact database property names for status, slug, category, tags, summary, cover, canonical, comments, and site metadata.
+- Exact database property names for the managed Posts DB and Site DB schemas.
 
 ## Current CMS setup
 
@@ -158,19 +161,34 @@ Posts DB columns:
 - `Title`: public post title.
 - `Status`: publish state. `Published` rows are exported.
 - `Slug`: URL slug and generated Markdown filename.
-- `Date`: publication date used for sorting and frontmatter.
+- `PublishedAt`: publication date used for sorting and frontmatter.
 - `Category`: primary category used by archive URLs and the graph.
 - `Tags`: tag list used by post metadata and the graph.
-- `Summary`: list-card and meta-description summary.
-- Optional `Cover`, `Canonical`, `Comments`: cover image, canonical URL, and per-post comment toggle.
+- `Excerpt`: list-card and meta-description summary.
+- `Cover`: optional cover image.
+- `CanonicalUrl`: optional canonical URL.
+- `CommentsEnabled`: per-post comment toggle.
+- `Featured`: optional editorial marker for future featured surfaces.
+- `Series`: optional series label for grouped writing.
 
 Site DB columns:
 
-- `Title`: editor-facing page title.
+- `Title`: editor-facing row title.
 - `Status`: publish state. `Published` rows are exported.
-- `Slug`: static page key such as `home`, `profile`, `links`, `privacy`, `disclaimer`, or `contact`.
-- `Summary`: short description for generated frontmatter.
-- `Meta`: YAML frontmatter extension for structured profile, link, footer, and home UI data.
+- `Key`: stable static page or component key such as `home`, `profile`,
+  `links`, `privacy`, `disclaimer`, `contact`, `portfolio`, or `github`.
+- `Kind`: row role. Use `Page`, `Profile`, `Link`, `Text`, `Footer`, or
+  `Navigation`.
+- `Slot`: rendering slot such as `home.main`, `sidebar.profile`,
+  `sidebar.links`, or `footer.links`.
+- `Label`: display label.
+- `Value`: short value, intro, link note, or generated page summary.
+- `URL`: optional internal or external URL.
+- `Order`: numeric display order for slot rows.
+- `IconKey`: optional icon hint such as `portfolio`, `github`, `mail`, or
+  `link`.
+- `Config`: YAML frontmatter extension for exceptional structured values only.
+  Prefer typed columns for ordinary labels, links, order, and slots.
 
 GitHub Actions expects these values:
 

@@ -20,12 +20,30 @@ const DEFAULT_PROPERTIES = {
   meta: "Meta",
 };
 
-const SPLIT_SITE_PROPERTIES = {
+export const POST_DB_PROPERTIES = {
   ...DEFAULT_PROPERTIES,
+  date: "PublishedAt",
+  summary: "Excerpt",
+  canonical: "CanonicalUrl",
+  comments: "CommentsEnabled",
+};
+
+export const SITE_DB_PROPERTIES = {
+  ...DEFAULT_PROPERTIES,
+  slug: "Key",
+  summary: "Value",
+  meta: "Config",
   date: "",
   tags: "",
   comments: "",
-  type: "",
+  type: "Kind",
+  kind: "Kind",
+  slot: "Slot",
+  label: "Label",
+  value: "Value",
+  url: "URL",
+  order: "Order",
+  iconKey: "IconKey",
 };
 
 const GENERATED_POSTS_DIR = path.join("content", "posts");
@@ -45,6 +63,7 @@ const STATIC_PAGE_TYPES = new Set([
   "profile",
   "links",
 ]);
+const SITE_PAGE_KINDS = new Set(["", "page", "static", "static page", "home", "profile", "legal"]);
 
 export function pageToContentType(page, propertyNames = DEFAULT_PROPERTIES) {
   const properties = page.properties ?? {};
@@ -121,7 +140,7 @@ export function buildPostDocument(post, markdownBody) {
   return `${frontMatter.join("\n")}${markdownBody.trim()}\n`;
 }
 
-export function pageToStaticPage(page, propertyNames = DEFAULT_PROPERTIES) {
+export function pageToStaticPage(page, propertyNames = DEFAULT_PROPERTIES, relatedSitePages = []) {
   const properties = page.properties ?? {};
   const staticPage = {
     notionId: page.id,
@@ -132,7 +151,7 @@ export function pageToStaticPage(page, propertyNames = DEFAULT_PROPERTIES) {
     tags: readMultiSelect(properties[propertyNames.tags]),
     summary: readPlainText(properties[propertyNames.summary]),
     comments: readCheckbox(properties[propertyNames.comments], false),
-    customFrontMatter: readCustomFrontMatter(properties, propertyNames),
+    customFrontMatter: readSiteCustomFrontMatter(page, propertyNames, relatedSitePages),
   };
 
   const missing = [];
@@ -235,6 +254,81 @@ export function normalizeCustomFrontMatter(value) {
   return kept.join("\n").trim();
 }
 
+function shouldExportSitePage(page, propertyNames = SITE_DB_PROPERTIES) {
+  const fields = pageToSiteFields(page, propertyNames);
+  return SITE_PAGE_KINDS.has(fields.kind.trim().toLowerCase());
+}
+
+function pageToSiteFields(page, propertyNames = SITE_DB_PROPERTIES) {
+  const properties = page.properties ?? {};
+  const key = readPlainText(properties[propertyNames.slug]);
+  const kind =
+    readSelect(properties[propertyNames.kind]) ||
+    readPlainText(properties[propertyNames.kind]) ||
+    readSelect(properties[propertyNames.type]) ||
+    readPlainText(properties[propertyNames.type]);
+  return {
+    key,
+    kind,
+    slot: readSelect(properties[propertyNames.slot]) || readPlainText(properties[propertyNames.slot]),
+    label: readPlainText(properties[propertyNames.label]),
+    value: readPlainText(properties[propertyNames.value || propertyNames.summary]),
+    url: readUrl(properties[propertyNames.url]),
+    order: readNumber(properties[propertyNames.order]),
+    iconKey: readPlainText(properties[propertyNames.iconKey]),
+  };
+}
+
+function readSiteCustomFrontMatter(page, propertyNames, relatedSitePages = []) {
+  const properties = page.properties ?? {};
+  const fields = pageToSiteFields(page, propertyNames);
+  const generated = siteFieldsToFrontMatter(fields, relatedSitePages, propertyNames);
+  const config = readCustomFrontMatter(properties, propertyNames);
+  return [generated, config].filter(Boolean).join("\n").trim();
+}
+
+function siteFieldsToFrontMatter(fields, relatedSitePages, propertyNames) {
+  const key = fields.key.trim().toLowerCase();
+  const kind = fields.kind.trim().toLowerCase();
+  const slot = fields.slot.trim().toLowerCase();
+  const lines = [];
+
+  if (key === "profile" || kind === "profile" || slot === "sidebar.profile") {
+    if (fields.label) {
+      lines.push(`profile_name: ${yamlString(fields.label)}`);
+    }
+    if (fields.url) {
+      lines.push(`profile_url: ${yamlString(fields.url)}`);
+    }
+  }
+
+  if (slot === "footer.links" || ["privacy", "disclaimer", "contact"].includes(key)) {
+    const label = fields.label || fields.key;
+    if (label) {
+      lines.push(`footer_label: ${yamlString(label)}`);
+    }
+  }
+
+  if (key === "links") {
+    const links = relatedSitePages
+      .map((page) => pageToSiteFields(page, propertyNames))
+      .filter((entry) => entry.kind.trim().toLowerCase() === "link" && entry.slot.trim().toLowerCase() === "sidebar.links" && entry.url)
+      .sort((a, b) => (a.order - b.order) || a.label.localeCompare(b.label));
+    if (links.length > 0) {
+      lines.push("links:");
+      for (const link of links) {
+        lines.push(`  - label: ${yamlString(link.label || link.key)}`);
+        lines.push(`    href: ${yamlString(link.url)}`);
+        if (link.value) {
+          lines.push(`    note: ${yamlString(link.value)}`);
+        }
+      }
+    }
+  }
+
+  return lines.join("\n");
+}
+
 export function hasTemporaryNotionUrl(markdown) {
   return /https?:\/\/[^\s)"]*(notion-static\.com|notion\.site|amazonaws\.com)[^\s)"]*(X-Amz-|notion|secure)/i.test(
     markdown,
@@ -332,10 +426,11 @@ export async function fetchNotionContent(options = {}) {
   };
   const postPropertyNames = {
     ...propertyNames,
+    ...POST_DB_PROPERTIES,
     ...options.postPropertyNames,
   };
   const sitePropertyNames = {
-    ...SPLIT_SITE_PROPERTIES,
+    ...SITE_DB_PROPERTIES,
     ...options.sitePropertyNames,
   };
 
@@ -358,8 +453,8 @@ export async function fetchNotionContent(options = {}) {
   const exportedPosts = [];
   const exportedPages = [];
 
-  const exportStaticPage = async (page, names) => {
-    const staticPage = pageToStaticPage(page, names);
+  const exportStaticPage = async (page, names, relatedSitePages) => {
+    const staticPage = pageToStaticPage(page, names, relatedSitePages);
     const rawMarkdown = await convertPageToMarkdown(n2m, page.id);
     const bodyWithAssets = await downloadAndRewriteAssets(rawMarkdown, staticPage, root, mediaMode);
     assertNoUnsupportedGeneratedMarkdown(bodyWithAssets, staticPage.slug);
@@ -386,8 +481,8 @@ export async function fetchNotionContent(options = {}) {
     queryPublishedPages(notion, sourceConfig.siteDatabaseId, sitePropertyNames, status),
   ]);
 
-  for (const page of sitePages) {
-    await exportStaticPage(page, sitePropertyNames);
+  for (const page of sitePages.filter((sitePage) => shouldExportSitePage(sitePage, sitePropertyNames))) {
+    await exportStaticPage(page, sitePropertyNames, sitePages);
   }
   for (const page of postPages) {
     await exportPost(page, postPropertyNames);
@@ -997,6 +1092,10 @@ function readDate(property) {
 
 function readUrl(property) {
   return property?.type === "url" ? property.url ?? "" : "";
+}
+
+function readNumber(property) {
+  return property?.type === "number" && typeof property.number === "number" ? property.number : 0;
 }
 
 function readCheckbox(property, fallback = false) {
