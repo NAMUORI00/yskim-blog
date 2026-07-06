@@ -43,6 +43,8 @@ concurrency:
 env:
   CONTENT_SOURCE: notion
   NOTION_DATABASE_ID: ${{ vars.NOTION_DATABASE_ID }}
+  NOTION_POSTS_DATABASE_ID: ${{ vars.NOTION_POSTS_DATABASE_ID }}
+  NOTION_SITE_DATABASE_ID: ${{ vars.NOTION_SITE_DATABASE_ID }}
   NOTION_STATUS: ${{ github.event.inputs.notion_status || vars.NOTION_STATUS || 'Published' }}
   PUBLISH_BRANCH: ${{ github.event.inputs.production_branch || vars.PUBLISH_BRANCH || 'production' }}
 
@@ -78,8 +80,14 @@ jobs:
             echo "PUBLISH_BRANCH contains unsupported characters: ${PUBLISH_BRANCH}" >&2
             exit 1
           fi
-          if [[ -z "${NOTION_DATABASE_ID:-}" ]]; then
-            echo "NOTION_DATABASE_ID repository variable is required for Notion content." >&2
+          if [[ -n "${NOTION_POSTS_DATABASE_ID:-}" || -n "${NOTION_SITE_DATABASE_ID:-}" ]]; then
+            if [[ -z "${NOTION_POSTS_DATABASE_ID:-}" || -z "${NOTION_SITE_DATABASE_ID:-}" ]]; then
+              echo "Both NOTION_POSTS_DATABASE_ID and NOTION_SITE_DATABASE_ID repository variables are required for split Notion content." >&2
+              exit 1
+            fi
+          fi
+          if [[ -z "${NOTION_DATABASE_ID:-}" && ( -z "${NOTION_POSTS_DATABASE_ID:-}" || -z "${NOTION_SITE_DATABASE_ID:-}" ) ]]; then
+            echo "NOTION_DATABASE_ID or both NOTION_POSTS_DATABASE_ID and NOTION_SITE_DATABASE_ID repository variables are required for Notion content." >&2
             exit 1
           fi
           if [[ -z "${NOTION_TOKEN:-}" ]]; then

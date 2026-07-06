@@ -55,3 +55,37 @@ test("reports dry-run commands once the Notion token and database id exist", () 
   assert.equal(summary.productionSource, "notion");
   assert.equal(summary.publishBranch, "production");
 });
+
+test("accepts split Notion database variables instead of the legacy database id", () => {
+  const summary = summarizeNotionSetup({
+    repo: "NAMUORI00/yskim-blog",
+    secrets: new Map([["NOTION_TOKEN", "2026-06-12T07:30:00Z"]]),
+    variables: new Map([
+      ["CONTENT_SOURCE", "notion"],
+      ["NOTION_POSTS_DATABASE_ID", "posts-db"],
+      ["NOTION_SITE_DATABASE_ID", "site-db"],
+      ["NOTION_STATUS", "Published"],
+      ["PUBLISH_BRANCH", "production"],
+    ]),
+  });
+
+  assert.equal(summary.readyForNotionDryRun, true);
+  assert.deepEqual(summary.missing, []);
+  assert.doesNotMatch(summary.nextSteps.join("\n"), /NOTION_DATABASE_ID --body/);
+});
+
+test("requires both split Notion database variables when split mode is started", () => {
+  const summary = summarizeNotionSetup({
+    repo: "NAMUORI00/yskim-blog",
+    secrets: new Map([["NOTION_TOKEN", "2026-06-12T07:30:00Z"]]),
+    variables: new Map([
+      ["CONTENT_SOURCE", "notion"],
+      ["NOTION_POSTS_DATABASE_ID", "posts-db"],
+      ["NOTION_STATUS", "Published"],
+    ]),
+  });
+
+  assert.equal(summary.readyForNotionDryRun, false);
+  assert.deepEqual(summary.missing, ["NOTION_SITE_DATABASE_ID"]);
+  assert.match(summary.nextSteps.join("\n"), /gh variable set NOTION_SITE_DATABASE_ID --body/);
+});

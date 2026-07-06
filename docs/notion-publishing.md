@@ -141,16 +141,41 @@ Do not do partial updates at first. Full rebuild keeps unpublished, deleted, or 
 ## Needed before implementation
 
 - Notion integration token stored as a GitHub Actions secret.
-- Notion database id.
-- Exact database property names for status, slug, category, tags, summary, cover, canonical, and comments.
+- Split Notion database ids for Posts and Site content, or the legacy single database id during migration.
+- Exact database property names for status, slug, category, tags, summary, cover, canonical, comments, and site metadata.
 
 ## Current CMS setup
 
-The Notion CMS database has been created and configured outside this public repository.
+The Notion CMS databases are configured outside this public repository. The
+recommended structure uses two databases:
+
+- Posts DB: public blog posts.
+- Site DB: home intro, profile, address, links, privacy, disclaimer, contact,
+  and other non-post content.
+
+Posts DB columns:
+
+- `Title`: public post title.
+- `Status`: publish state. `Published` rows are exported.
+- `Slug`: URL slug and generated Markdown filename.
+- `Date`: publication date used for sorting and frontmatter.
+- `Category`: primary category used by archive URLs and the graph.
+- `Tags`: tag list used by post metadata and the graph.
+- `Summary`: list-card and meta-description summary.
+- Optional `Cover`, `Canonical`, `Comments`: cover image, canonical URL, and per-post comment toggle.
+
+Site DB columns:
+
+- `Title`: editor-facing page title.
+- `Status`: publish state. `Published` rows are exported.
+- `Slug`: static page key such as `home`, `profile`, `links`, `privacy`, `disclaimer`, or `contact`.
+- `Summary`: short description for generated frontmatter.
+- `Meta`: YAML frontmatter extension for structured profile, link, footer, and home UI data.
 
 GitHub Actions expects these values:
 
-- repository variable `NOTION_DATABASE_ID`;
+- repository variables `NOTION_POSTS_DATABASE_ID` and `NOTION_SITE_DATABASE_ID`;
+- legacy repository variable `NOTION_DATABASE_ID` only while migrating from the old single DB;
 - repository secret `NOTION_TOKEN`;
 - repository variable `CONTENT_SOURCE=notion`;
 - optional repository variable `NOTION_STATUS=Published` if the default should be explicit.

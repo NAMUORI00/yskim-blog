@@ -25,6 +25,8 @@ import {
   fileLinkTag,
   fileAttachmentTag,
   pdfEmbedTag,
+  resolveNotionSourceConfig,
+  selectLegacyFallbackPages,
   bookmarkTag,
   tweetTag,
   isTweetUrl,
@@ -160,6 +162,32 @@ test("maps Notion page records to static page metadata", () => {
       '    href: "https://namuori.net/"',
     ].join("\n"),
   });
+});
+
+test("maps split Site DB Meta column to static page frontmatter", () => {
+  const splitSitePage = {
+    ...notionStaticPage,
+    properties: {
+      Title: notionStaticPage.properties.Title,
+      Status: notionStaticPage.properties.Status,
+      Slug: notionStaticPage.properties.Slug,
+      Summary: notionStaticPage.properties.Summary,
+      Meta: {
+        type: "rich_text",
+        rich_text: [{ plain_text: 'footer_label: "Home"\nprofile_name: "KIM YUSEOK"' }],
+      },
+    },
+  };
+
+  const staticPage = pageToStaticPage(splitSitePage);
+
+  assert.equal(staticPage.date, "");
+  assert.deepEqual(staticPage.tags, []);
+  assert.equal(staticPage.comments, false);
+  assert.equal(staticPage.customFrontMatter, 'footer_label: "Home"\nprofile_name: "KIM YUSEOK"');
+
+  const document = buildStaticPageDocument(staticPage, "Body");
+  assert.match(document, /tags: \[\]/);
 });
 
 test("renders Notion-managed static page frontmatter", () => {
@@ -479,6 +507,69 @@ test("queries the current Notion data source API after resolving the database id
       },
     },
   ]);
+});
+
+test("queries split Site DB records without requiring a Date sort property", async () => {
+  const calls = [];
+  const notion = {
+    databases: {
+      retrieve: async (request) => {
+        calls.push({ type: "retrieve", request });
+        return { data_sources: [{ id: "site-data-source" }] };
+      },
+    },
+    dataSources: {
+      query: async (request) => {
+        calls.push({ type: "query", request });
+        return { results: [], has_more: false, next_cursor: null };
+      },
+    },
+  };
+
+  await queryPublishedPages(notion, "site-db", { status: "Status", date: "" }, "Published");
+
+  assert.deepEqual(calls[1], {
+    type: "query",
+    request: {
+      data_source_id: "site-data-source",
+      filter: {
+        property: "Status",
+        select: {
+          equals: "Published",
+        },
+      },
+      page_size: 100,
+      start_cursor: undefined,
+    },
+  });
+});
+
+test("resolves split Notion database variables without dropping legacy fallback", () => {
+  assert.deepEqual(
+    resolveNotionSourceConfig({}, {
+      NOTION_DATABASE_ID: "legacy-db",
+      NOTION_POSTS_DATABASE_ID: "posts-db",
+      NOTION_SITE_DATABASE_ID: "site-db",
+    }),
+    {
+      mode: "split",
+      databaseId: "legacy-db",
+      postsDatabaseId: "posts-db",
+      siteDatabaseId: "site-db",
+    },
+  );
+});
+
+test("selects only legacy pages whose slugs are missing from split databases", () => {
+  const splitPost = { properties: { Slug: { type: "rich_text", rich_text: [{ plain_text: "daily" }] } } };
+  const splitSite = { properties: { Slug: { type: "rich_text", rich_text: [{ plain_text: "home" }] } } };
+  const legacyDaily = { properties: { Slug: { type: "rich_text", rich_text: [{ plain_text: "daily" }] } } };
+  const legacyMarkdown = { properties: { Slug: { type: "rich_text", rich_text: [{ plain_text: "markdown" }] } } };
+
+  assert.deepEqual(
+    selectLegacyFallbackPages([splitPost], [splitSite], [legacyDaily, legacyMarkdown]),
+    [legacyMarkdown],
+  );
 });
 
 test("converts an empty Notion page to an empty Markdown body", async () => {

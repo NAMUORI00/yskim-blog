@@ -40,8 +40,9 @@ See `docs/notion-publishing.md` for Notion rules and
 
 ## Local development
 
-Authenticate with GitHub (`gh auth login`) and provide `NOTION_TOKEN` and
-`NOTION_DATABASE_ID` to fetch content.
+Authenticate with GitHub (`gh auth login`) and provide `NOTION_TOKEN` plus
+either the legacy `NOTION_DATABASE_ID` or both split database ids
+(`NOTION_POSTS_DATABASE_ID` and `NOTION_SITE_DATABASE_ID`) to fetch content.
 
 ```powershell
 npm install
@@ -64,8 +65,8 @@ npm run build    # outputs to dist/
 Generated `content/` and `static/images/` are ignored on `main`. They are
 force-added only by the production publishing workflow. `content/pages/`
 keeps committed source pages such as privacy/contact/disclaimer, while Notion
-rows with `Type=Page` can generate the home intro (`home`) or other static
-pages in the same folder.
+rows from the Site DB can generate the home intro (`home`), profile, links,
+privacy, disclaimer, contact, or other static pages in the same folder.
 
 Site configuration (title, author, giscus, search-engine verification codes,
 AdSense publisher id) lives in `src/config.ts`. The deployment URL is set as
@@ -104,10 +105,19 @@ Required GitHub Actions secrets:
 Required repository variables:
 
 - `CONTENT_SOURCE=notion`
-- `NOTION_DATABASE_ID`
+- `NOTION_POSTS_DATABASE_ID` and `NOTION_SITE_DATABASE_ID` for the split CMS
+  setup, or legacy `NOTION_DATABASE_ID` while migrating
 - `NOTION_STATUS=Published`
 - `PUBLISH_BRANCH=production` (optional; workflow default is `production`)
 - `NOTION_MEDIA_MODE` (`download` default, or `proxy`)
+
+Recommended Notion CMS structure:
+
+- Posts DB: `Title`, `Status`, `Slug`, `Date`, `Category`, `Tags`, `Summary`.
+- Site DB: `Title`, `Status`, `Slug`, `Summary`, `Meta`.
+
+Optional post columns such as `Cover`, `Canonical`, and `Comments` are still
+recognized when present.
 
 For the media `proxy` mode, the Pages project also needs a runtime
 `NOTION_TOKEN` secret and the `MEDIA_CACHE` KV binding (see `wrangler.toml`).
