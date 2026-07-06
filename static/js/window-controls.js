@@ -4,6 +4,10 @@
 
   const dragReset = document.querySelector("[data-window-drag-reset]");
   const railToggles = [...document.querySelectorAll("[data-drag-rail-toggle]")];
+  const rails = {
+    left: document.querySelector('[data-drag-rail="left"]'),
+    right: document.querySelector('[data-drag-rail="right"]'),
+  };
   const maximizeClass = "is-maximized";
   const minimizeClass = "is-minimized";
   const draggingClass = "is-dragging";
@@ -100,6 +104,25 @@
     updateDragMode();
   };
 
+  const getViewportSafeBounds = () => {
+    const safeMargin = 12;
+    const topBar = document.querySelector(".top-bar");
+    const footer = document.querySelector(".site-footer");
+    const topBarBottom = topBar?.getBoundingClientRect().bottom ?? 0;
+    const footerTop = footer?.getBoundingClientRect().top ?? window.innerHeight;
+    const top = Math.max(safeMargin, topBarBottom + safeMargin);
+    const bottom = Math.max(top + 96, Math.min(window.innerHeight - safeMargin, footerTop - safeMargin));
+
+    return {
+      left: safeMargin,
+      right: Math.max(safeMargin + 1, window.innerWidth - safeMargin),
+      top,
+      bottom,
+    };
+  };
+
+  const normalizeRange = (min, max) => (min <= max ? [min, max] : [max, min]);
+
   const clampPosition = (card, x, y) => {
     const state = stateFor(card);
     const rect = card.getBoundingClientRect();
@@ -107,12 +130,9 @@
     const baseRight = rect.right - state.x;
     const baseTop = rect.top - state.y;
     const baseBottom = rect.bottom - state.y;
-    const visibleX = Math.min(140, Math.max(72, rect.width * 0.3));
-    const visibleY = Math.min(96, Math.max(52, rect.height * 0.22));
-    const minX = visibleX - baseRight;
-    const maxX = window.innerWidth - visibleX - baseLeft;
-    const minY = 52 - baseBottom;
-    const maxY = window.innerHeight - visibleY - baseTop;
+    const bounds = getViewportSafeBounds();
+    const [minX, maxX] = normalizeRange(bounds.left - baseLeft, bounds.right - baseRight);
+    const [minY, maxY] = normalizeRange(bounds.top - baseTop, bounds.bottom - baseBottom);
 
     return {
       x: Math.min(maxX, Math.max(minX, x)),
@@ -205,11 +225,36 @@
     }
   };
 
+  const railContainsPoint = (rail, event) => {
+    if (!rail) return false;
+    const rect = rail.getBoundingClientRect();
+    return (
+      event.clientX >= rect.left
+      && event.clientX <= rect.right
+      && event.clientY >= rect.top
+      && event.clientY <= rect.bottom
+    );
+  };
+
   const updateRailPeek = (event) => {
     if (!document.body.classList.contains(dragModeClass) || activeDrag || pendingDrag) return;
     const threshold = 48;
-    document.body.classList.toggle(leftRailPeekClass, event.clientX <= threshold);
-    document.body.classList.toggle(rightRailPeekClass, window.innerWidth - event.clientX <= threshold);
+    const leftActive = (
+      event.clientX <= threshold
+      || (document.body.classList.contains(leftRailPeekClass) && railContainsPoint(rails.left, event))
+      || (document.body.classList.contains(leftRailOpenClass) && railContainsPoint(rails.left, event))
+    );
+    const rightActive = (
+      window.innerWidth - event.clientX <= threshold
+      || (document.body.classList.contains(rightRailPeekClass) && railContainsPoint(rails.right, event))
+      || (document.body.classList.contains(rightRailOpenClass) && railContainsPoint(rails.right, event))
+    );
+
+    document.body.classList.toggle(leftRailPeekClass, !document.body.classList.contains(leftRailOpenClass) && leftActive);
+    document.body.classList.toggle(rightRailPeekClass, !document.body.classList.contains(rightRailOpenClass) && rightActive);
+    document.body.classList.toggle(leftRailOpenClass, document.body.classList.contains(leftRailOpenClass) && leftActive);
+    document.body.classList.toggle(rightRailOpenClass, document.body.classList.contains(rightRailOpenClass) && rightActive);
+    updateRailButtons();
   };
 
   const setExpandedState = (card) => {
