@@ -100,11 +100,9 @@ test("profile and sidebar asides expose contextual landmark labels", async () =>
   assert.match(sidebar, /id="blog-sidebar"/);
   assert.match(sidebar, /data-drag-rail="right"/);
   assert.match(sidebar, /class="blog-sidebar-panel"/);
-  assert.match(base, /class="rail-dock-layer"/);
-  assert.match(base, /data-drag-rail-toggle="left"/);
-  assert.match(base, /data-drag-rail-toggle="right"/);
-  assert.match(base, /aria-controls="profile-rail"/);
-  assert.match(base, /aria-controls="blog-sidebar"/);
+  assert.doesNotMatch(base, /class="rail-dock-layer"/);
+  assert.doesNotMatch(base, /data-drag-rail-toggle/);
+  assert.doesNotMatch(base, /aria-controls="profile-rail"|aria-controls="blog-sidebar"/);
   assert.match(base, /class="site-footer__inner"/);
   assert.match(base, /class="site-footer__license"/);
   assert.match(base, /class="footer-primary"/);
@@ -197,25 +195,14 @@ test("site css applies shell surface polish and keeps the mobile graph visible",
   assert.match(activeRule.body, /background:\s*var\(--accent-soft\)/);
   assert.match(activeRule.body, /border-color:\s*var\(--accent-border\)/);
   assert.match(ruleForSelector(css, ".top-bar-categories").body, /position:\s*relative/);
-  assert.match(ruleForSelector(css, ".rail-dock-layer").body, /pointer-events:\s*none/);
-  assert.match(ruleForSelector(css, ".rail-dock-layer").body, /z-index:\s*40/);
-  assert.match(ruleForSelector(css, ".rail-dock").body, /display:\s*none/);
-  assert.match(ruleForSelector(css, "body.has-window-drag-mode .rail-dock").body, /display:\s*inline-flex/);
+  assert.doesNotMatch(css, /\.rail-dock|data-drag-rail-toggle/);
   assert.match(ruleForSelector(css, "body.has-window-drag-mode .site-shell").body, /--content-column-max:\s*min\(1240px,\s*calc\(100vw - 96px\)\)/);
   assert.match(ruleForSelector(css, "body.has-window-drag-mode .content-column").body, /position:\s*relative/);
   assert.match(ruleForSelector(css, "body.has-window-drag-mode .content-column").body, /z-index:\s*60/);
   assert.match(ruleForSelectors(css, ["body.has-window-drag-mode .profile-rail", "body.has-window-drag-mode .blog-sidebar"]).body, /position:\s*fixed/);
   assert.match(ruleForSelectors(css, ["body.has-window-drag-mode .profile-rail", "body.has-window-drag-mode .blog-sidebar"]).body, /z-index:\s*92/);
-  assert.match(ruleForSelectors(css, [
-    "body.has-window-drag-mode.is-rail-left-open .rail-dock--left",
-    "body.has-window-drag-mode.is-rail-left-peeking .rail-dock--left",
-  ]).body, /opacity:\s*0/);
-  assert.match(ruleForSelectors(css, [
-    "body.has-window-drag-mode.is-rail-right-open .rail-dock--right",
-    "body.has-window-drag-mode.is-rail-right-peeking .rail-dock--right",
-  ]).body, /opacity:\s*0/);
-  assert.match(ruleForSelector(css, "body.has-window-drag-mode:not(.is-rail-left-open):not(.is-rail-left-peeking) .profile-rail").body, /translateX\(calc\(-100% - var\(--space-5\)\)\)/);
-  assert.match(ruleForSelector(css, "body.has-window-drag-mode:not(.is-rail-right-open):not(.is-rail-right-peeking) .blog-sidebar").body, /translateX\(calc\(100% \+ var\(--space-5\)\)\)/);
+  assert.match(ruleForSelector(css, "body.has-window-drag-mode:not(.is-rail-left-peeking) .profile-rail").body, /translateX\(calc\(-100% - var\(--space-5\)\)\)/);
+  assert.match(ruleForSelector(css, "body.has-window-drag-mode:not(.is-rail-right-peeking) .blog-sidebar").body, /translateX\(calc\(100% \+ var\(--space-5\)\)\)/);
   assert.match(ruleForSelector(css, ".top-bar-category-menu").body, /position:\s*absolute/);
   assert.match(ruleForSelector(css, ".top-bar-left").body, /justify-content:\s*flex-start/);
   assert.match(ruleForSelector(css, ".top-bar-left").body, /gap:\s*clamp\(24px,\s*4vw,\s*72px\)/);

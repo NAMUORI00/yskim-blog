@@ -34,12 +34,16 @@ test("content windows expose real filebar controls without a separate move butto
   }
 });
 
-test("top search hosts the content-window drag reset control", async () => {
-  const topBar = await readFile(files.topBar, "utf8");
+test("base layout hosts the floating content-window drag reset control", async () => {
+  const [base, topBar] = await Promise.all([
+    readFile(files.base, "utf8"),
+    readFile(files.topBar, "utf8"),
+  ]);
 
-  assert.match(topBar, /class="top-bar-drag-reset"/);
-  assert.match(topBar, /data-window-drag-reset/);
-  assert.match(topBar, /aria-label="창 위치 초기화"/);
+  assert.match(base, /class="top-bar-drag-reset"/);
+  assert.match(base, /data-window-drag-reset/);
+  assert.match(base, /aria-label="창 위치 초기화"/);
+  assert.doesNotMatch(topBar, /data-window-drag-reset/);
 });
 
 test("window controls close only restores a maximized card", async () => {
@@ -66,7 +70,7 @@ test("window controls drag directly from the filebar and reset without recenteri
   assert.match(script, /const dragState = new WeakMap\(\)/);
   assert.match(script, /const draggingClass = "is-dragging"/);
   assert.match(script, /const dragModeClass = "has-window-drag-mode"/);
-  assert.match(script, /const railToggles = \[\.\.\.document\.querySelectorAll\("\[data-drag-rail-toggle\]"\)\]/);
+  assert.doesNotMatch(script, /railToggles|data-drag-rail-toggle/);
   assert.match(script, /--window-drag-x/);
   assert.match(script, /--window-drag-y/);
   assert.match(script, /setPointerCapture/);
@@ -77,8 +81,6 @@ test("window controls drag directly from the filebar and reset without recenteri
   assert.match(script, /const normalizeRange = \(min, max\) =>/);
   assert.match(script, /const updateDragMode = \(\) => \{/);
   assert.match(script, /card\.classList\.contains\(maximizeClass\)/);
-  assert.match(script, /is-rail-left-open/);
-  assert.match(script, /is-rail-right-open/);
   assert.match(script, /is-rail-left-peeking/);
   assert.match(script, /is-rail-right-peeking/);
   assert.match(script, /window\.addEventListener\("pointermove", updateRailPeek\)/);
@@ -92,7 +94,7 @@ test("window controls drag directly from the filebar and reset without recenteri
   assert.doesNotMatch(minimizeBody, /resetDraggedWindows\(|--window-drag-x|--window-drag-y/);
 });
 
-test("window controls keep peeking rails available until the pointer leaves them", async () => {
+test("window controls keep peeking rails available until the pointer leaves them without dock buttons", async () => {
   const script = await readFile(files.script, "utf8");
 
   assert.match(script, /const rails = \{/);
@@ -103,8 +105,9 @@ test("window controls keep peeking rails available until the pointer leaves them
   assert.match(script, /event\.clientY <= rect\.bottom/);
   assert.match(script, /document\.body\.classList\.contains\(leftRailPeekClass\) && railContainsPoint\(rails\.left, event\)/);
   assert.match(script, /document\.body\.classList\.contains\(rightRailPeekClass\) && railContainsPoint\(rails\.right, event\)/);
-  assert.match(script, /!document\.body\.classList\.contains\(leftRailOpenClass\) && leftActive/);
-  assert.match(script, /!document\.body\.classList\.contains\(rightRailOpenClass\) && rightActive/);
+  assert.match(script, /document\.body\.classList\.toggle\(leftRailPeekClass, leftActive\)/);
+  assert.match(script, /document\.body\.classList\.toggle\(rightRailPeekClass, rightActive\)/);
+  assert.doesNotMatch(script, /leftRailOpenClass|rightRailOpenClass|updateRailButtons|data-drag-rail-toggle/);
 });
 
 test("window control css defines minimized and maximized states", async () => {
@@ -119,7 +122,10 @@ test("window control css defines minimized and maximized states", async () => {
   assert.match(css, /\.readme-card\.is-dragging/);
   assert.match(css, /\.readme-card\.is-dragging\s*>\s*\.filebar\s*\{[\s\S]*?cursor:\s*grabbing/s);
   assert.match(css, /\.readme-card\.is-maximized\s*\{[\s\S]*?z-index:\s*180/s);
-  assert.match(css, /\.top-bar-drag-reset/);
+  assert.match(css, /\.top-bar-drag-reset\s*\{[\s\S]*?position:\s*fixed/s);
+  assert.match(css, /\.top-bar-drag-reset\s*\{[\s\S]*?right:\s*var\(--space-5\)/s);
+  assert.match(css, /\.top-bar-drag-reset\s*\{[\s\S]*?bottom:\s*calc\(var\(--footer-reserved\) \+ var\(--space-3\)\)/s);
+  assert.doesNotMatch(css, /\.top-bar-drag-reset\s*\{[\s\S]*?top:\s*calc\(100% \+ var\(--space-2\)\)/s);
   assert.match(css, /\.top-bar-drag-reset\[hidden\]/);
   assert.doesNotMatch(css, /\.filebar-control--move|is-drag-armed/);
   assert.match(css, /\.filebar-control--close/);

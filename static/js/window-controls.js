@@ -3,7 +3,6 @@
   if (windows.length === 0) return;
 
   const dragReset = document.querySelector("[data-window-drag-reset]");
-  const railToggles = [...document.querySelectorAll("[data-drag-rail-toggle]")];
   const rails = {
     left: document.querySelector('[data-drag-rail="left"]'),
     right: document.querySelector('[data-drag-rail="right"]'),
@@ -14,8 +13,6 @@
   const draggedClass = "is-dragged";
   const dragModeClass = "has-window-drag-mode";
   const maximizedBodyClass = "has-maximized-content-window";
-  const leftRailOpenClass = "is-rail-left-open";
-  const rightRailOpenClass = "is-rail-right-open";
   const leftRailPeekClass = "is-rail-left-peeking";
   const rightRailPeekClass = "is-rail-right-peeking";
   const dragState = new WeakMap();
@@ -36,18 +33,7 @@
   };
 
   const clearRailState = () => {
-    document.body.classList.remove(leftRailOpenClass, rightRailOpenClass, leftRailPeekClass, rightRailPeekClass);
-    railToggles.forEach((button) => button.setAttribute("aria-expanded", "false"));
-  };
-
-  const updateRailButtons = () => {
-    railToggles.forEach((button) => {
-      const side = button.dataset.dragRailToggle;
-      const open = side === "left"
-        ? document.body.classList.contains(leftRailOpenClass)
-        : document.body.classList.contains(rightRailOpenClass);
-      button.setAttribute("aria-expanded", String(open));
-    });
+    document.body.classList.remove(leftRailPeekClass, rightRailPeekClass);
   };
 
   const updateDragReset = () => {
@@ -67,7 +53,6 @@
       clearRailState();
     }
     updateDragReset();
-    updateRailButtons();
   };
 
   const updateMaximizedBodyState = () => {
@@ -242,19 +227,14 @@
     const leftActive = (
       event.clientX <= threshold
       || (document.body.classList.contains(leftRailPeekClass) && railContainsPoint(rails.left, event))
-      || (document.body.classList.contains(leftRailOpenClass) && railContainsPoint(rails.left, event))
     );
     const rightActive = (
       window.innerWidth - event.clientX <= threshold
       || (document.body.classList.contains(rightRailPeekClass) && railContainsPoint(rails.right, event))
-      || (document.body.classList.contains(rightRailOpenClass) && railContainsPoint(rails.right, event))
     );
 
-    document.body.classList.toggle(leftRailPeekClass, !document.body.classList.contains(leftRailOpenClass) && leftActive);
-    document.body.classList.toggle(rightRailPeekClass, !document.body.classList.contains(rightRailOpenClass) && rightActive);
-    document.body.classList.toggle(leftRailOpenClass, document.body.classList.contains(leftRailOpenClass) && leftActive);
-    document.body.classList.toggle(rightRailOpenClass, document.body.classList.contains(rightRailOpenClass) && rightActive);
-    updateRailButtons();
+    document.body.classList.toggle(leftRailPeekClass, leftActive);
+    document.body.classList.toggle(rightRailPeekClass, rightActive);
   };
 
   const setExpandedState = (card) => {
@@ -326,20 +306,6 @@
     }
     minimize(card);
   };
-
-  railToggles.forEach((button) => {
-    button.addEventListener("click", () => {
-      if (!document.body.classList.contains(dragModeClass)) return;
-      const side = button.dataset.dragRailToggle;
-      if (side === "left") {
-        document.body.classList.toggle(leftRailOpenClass);
-      }
-      if (side === "right") {
-        document.body.classList.toggle(rightRailOpenClass);
-      }
-      updateRailButtons();
-    });
-  });
 
   windows.forEach((card) => {
     setExpandedState(card);
