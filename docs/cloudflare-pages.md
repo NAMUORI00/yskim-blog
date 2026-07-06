@@ -50,7 +50,6 @@ Register these repository variables in the same settings area:
 | `CONTENT_SOURCE`           | Set to `notion`                                                    |
 | `NOTION_POSTS_DATABASE_ID` | Private Notion Posts DB id for blog posts                          |
 | `NOTION_SITE_DATABASE_ID`  | Private Notion Site DB id for home/profile/links/legal pages       |
-| `NOTION_DATABASE_ID`       | Legacy single CMS database id; keep only while migrating if needed |
 | `NOTION_STATUS`            | Optional Notion status filter. Defaults to `Published`             |
 | `PUBLISH_BRANCH`           | Optional deploy branch. Defaults to `production`                   |
 

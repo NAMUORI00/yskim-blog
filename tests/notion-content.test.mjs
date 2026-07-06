@@ -26,7 +26,6 @@ import {
   fileAttachmentTag,
   pdfEmbedTag,
   resolveNotionSourceConfig,
-  selectLegacyFallbackPages,
   bookmarkTag,
   tweetTag,
   isTweetUrl,
@@ -544,7 +543,7 @@ test("queries split Site DB records without requiring a Date sort property", asy
   });
 });
 
-test("resolves split Notion database variables without dropping legacy fallback", () => {
+test("resolves only split Notion database variables", () => {
   assert.deepEqual(
     resolveNotionSourceConfig({}, {
       NOTION_DATABASE_ID: "legacy-db",
@@ -553,22 +552,16 @@ test("resolves split Notion database variables without dropping legacy fallback"
     }),
     {
       mode: "split",
-      databaseId: "legacy-db",
       postsDatabaseId: "posts-db",
       siteDatabaseId: "site-db",
     },
   );
 });
 
-test("selects only legacy pages whose slugs are missing from split databases", () => {
-  const splitPost = { properties: { Slug: { type: "rich_text", rich_text: [{ plain_text: "daily" }] } } };
-  const splitSite = { properties: { Slug: { type: "rich_text", rich_text: [{ plain_text: "home" }] } } };
-  const legacyDaily = { properties: { Slug: { type: "rich_text", rich_text: [{ plain_text: "daily" }] } } };
-  const legacyMarkdown = { properties: { Slug: { type: "rich_text", rich_text: [{ plain_text: "markdown" }] } } };
-
-  assert.deepEqual(
-    selectLegacyFallbackPages([splitPost], [splitSite], [legacyDaily, legacyMarkdown]),
-    [legacyMarkdown],
+test("rejects legacy-only Notion database settings", () => {
+  assert.throws(
+    () => resolveNotionSourceConfig({}, { NOTION_DATABASE_ID: "legacy-db" }),
+    /NOTION_POSTS_DATABASE_ID and NOTION_SITE_DATABASE_ID/,
   );
 });
 

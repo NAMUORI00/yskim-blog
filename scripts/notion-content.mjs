@@ -305,51 +305,20 @@ async function removeGeneratedStaticPages(pagesDir) {
 }
 
 export function resolveNotionSourceConfig(options = {}, env = process.env) {
-  const databaseId = cleanSourceId(options.databaseId ?? env.NOTION_DATABASE_ID);
   const postsDatabaseId = cleanSourceId(options.postsDatabaseId ?? env.NOTION_POSTS_DATABASE_ID);
   const siteDatabaseId = cleanSourceId(options.siteDatabaseId ?? env.NOTION_SITE_DATABASE_ID);
 
-  if (postsDatabaseId || siteDatabaseId) {
-    if (!postsDatabaseId || !siteDatabaseId) {
-      throw new Error(
-        "Both NOTION_POSTS_DATABASE_ID and NOTION_SITE_DATABASE_ID are required when using split Notion databases.",
-      );
-    }
-    return {
-      mode: "split",
-      databaseId,
-      postsDatabaseId,
-      siteDatabaseId,
-    };
-  }
-
-  if (databaseId) {
-    return {
-      mode: "legacy",
-      databaseId,
-      postsDatabaseId: "",
-      siteDatabaseId: "",
-    };
+  if (!postsDatabaseId || !siteDatabaseId) {
+    throw new Error(
+      "Both NOTION_POSTS_DATABASE_ID and NOTION_SITE_DATABASE_ID are required for Notion content.",
+    );
   }
 
   return {
-    mode: "missing",
-    databaseId: "",
-    postsDatabaseId: "",
-    siteDatabaseId: "",
+    mode: "split",
+    postsDatabaseId,
+    siteDatabaseId,
   };
-}
-
-export function selectLegacyFallbackPages(postPages, sitePages, legacyPages, propertyNames = DEFAULT_PROPERTIES) {
-  const splitSlugs = new Set(
-    [...postPages, ...sitePages]
-      .map((page) => pageSlug(page, propertyNames))
-      .filter(Boolean),
-  );
-  return legacyPages.filter((page) => {
-    const slug = pageSlug(page, propertyNames);
-    return slug && !splitSlugs.has(slug);
-  });
 }
 
 export async function fetchNotionContent(options = {}) {
@@ -372,11 +341,6 @@ export async function fetchNotionContent(options = {}) {
 
   if (!token) {
     throw new Error("Missing NOTION_TOKEN. Create a read-only Notion integration and store it as a secret.");
-  }
-  if (sourceConfig.mode === "missing") {
-    throw new Error(
-      "Missing Notion database settings. Set NOTION_DATABASE_ID or both NOTION_POSTS_DATABASE_ID and NOTION_SITE_DATABASE_ID.",
-    );
   }
 
   const [{ Client }, { NotionToMarkdown }] = await Promise.all([
@@ -417,50 +381,22 @@ export async function fetchNotionContent(options = {}) {
     exportedPosts.push(post);
   };
 
-  if (sourceConfig.mode === "split") {
-    const [postPages, sitePages] = await Promise.all([
-      queryPublishedPages(notion, sourceConfig.postsDatabaseId, postPropertyNames, status),
-      queryPublishedPages(notion, sourceConfig.siteDatabaseId, sitePropertyNames, status),
-    ]);
-    const legacyFallbackPages = sourceConfig.databaseId
-      ? selectLegacyFallbackPages(
-          postPages,
-          sitePages,
-          await queryPublishedPages(notion, sourceConfig.databaseId, propertyNames, status),
-          propertyNames,
-        )
-      : [];
+  const [postPages, sitePages] = await Promise.all([
+    queryPublishedPages(notion, sourceConfig.postsDatabaseId, postPropertyNames, status),
+    queryPublishedPages(notion, sourceConfig.siteDatabaseId, sitePropertyNames, status),
+  ]);
 
-    for (const page of sitePages) {
-      await exportStaticPage(page, sitePropertyNames);
-    }
-    for (const page of postPages) {
-      await exportPost(page, postPropertyNames);
-    }
-    for (const page of legacyFallbackPages) {
-      if (isStaticPageRecord(page, propertyNames)) {
-        await exportStaticPage(page, propertyNames);
-        continue;
-      }
-      await exportPost(page, propertyNames);
-    }
-  } else {
-    const pages = await queryPublishedPages(notion, sourceConfig.databaseId, propertyNames, status);
-    for (const page of pages) {
-      if (isStaticPageRecord(page, propertyNames)) {
-        await exportStaticPage(page, propertyNames);
-        continue;
-      }
-
-      await exportPost(page, propertyNames);
-    }
+  for (const page of sitePages) {
+    await exportStaticPage(page, sitePropertyNames);
+  }
+  for (const page of postPages) {
+    await exportPost(page, postPropertyNames);
   }
 
   await organizePostsByCategory(path.join(root, GENERATED_POSTS_DIR));
   await writeContentSourceMeta(root, {
     provider: "notion",
     sourceMode: sourceConfig.mode,
-    databaseId: sourceConfig.databaseId,
     postsDatabaseId: sourceConfig.postsDatabaseId,
     siteDatabaseId: sourceConfig.siteDatabaseId,
     status,
@@ -990,8 +926,7 @@ async function writeContentSourceMeta(root, meta) {
   await mkdir(dataDir, { recursive: true });
   const yaml = [
     `provider: ${yamlString(meta.provider)}`,
-    `source_mode: ${yamlString(meta.sourceMode ?? "legacy")}`,
-    `database_id: ${yamlString(meta.databaseId)}`,
+    `source_mode: ${yamlString(meta.sourceMode ?? "split")}`,
     `posts_database_id: ${yamlString(meta.postsDatabaseId ?? "")}`,
     `site_database_id: ${yamlString(meta.siteDatabaseId ?? "")}`,
     `status: ${yamlString(meta.status)}`,
@@ -1017,10 +952,6 @@ function readCustomFrontMatter(properties, propertyNames) {
     readPlainText(properties[propertyNames.meta]) ||
     readPlainText(properties[propertyNames.customFrontMatter])
   );
-}
-
-function pageSlug(page, propertyNames) {
-  return readPlainText((page.properties ?? {})[propertyNames.slug]);
 }
 
 function readPlainText(property) {
