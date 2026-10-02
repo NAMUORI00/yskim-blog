@@ -1,12 +1,23 @@
 ---
 import Base from "../../layouts/Base.astro";
-import PostListWindow from "../../components/PostListWindow.astro";
+import ArchiveView from "../../components/ArchiveView.astro";
 import { UI } from "../../config";
-import { getPublishedPosts } from "../../lib/posts";
+import { archiveFacets, getTaxonomy, listItems } from "../../lib/posts";
+import { paginate } from "../../lib/taxonomy.mjs";
 
-const posts = await getPublishedPosts();
+const taxonomy = await getTaxonomy();
+const pages = paginate(taxonomy.posts);
 ---
 
 <Base title={UI.allPosts} description="공개 발행된 노트와 글.">
-  <PostListWindow label="아카이브" title={UI.allPosts} posts={posts} />
+  <ArchiveView
+    kicker="Archive"
+    title={UI.allPosts}
+    total={taxonomy.posts.length}
+    posts={listItems(taxonomy, pages[0])}
+    base="/posts/"
+    page={1}
+    pages={pages.length}
+    facets={archiveFacets(taxonomy)}
+  />
 </Base>

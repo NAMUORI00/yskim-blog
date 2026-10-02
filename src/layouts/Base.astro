@@ -5,6 +5,7 @@ import Seo from "../components/Seo.astro";
 import TopBar from "../components/TopBar.astro";
 import ProfileRail from "../components/ProfileRail.astro";
 import Sidebar from "../components/Sidebar.astro";
+import KnowledgeGraph from "../components/KnowledgeGraph.astro";
 import BackToTop from "../components/BackToTop.svelte";
 import "../styles/enhance.css";
 
@@ -74,6 +75,7 @@ const footerPages = footerPageSlugs
     </noscript>
     <script is:inline>
       (() => {
+        document.documentElement.classList.add("js");
         try {
           const saved = localStorage.getItem("yskim-theme");
           const preferred = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
@@ -87,6 +89,7 @@ const footerPages = footerPageSlugs
       })();
     </script>
     <link rel="stylesheet" href={`/css/site.css?v=${ASSET_VERSION}`} />
+    <link rel="stylesheet" href={`/css/knowledge-map.css?v=${ASSET_VERSION}`} />
     <link rel="alternate" type="application/rss+xml" title={SITE.title} href={rss} />
     <Seo {...seo} />
     {math && (
@@ -98,7 +101,6 @@ const footerPages = footerPageSlugs
       />
     )}
     <script src={`/js/theme.js?v=${ASSET_VERSION}`} defer></script>
-    <script src={`/js/window-controls.js?v=${ASSET_VERSION}`} defer></script>
     <script src={`/js/embeds.js?v=${ASSET_VERSION}`} defer></script>
     {SITE.adsensePublisherId && (
       <script
@@ -115,20 +117,17 @@ const footerPages = footerPageSlugs
         document.body.classList.add("theme-" + theme);
       })();
     </script>
+    <a class="skip-link" href="#main">본문으로 건너뛰기</a>
     <TopBar />
-    <button class="top-bar-drag-reset" type="button" hidden data-window-drag-reset aria-label="창 위치 초기화">
-      <svg viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M3 12a9 9 0 1 0 3-6.7" />
-        <path d="M3 4v6h6" />
-      </svg>
-      <span>위치 초기화</span>
-    </button>
     <div class="site-shell">
       <ProfileRail />
-      <div class="content-column">
-        <main>
+      <div class="content-column" data-drawer-inert>
+        <main id="main" tabindex="-1">
           <slot />
         </main>
+        <div class="km-compact-slot">
+          <KnowledgeGraph variant="compact" />
+        </div>
         <footer class="site-footer">
           <div class="site-footer__inner">
             <span class="site-footer__license">{UI.footerCopyright}</span>
@@ -150,6 +149,7 @@ const footerPages = footerPageSlugs
       </div>
       <Sidebar />
     </div>
+    <div class="drawer-scrim" data-drawer-scrim hidden></div>
     <BackToTop client:idle />
   </body>
 </html>

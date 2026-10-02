@@ -1,0 +1,61 @@
+---
+// What to read next, from the same metadata as the knowledge map: posts that
+// share topics, the category, or a body link — each with the reason shown.
+import type { TaxonomyPost } from "../lib/posts";
+
+interface Related {
+  post: TaxonomyPost;
+  sharedTags: { label: string; url: string }[];
+  sameCategory: boolean;
+  linked: "to" | "from" | "both" | null;
+}
+
+interface Props {
+  related: Related[];
+  newer: TaxonomyPost | null;
+  older: TaxonomyPost | null;
+}
+
+const { related, newer, older } = Astro.props;
+const day = (post: TaxonomyPost) => post.date.toISOString().slice(0, 10);
+const linkLabel = { to: "이 글이 링크함", from: "이 글을 링크함", both: "서로 링크" } as const;
+---
+
+{(related.length > 0 || newer || older) && (
+  <footer class="article-footer">
+    {related.length > 0 && (
+      <section class="related" aria-labelledby="related-title">
+        <h2 id="related-title" class="article-footer__title">이어 읽기</h2>
+        <ul class="related-list">
+          {related.map((item) => (
+            <li class="related-item">
+              <a class="related-item__link" href={item.post.url}>{item.post.title}</a>
+              <p class="related-item__meta">
+                <time datetime={day(item.post)}>{day(item.post)}</time>
+                {item.linked && <span class="related-reason">{linkLabel[item.linked]}</span>}
+                {item.sharedTags.slice(0, 3).map((tag) => <span class="related-reason">#{tag.label}</span>)}
+                {item.sameCategory && <span class="related-reason">같은 카테고리</span>}
+              </p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )}
+    {(newer || older) && (
+      <nav class="article-adjacent" aria-label="이전 글과 다음 글">
+        {older ? (
+          <a class="article-adjacent__link article-adjacent__link--older" href={older.url} rel="prev">
+            <span>이전 글</span>
+            <strong>{older.title}</strong>
+          </a>
+        ) : <span class="article-adjacent__empty" aria-hidden="true"></span>}
+        {newer ? (
+          <a class="article-adjacent__link article-adjacent__link--newer" href={newer.url} rel="next">
+            <span>다음 글</span>
+            <strong>{newer.title}</strong>
+          </a>
+        ) : <span class="article-adjacent__empty" aria-hidden="true"></span>}
+      </nav>
+    )}
+  </footer>
+)}

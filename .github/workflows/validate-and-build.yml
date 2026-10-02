@@ -114,6 +114,9 @@ jobs:
         shell: bash
         run: bash .github/scripts/fetch-github-profile.sh
 
+      - name: Test content and design behavior
+        run: npm test
+
       - name: Build site
         run: npm run build
 

@@ -1,36 +1,61 @@
 ---
-import { SITE, ASSET_VERSION } from "../config";
-import { getPublishedPosts, postUrl, categoryUrl, tagUrl, slugifyTerm } from "../lib/posts";
-import { buildKnowledgeGraph, createVisualGraphSubset } from "../lib/knowledge-graph-data.mjs";
+// Knowledge map host. The Svelte island draws the map from the build's
+// /knowledge-map.json; the list below is the same information as plain links,
+// shown without JavaScript or if the map cannot load.
+import { ASSET_VERSION } from "../config";
+import KnowledgeMap from "./knowledge-map/KnowledgeMap.svelte";
+import { getTaxonomy } from "../lib/posts";
+import { postNodeId } from "../lib/knowledge-graph-data.mjs";
+import { UNCATEGORIZED_ID } from "../lib/taxonomy.mjs";
 
-const allPosts = await getPublishedPosts();
+interface Props {
+  variant?: "rail" | "compact";
+}
+
+const { variant = "rail" } = Astro.props;
+const taxonomy = await getTaxonomy();
 const match = Astro.url.pathname.match(/^\/posts\/([^/]+)\/?$/);
 const currentSlug = match ? decodeURIComponent(match[1]) : undefined;
-
-const fullGraph = buildKnowledgeGraph({
-  posts: allPosts,
-  handle: SITE.handle,
-  currentSlug,
-  postUrl,
-  categoryUrl,
-  tagUrl,
-  slugifyTerm,
-});
-const graphObject = createVisualGraphSubset(fullGraph, { maxNodes: 72 });
-const graph = JSON.stringify(graphObject);
-const hasGraph = graphObject.nodes.length > 1;
+const currentPost = currentSlug ? taxonomy.bySlug.get(currentSlug) : undefined;
+const currentCategory = currentPost && currentPost.categoryIds[0] !== UNCATEGORIZED_ID ? taxonomy.categoryById.get(currentPost.categoryIds[0]) : undefined;
+const currentTags = currentPost ? currentPost.tagIds.map((id) => taxonomy.tagById.get(id)!) : [];
+const src = `/knowledge-map.json?v=${ASSET_VERSION}`;
 ---
 
-{hasGraph && (
-  <section class="sidebar-card sidebar-graph-card">
-    <div class="knowledge-graph-heading">
-      <p class="sidebar-title">지식 그래프</p>
-      <span>{graphObject.nodes.length} nodes</span>
+<div class={`km-host km-host--${variant}`} data-km-host>
+  {taxonomy.posts.length > 0 && (
+    <KnowledgeMap client:visible src={src} current={currentPost ? postNodeId(currentPost.slug) : null} variant={variant} />
+  )}
+  {variant === "rail" && (
+    <div class="km-fallback">
+      {taxonomy.posts.length === 0 && <p class="km-hint">아직 발행된 글이 없습니다.</p>}
+      {currentPost && (
+        <section class="km-fallback__section" aria-label="지금 읽는 글">
+          <p class="km-detail-kicker">지금 읽는 글</p>
+          <p class="km-detail-title">{currentPost.title}</p>
+          <p class="kg3-meta">
+            {currentPost.date.toISOString().slice(0, 10)}
+            {currentCategory && <> · <a href={currentCategory.url}>{currentCategory.label}</a></>}
+          </p>
+          {currentTags.length > 0 && (
+            <ul class="km-chips">
+              {currentTags.map((tag) => <li><a class="km-chip" href={tag.url}>#{tag.label}</a></li>)}
+            </ul>
+          )}
+        </section>
+      )}
+      {taxonomy.categories.length > 0 && (
+        <section class="km-fallback__section" aria-label="카테고리">
+          <p class="km-detail-kicker">카테고리 <b>{taxonomy.categories.length}</b></p>
+          <ul class="km-chips">
+            {taxonomy.categories.map((category) => (
+              <li>
+                <a class="km-chip" href={category.url ?? "/posts/"}>{category.label} <b>{category.count}</b></a>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </div>
-    <div class="sidebar-graph-canvas" data-knowledge-graph>
-      <template class="knowledge-graph-data">{graph}</template>
-      <canvas class="knowledge-graph-canvas" aria-hidden="true"></canvas>
-    </div>
-  </section>
-  <script src={`/js/knowledge-graph.js?v=${ASSET_VERSION}`} is:inline defer></script>
-)}
+  )}
+</div>

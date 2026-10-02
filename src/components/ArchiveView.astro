@@ -1,0 +1,55 @@
+---
+import Pagination from "./Pagination.astro";
+import PostList from "./PostList.astro";
+import type { PostListItem } from "../lib/posts";
+
+interface Facet {
+  label: string;
+  url: string | null;
+  count: number;
+}
+
+interface Props {
+  kicker: string;
+  title: string;
+  description?: string;
+  total: number;
+  posts: PostListItem[];
+  base: string;
+  page: number;
+  pages: number;
+  facets?: { label: string; items: Facet[] };
+  emptyText?: string;
+}
+
+const { kicker, title, description, total, posts, base, page, pages, facets, emptyText } = Astro.props;
+---
+
+<section class="archive" aria-labelledby="archive-title">
+  <header class="page-head">
+    <p class="eyebrow">{kicker}</p>
+    <h1 id="archive-title">{title}</h1>
+    <p class="page-head__meta">
+      글 {total}개{pages > 1 && <span> · {page} / {pages} 페이지</span>}
+    </p>
+    {description && <p class="page-head__desc">{description}</p>}
+    {facets && facets.items.length > 0 && (
+      <nav class="facet-list" aria-label={facets.label}>
+        <span class="facet-list__label">{facets.label}</span>
+        <ul>
+          {facets.items.map((item) => (
+            <li>
+              {item.url ? (
+                <a href={item.url}>{item.label} <b>{item.count}</b></a>
+              ) : (
+                <span>{item.label} <b>{item.count}</b></span>
+              )}
+            </li>
+          ))}
+        </ul>
+      </nav>
+    )}
+  </header>
+  <PostList posts={posts} emptyText={emptyText} />
+  <Pagination base={base} page={page} pages={pages} label={title} />
+</section>

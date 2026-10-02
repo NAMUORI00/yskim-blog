@@ -1,0 +1,37 @@
+---
+import Base from "../../../../layouts/Base.astro";
+import ArchiveView from "../../../../components/ArchiveView.astro";
+import { categoryFacets, getTaxonomy, listItems } from "../../../../lib/posts";
+import { paginate } from "../../../../lib/taxonomy.mjs";
+
+export async function getStaticPaths() {
+  const taxonomy = await getTaxonomy();
+  return taxonomy.categories
+    .filter((category) => category.url)
+    .flatMap((category) => {
+      const pages = paginate(category.posts);
+      return pages.slice(1).map((_, index) => ({
+        params: { category: category.slug, page: String(index + 2) },
+        props: { id: category.id, page: index + 2 },
+      }));
+    });
+}
+
+const { id, page } = Astro.props;
+const taxonomy = await getTaxonomy();
+const category = taxonomy.categoryById.get(id)!;
+const pages = paginate(category.posts.map((slug) => taxonomy.bySlug.get(slug)!));
+---
+
+<Base title={`${category.label} · ${page}페이지`} description={`카테고리: ${category.label}`}>
+  <ArchiveView
+    kicker="Category"
+    title={category.label}
+    total={category.count}
+    posts={listItems(taxonomy, pages[page - 1])}
+    base={category.url!}
+    page={page}
+    pages={pages.length}
+    facets={categoryFacets(taxonomy, category.id)}
+  />
+</Base>

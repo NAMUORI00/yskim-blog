@@ -1,12 +1,12 @@
 # Notion Publishing Workflow
 
-This is the lightweight production target for managing blog content in a private Notion database while keeping Hugo and Cloudflare Pages in the public `yskim-blog` repository.
+This is the lightweight production target for managing blog content in a private Notion database while keeping Astro and Cloudflare Pages in the public `yskim-blog` repository.
 
 ## Goal
 
-Keep `yskim-blog` as the only active publishing repository. Notion-managed content becomes Hugo-ready Markdown before validation, category path organization, Hugo build, comments, and deployment run.
+Keep `yskim-blog` as the only active publishing repository. Notion-managed content becomes Astro-ready Markdown before validation, category path organization, Astro build, comments, and deployment run.
 
-Notion is the CMS and editorial workspace. Hugo remains the owned static rendering layer. Do not embed Notion pages or scrape Notion public HTML.
+Notion is the CMS and editorial workspace. Astro remains the owned static rendering layer. Do not embed Notion pages or scrape Notion public HTML.
 
 ## Branch roles
 
@@ -62,7 +62,7 @@ frontmatter. The home route reads `Key=home` for the intro copy.
 3. Convert blocks to Markdown with a proven converter such as `notion-to-md`.
 4. Download Notion-hosted images and file assets, then rewrite Markdown paths.
 5. Preserve equations and post-process unsupported or lossy blocks.
-6. Generate Hugo frontmatter and Markdown under `content/posts` for posts.
+6. Generate Astro-compatible frontmatter and Markdown under `content/posts` for posts.
 7. Generate Notion-managed static pages under `content/pages` for `Type=Page`.
 8. Fully replace generated post, generated page, and Notion image artifacts on
    every build.
@@ -72,7 +72,7 @@ frontmatter. The home route reads `Key=home` for the intro copy.
    `content/posts/<category-slug>/<slug>.md`.
 11. Run the existing content validation.
 12. Commit generated source artifacts to the `production` branch.
-13. Deploy the built `public/` artifact to Cloudflare Pages as the
+13. Deploy the built `dist/` artifact to Cloudflare Pages as the
     `production` branch.
 
 Public URLs should stay slug-based, for example `/posts/my-note/`.
@@ -217,3 +217,15 @@ Use the GitHub Actions manual workflow inputs to test the Notion source before c
 - `deploy=false` for a dry run.
 
 After the Notion source passes with real data, keep `CONTENT_SOURCE=notion`, keep the production status filter at `Published`, and use the scheduled workflow as the polling deploy path.
+
+## Content-driven design
+
+Published post metadata is the source for the archive, category and tag navigation,
+and knowledge map. Maintain the title, category, tags, excerpt and cover on the
+Notion post; do not maintain a second graph inventory. Drafts are excluded.
+Relationships show shared categories and tags, not measured expertise.
+
+The publishing workflow rebuilds these views after fetching Notion. Scheduled
+publishing runs every six hours; a manual workflow dispatch publishes sooner.
+Changing a post in Notion does not immediately change an already-built site.
+Source styling remains in Git; generated content remains in the production branch.

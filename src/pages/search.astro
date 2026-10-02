@@ -17,26 +17,22 @@ const searchIndex = JSON.stringify(searchItems);
 ---
 
 <Base title={UI.navSearch} description={`${SITE.title} 글 검색`}>
-  <article class="readme-card search-window" aria-label="검색" data-content-window>
-    <div class="filebar search-window__bar">
-      <div class="filebar-controls" aria-label="검색 창 제어">
-        <button type="button" class="filebar-control filebar-control--close" data-window-action="close" aria-label="닫기"></button>
-        <button type="button" class="filebar-control filebar-control--minimize" data-window-action="minimize" aria-label="최소화"></button>
-        <button type="button" class="filebar-control filebar-control--maximize" data-window-action="maximize" aria-label="최대화"></button>
-      </div>
-      <strong>검색: 글</strong>
-      <em>{posts.length} entries</em>
-    </div>
-    <section class="search-panel">
+  <section class="search-page" aria-labelledby="search-title">
+    <header class="page-head">
+      <p class="eyebrow">Search</p>
+      <h1 id="search-title">{UI.navSearch}</h1>
+      <p class="page-head__meta" data-search-count aria-live="polite">글 {posts.length}개</p>
+    </header>
+    <div class="search-panel">
       <label class="search-field">
-        <span>{UI.navSearch}</span>
+        <span>검색어</span>
         <input type="search" inputmode="search" autocomplete="off" placeholder="제목, 요약, 카테고리, 태그" data-search-input />
       </label>
-      <p class="search-count" data-search-count>{posts.length} entries</p>
+      <noscript><p class="search-empty">검색은 JavaScript가 필요합니다. <a href="/posts/">모든 글</a>에서 찾아볼 수 있습니다.</p></noscript>
       <div class="search-results" data-search-results></div>
       <template class="search-index" data-search-index>{searchIndex}</template>
-    </section>
-  </article>
+    </div>
+  </section>
 
   <script is:inline>
     (() => {
@@ -76,7 +72,7 @@ const searchIndex = JSON.stringify(searchItems);
       const render = () => {
         const query = normalize(input.value.trim());
         const filtered = items.filter((item) => matches(item, query));
-        count.textContent = `${filtered.length} entries`;
+        count.textContent = `글 ${filtered.length}개`;
         results.replaceChildren();
 
         if (filtered.length === 0) {
