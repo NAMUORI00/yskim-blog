@@ -1,69 +1,73 @@
 ---
 import Base from "../layouts/Base.astro";
+import PostList from "../components/PostList.astro";
+import SectionTitle from "../components/SectionTitle.astro";
 import { SITE, UI } from "../config";
 import { getCollection, render } from "astro:content";
+import { getTaxonomy, listItems } from "../lib/posts";
+import { categoryTags } from "../lib/taxonomy.mjs";
 
+// The intro is the only home content managed by hand (Notion `home` page);
+// the sections below are derived from the published posts.
 const pages = await getCollection("pages", (p) => !p.data.draft);
 const findPage = (slug: string) => pages.find((p) => p.data.slug === slug);
 const homePage = findPage("home");
 const HomeContent = homePage ? (await render(homePage)).Content : null;
 const heroTitle = homePage?.data.title || SITE.title;
 const heroSummary = homePage?.data.summary || SITE.description;
+
+const taxonomy = await getTaxonomy();
+const recent = listItems(taxonomy, taxonomy.posts.slice(0, 5));
+const categories = taxonomy.categories.map((category) => ({
+  ...category,
+  latestDay: category.latest ? category.latest.toISOString().slice(0, 10) : "",
+  topics: categoryTags(taxonomy, category.id).slice(0, 5),
+}));
 ---
 
 <Base isHome={true} title={heroTitle} description={heroSummary} type="website">
-  <section class="home-hero" aria-labelledby="home-title">
-    <article class="readme-card home-intro-window" aria-label="나무가든 소개" data-content-window>
-      <div class="filebar home-intro-window__bar">
-        <div class="filebar-controls" aria-label="홈 소개 창 제어">
-          <button type="button" class="filebar-control filebar-control--close" data-window-action="close" aria-label="닫기"></button>
-          <button type="button" class="filebar-control filebar-control--minimize" data-window-action="minimize" aria-label="최소화"></button>
-          <button type="button" class="filebar-control filebar-control--maximize" data-window-action="maximize" aria-label="최대화"></button>
-        </div>
-        <strong>{heroTitle}</strong>
-        <em>소개</em>
+  <section class="home-intro" aria-labelledby="home-title">
+    <p class="eyebrow">NAMUORI.LOG</p>
+    <h1 id="home-title">{heroTitle}</h1>
+    {heroSummary && <p class="home-intro__lead">{heroSummary}</p>}
+    {HomeContent && (
+      <div class="home-intro__note content">
+        <HomeContent />
       </div>
-      <div class="home-hero__copy">
-        <p class="eyebrow">NAMUORI.LOG</p>
-        <h1 id="home-title">{heroTitle}</h1>
-        {heroSummary && <p class="summary">{heroSummary}</p>}
-        {HomeContent && (
-          <div class="home-hero__note content">
-            <HomeContent />
-          </div>
-        )}
-        <div class="hero-actions">
-          <a class="primary-link" href="/posts/">{UI.navPosts}</a>
-          <a class="text-link" href={SITE.portfolio} target="_blank" rel="noopener noreferrer">
-            {UI.navPortfolio}
-          </a>
-        </div>
-      </div>
-    </article>
-    <aside class="readme-card home-grove-window" aria-label="나무 애니메이션 창" data-content-window>
-      <div class="filebar home-grove-window__bar">
-        <div class="filebar-controls" aria-label="나무 애니메이션 창 제어">
-          <button type="button" class="filebar-control filebar-control--close" data-window-action="close" aria-label="닫기"></button>
-          <button type="button" class="filebar-control filebar-control--minimize" data-window-action="minimize" aria-label="최소화"></button>
-          <button type="button" class="filebar-control filebar-control--maximize" data-window-action="maximize" aria-label="최대화"></button>
-        </div>
-        <strong>garden.motion</strong>
-        <em>loop</em>
-      </div>
-      <div class="home-grove-window__body">
-        <div class="home-hero__grove" aria-hidden="true">
-          <span class="grove-trunk"></span>
-          <span class="grove-branch grove-branch--one"></span>
-          <span class="grove-branch grove-branch--two"></span>
-          <span class="grove-leaf grove-leaf--crown grove-leaf--one"></span>
-          <span class="grove-leaf grove-leaf--crown grove-leaf--two"></span>
-          <span class="grove-leaf grove-leaf--crown grove-leaf--three"></span>
-          <span class="grove-leaf grove-leaf--float grove-leaf--drift-one"></span>
-          <span class="grove-leaf grove-leaf--float grove-leaf--drift-two"></span>
-          <span class="grove-leaf grove-leaf--float grove-leaf--drift-three"></span>
-          <span class="grove-leaf grove-leaf--float grove-leaf--drift-four"></span>
-        </div>
-      </div>
-    </aside>
+    )}
+    <div class="hero-actions">
+      <a class="primary-link" href="/posts/">{UI.allPosts}</a>
+      <a class="text-link" href={SITE.portfolio} target="_blank" rel="noopener noreferrer">{UI.navPortfolio} <span aria-hidden="true">↗</span></a>
+    </div>
   </section>
+
+  <section class="home-section" aria-labelledby="home-recent">
+    <SectionTitle id="home-recent" title={UI.recent} link={recent.length ? { href: "/posts/", label: UI.allPosts } : undefined} />
+    <PostList posts={recent} level={3} />
+  </section>
+
+  {categories.length > 0 && (
+    <section class="home-section" aria-labelledby="home-categories">
+      <SectionTitle id="home-categories" title={UI.categories} />
+      <ul class="category-overview">
+        {categories.map((category) => (
+          <li class="category-row">
+            <div class="category-row__head">
+              {category.url ? (
+                <a class="category-row__name" href={category.url}>{category.label}</a>
+              ) : (
+                <span class="category-row__name">{category.label}</span>
+              )}
+              <span class="category-row__meta">글 {category.count}{category.latestDay && <> · 최근 <time datetime={category.latestDay}>{category.latestDay}</time></>}</span>
+            </div>
+            {category.topics.length > 0 && (
+              <ul class="tags category-row__topics" aria-label={`${category.label}의 주제`}>
+                {category.topics.map(({ tag }) => <li><a href={tag.url}>#{tag.label}</a></li>)}
+              </ul>
+            )}
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
 </Base>

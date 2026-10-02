@@ -62,7 +62,22 @@ test("site css defines the portfolio typography roles", async () => {
   assert.match(css, /--font-mono:\s*"JetBrains Mono"/);
   assert.match(css, /body\s*\{[\s\S]*font-family:\s*var\(--font-sans\)/);
   assert.match(ruleContaining(css, ".eyebrow"), /font-family:\s*var\(--font-mono\)/);
-  assert.match(ruleContaining(css, ".page-header-kicker"), /font-family:\s*var\(--font-mono\)/);
+  assert.match(ruleContaining(css, ".rail-section-title"), /font-family:\s*var\(--font-mono\)/);
+  assert.match(ruleContaining(css, ".post-card-meta"), /font-family:\s*var\(--font-mono\)/);
+});
+
+test("the portfolio's secondary ink and map plane tones exist in both themes", async () => {
+  const css = await readFile(cssUrl, "utf8");
+  const light = themeBlock(css, ":root,\\s*html\\.theme-light,\\s*body\\.theme-light");
+  const dark = themeBlock(css, ':root\\[data-theme="dark"\\],\\s*html\\.theme-dark,\\s*body\\.theme-dark');
+
+  assert.match(light, /--sub:\s*#42473f;/);
+  assert.match(dark, /--sub:\s*#c9c5bb;/);
+  for (const block of [light, dark]) {
+    for (const token of ["--km-plane", "--km-plane-top", "--km-plane-edge", "--km-slab", "--km-grid", "--km-scrim", "--km-shadow"]) {
+      assert.match(block, new RegExp(`${token}:`), `missing ${token}`);
+    }
+  }
 });
 
 test("base layout preloads external fonts without delaying theme bootstrap", async () => {

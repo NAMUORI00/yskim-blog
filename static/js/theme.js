@@ -2,7 +2,9 @@
   const storageKey = "yskim-theme";
   const darkQuery = window.matchMedia("(prefers-color-scheme: dark)");
   const body = document.body;
-  const toggle = document.querySelector("[data-theme-toggle]");
+  // A flip button (mobile header) and explicit light/dark buttons (left rail).
+  const toggles = [...document.querySelectorAll("[data-theme-toggle]")];
+  const setters = [...document.querySelectorAll("[data-theme-set]")];
 
   const readSavedTheme = () => {
     try {
@@ -56,11 +58,16 @@
       writeSavedTheme(nextTheme);
     }
 
-    if (toggle) {
+    for (const toggle of toggles) {
       const targetLabel = nextTheme === "dark" ? toggle.dataset.lightLabel : toggle.dataset.darkLabel;
       toggle.setAttribute("aria-pressed", String(nextTheme === "dark"));
-      toggle.setAttribute("title", targetLabel);
-      toggle.setAttribute("aria-label", targetLabel);
+      if (targetLabel) {
+        toggle.setAttribute("title", targetLabel);
+        toggle.setAttribute("aria-label", targetLabel);
+      }
+    }
+    for (const setter of setters) {
+      setter.setAttribute("aria-pressed", String(setter.dataset.themeSet === nextTheme));
     }
 
     syncGiscusTheme(nextTheme);
@@ -84,11 +91,14 @@
     }
   });
 
-  if (toggle) {
+  for (const toggle of toggles) {
     toggle.addEventListener("click", () => {
       const nextTheme = body.classList.contains("theme-dark") ? "light" : "dark";
       setTheme(nextTheme, true);
     });
+  }
+  for (const setter of setters) {
+    setter.addEventListener("click", () => setTheme(setter.dataset.themeSet, true));
   }
 
   darkQuery.addEventListener("change", () => {

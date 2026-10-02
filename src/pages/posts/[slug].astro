@@ -4,8 +4,10 @@ import Base from "../../layouts/Base.astro";
 import ReadingProgress from "../../components/ReadingProgress.svelte";
 import Comments from "../../components/Comments.astro";
 import AffiliateDisclosure from "../../components/AffiliateDisclosure.astro";
+import RelatedPosts from "../../components/RelatedPosts.astro";
 import { SITE } from "../../config";
-import { getPublishedPosts } from "../../lib/posts";
+import { getPublishedPosts, getTaxonomy } from "../../lib/posts";
+import { adjacentPosts, relatedPosts, UNCATEGORIZED_ID } from "../../lib/taxonomy.mjs";
 
 export async function getStaticPaths() {
   const posts = await getPublishedPosts();
@@ -17,6 +19,12 @@ const { Content } = await render(entry);
 const d = entry.data;
 const dateStr = d.date.toISOString().slice(0, 10);
 const isAffiliate = d.tags.some((t) => ["affiliate", "제휴"].includes(t.toLowerCase()));
+const taxonomy = await getTaxonomy();
+const post = taxonomy.bySlug.get(d.slug)!;
+const categories = post.categoryIds.filter((id) => id !== UNCATEGORIZED_ID).map((id) => taxonomy.categoryById.get(id)!);
+const tags = post.tagIds.map((id) => taxonomy.tagById.get(id)!);
+const related = relatedPosts(taxonomy, d.slug, { limit: 4 });
+const { newer, older } = adjacentPosts(taxonomy, d.slug);
 const breadcrumb = [
   { name: "홈", item: SITE.url + "/" },
   { name: "글", item: SITE.url + "/posts/" },
@@ -37,31 +45,41 @@ const breadcrumb = [
   math={d.math}
 >
   <ReadingProgress client:idle />
-  <article class="readme-card post" data-content-window>
-    <div class="filebar">
-      <div class="filebar-controls" aria-label="콘텐츠 창 제어">
-        <button type="button" class="filebar-control filebar-control--close" data-window-action="close" aria-label="닫기"></button>
-        <button type="button" class="filebar-control filebar-control--minimize" data-window-action="minimize" aria-label="최소화"></button>
-        <button type="button" class="filebar-control filebar-control--maximize" data-window-action="maximize" aria-label="최대화"></button>
-      </div>
-      <strong>posts/{d.slug}.md</strong>
-    </div>
-    <div class="post-inner">
-      <header class="post-header">
-        <p class="eyebrow">{dateStr}</p>
-        <h1>{d.title}</h1>
-        {d.summary && <p class="summary">{d.summary}</p>}
-        {d.tags.length > 0 && (
-          <ul class="tags" aria-label="Tags">
-            {d.tags.map((t) => <li>{t}</li>)}
-          </ul>
+  <article class="article post">
+    <header class="article-header post-header">
+      <nav class="article-path" aria-label="위치">
+        <a href="/">홈</a>
+        <span aria-hidden="true">/</span>
+        <a href="/posts/">글</a>
+        {categories[0] && (
+          <>
+            <span aria-hidden="true">/</span>
+            <a href={categories[0].url}>{categories[0].label}</a>
+          </>
         )}
-      </header>
-      <div class="content">
-        {isAffiliate && <AffiliateDisclosure />}
-        <Content />
-      </div>
-      {d.comments && <Comments />}
+      </nav>
+      <h1>{d.title}</h1>
+      {d.summary && <p class="summary">{d.summary}</p>}
+      <p class="article-meta">
+        <time datetime={dateStr}>{dateStr}</time>
+        {categories.map((category) => <a href={category.url}>{category.label}</a>)}
+      </p>
+      {tags.length > 0 && (
+        <ul class="tags article-tags" aria-label="주제">
+          {tags.map((tag) => <li><a href={tag.url}>#{tag.label}</a></li>)}
+        </ul>
+      )}
+    </header>
+    {d.cover && (
+      <figure class="article-cover">
+        <img src={d.cover} alt="" decoding="async" />
+      </figure>
+    )}
+    <div class="content">
+      {isAffiliate && <AffiliateDisclosure />}
+      <Content />
     </div>
+    <RelatedPosts related={related} newer={newer} older={older} />
+    {d.comments && <Comments />}
   </article>
 </Base>

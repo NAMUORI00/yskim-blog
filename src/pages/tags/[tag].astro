@@ -1,27 +1,29 @@
 ---
 import Base from "../../layouts/Base.astro";
-import PostListWindow from "../../components/PostListWindow.astro";
-import { getPublishedPosts, slugifyTerm, type Post } from "../../lib/posts";
+import ArchiveView from "../../components/ArchiveView.astro";
+import { getTaxonomy, listItems, tagFacets } from "../../lib/posts";
+import { paginate } from "../../lib/taxonomy.mjs";
 
 export async function getStaticPaths() {
-  const posts = await getPublishedPosts();
-  const map = new Map<string, { name: string; posts: Post[] }>();
-  for (const post of posts) {
-    for (const tag of post.data.tags) {
-      const slug = slugifyTerm(tag);
-      if (!map.has(slug)) map.set(slug, { name: tag, posts: [] });
-      map.get(slug)!.posts.push(post);
-    }
-  }
-  return [...map.entries()].map(([tag, { name, posts: list }]) => ({
-    params: { tag },
-    props: { name, posts: list },
-  }));
+  const taxonomy = await getTaxonomy();
+  return taxonomy.tags.map((tag) => ({ params: { tag: tag.slug }, props: { id: tag.id } }));
 }
 
-const { name, posts } = Astro.props;
+const { id } = Astro.props;
+const taxonomy = await getTaxonomy();
+const tag = taxonomy.tagById.get(id)!;
+const pages = paginate(tag.posts.map((slug) => taxonomy.bySlug.get(slug)!));
 ---
 
-<Base title={`#${name}`} description={`태그: ${name}`}>
-  <PostListWindow label="태그" title={name} posts={posts} />
+<Base title={`#${tag.label}`} description={`태그: ${tag.label}`}>
+  <ArchiveView
+    kicker="Topic"
+    title={`#${tag.label}`}
+    total={tag.count}
+    posts={listItems(taxonomy, pages[0])}
+    base={tag.url}
+    page={1}
+    pages={pages.length}
+    facets={tagFacets(taxonomy, tag.id)}
+  />
 </Base>

@@ -1,115 +1,38 @@
-/* Modern interaction layer — preserves the existing 나무가든 identity and
-   adds depth, motion, and polish on top of the base site.css. */
+/* Interaction layer on top of site.css: short, informative motion only, and
+   none of it when the reader asks for reduced motion. */
 
 @media (prefers-reduced-motion: no-preference) {
-  .home-hero__grove {
-    animation: grove-sway 9s ease-in-out infinite;
-    transform-origin: 50% 100%;
+  .post-list > *,
+  .article,
+  .archive,
+  .home-intro,
+  .home-section {
+    animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .grove-leaf--float {
-    animation: leaf-drift 7.6s ease-in-out infinite;
-  }
-
-  .grove-leaf--drift-two {
-    animation-duration: 9.2s;
-    animation-delay: -2.2s;
-  }
-
-  .grove-leaf--drift-three {
-    animation-duration: 8.4s;
-    animation-delay: -4s;
-  }
-
-  .grove-leaf--drift-four {
-    animation-duration: 10.2s;
-    animation-delay: -5.6s;
-  }
-
-  .post-card,
-  .sidebar-post,
-  .sidebar-card,
-  .profile-rail,
-  .rail-category-list a,
-  .sidebar-tags a,
-  .top-bar-nav a,
-  .post-card-thumb {
-    transition:
-      transform 0.18s ease,
-      box-shadow 0.2s ease,
-      border-color 0.18s ease,
-      background-color 0.18s ease,
-      color 0.18s ease;
-  }
-
-  .post-card:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 14px 34px -18px rgba(0, 0, 0, 0.45);
-    border-color: var(--accent-strong);
-  }
-
-  .post-card:hover .post-card-thumb {
-    transform: scale(1.03);
-  }
-
-  .post-card-thumb-wrap {
-    overflow: hidden;
-  }
-
-  .sidebar-post:hover {
-    transform: translateX(3px);
-  }
-
-  .sidebar-tags a:hover,
-  .rail-category-list a:hover {
-    transform: translateY(-1px);
-  }
-
-  .sidebar-card:hover,
-  .profile-rail:hover {
-    border-color: color-mix(in srgb, var(--accent) 38%, var(--line));
-  }
-
-  .post-list > * {
-    animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
   .post-list > *:nth-child(2) { animation-delay: 0.04s; }
   .post-list > *:nth-child(3) { animation-delay: 0.08s; }
   .post-list > *:nth-child(4) { animation-delay: 0.12s; }
   .post-list > *:nth-child(n + 5) { animation-delay: 0.16s; }
-
-  .post-inner {
-    animation: rise 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
+  .home-section { animation-delay: 0.06s; }
 
   @keyframes rise {
     from {
       opacity: 0;
-      transform: translateY(14px);
+      transform: translateY(10px);
     }
     to {
       opacity: 1;
       transform: translateY(0);
     }
   }
-
-  @keyframes grove-sway {
-    0%, 100% { transform: rotate(-1.4deg); }
-    50% { transform: rotate(1.8deg); }
-  }
-
-  @keyframes leaf-drift {
-    0% { opacity: 0; transform: translate3d(0, 10px, 0) rotate(-28deg); }
-    14% { opacity: 0.9; }
-    52% { opacity: 0.72; transform: translate3d(32px, -16px, 0) rotate(22deg); }
-    100% { opacity: 0; transform: translate3d(88px, -44px, 0) rotate(92deg); }
-  }
 }
 
 /* Clearer keyboard focus across interactive elements. */
 a:focus-visible,
-button:focus-visible {
-  outline: 2px solid var(--accent-strong);
+button:focus-visible,
+summary:focus-visible {
+  outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
 }
@@ -131,10 +54,10 @@ button:focus-visible {
   position: fixed;
   top: 0;
   left: 0;
-  height: 3px;
+  z-index: 130;
+  height: 2px;
   width: 0;
-  background: linear-gradient(90deg, var(--accent), var(--accent-strong));
-  z-index: 60;
+  background: var(--accent);
   will-change: width;
 }
 
@@ -142,22 +65,22 @@ button:focus-visible {
 .back-to-top {
   position: fixed;
   right: 1.25rem;
-  bottom: calc(var(--footer-reserved, 0px) + 1rem);
-  width: 44px;
-  height: 44px;
-  border-radius: 999px;
+  bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+  z-index: 55;
   display: grid;
   place-items: center;
+  width: 44px;
+  height: 44px;
   color: var(--heading);
   background: var(--panel);
   border: 1px solid var(--line);
-  box-shadow: 0 8px 24px -10px rgba(0, 0, 0, 0.4);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px -12px rgba(0, 0, 0, 0.35);
   cursor: pointer;
   opacity: 0;
   transform: translateY(10px);
   pointer-events: none;
-  transition: opacity 0.22s ease, transform 0.22s ease, background-color 0.18s ease;
-  z-index: 55;
+  transition: opacity 0.22s ease, transform 0.22s ease, background-color 0.18s ease, border-color 0.18s ease;
 }
 
 .back-to-top.is-visible {
@@ -167,6 +90,14 @@ button:focus-visible {
 }
 
 .back-to-top:hover {
-  transform: translateY(-3px);
-  background: var(--panel-soft, var(--panel));
+  color: var(--accent);
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+
+/* On wide screens the button sits at the reading column's edge, clear of the map rail. */
+@media (min-width: 1181px) {
+  .back-to-top {
+    right: calc(var(--rail-right) + 1.25rem);
+  }
 }

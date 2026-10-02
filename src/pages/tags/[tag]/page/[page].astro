@@ -1,0 +1,33 @@
+---
+import Base from "../../../../layouts/Base.astro";
+import ArchiveView from "../../../../components/ArchiveView.astro";
+import { getTaxonomy, listItems, tagFacets } from "../../../../lib/posts";
+import { paginate } from "../../../../lib/taxonomy.mjs";
+
+export async function getStaticPaths() {
+  const taxonomy = await getTaxonomy();
+  return taxonomy.tags.flatMap((tag) =>
+    paginate(tag.posts)
+      .slice(1)
+      .map((_, index) => ({ params: { tag: tag.slug, page: String(index + 2) }, props: { id: tag.id, page: index + 2 } })),
+  );
+}
+
+const { id, page } = Astro.props;
+const taxonomy = await getTaxonomy();
+const tag = taxonomy.tagById.get(id)!;
+const pages = paginate(tag.posts.map((slug) => taxonomy.bySlug.get(slug)!));
+---
+
+<Base title={`#${tag.label} · ${page}페이지`} description={`태그: ${tag.label}`}>
+  <ArchiveView
+    kicker="Topic"
+    title={`#${tag.label}`}
+    total={tag.count}
+    posts={listItems(taxonomy, pages[page - 1])}
+    base={tag.url}
+    page={page}
+    pages={pages.length}
+    facets={tagFacets(taxonomy, tag.id)}
+  />
+</Base>

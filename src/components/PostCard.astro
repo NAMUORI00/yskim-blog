@@ -1,34 +1,38 @@
 ---
+import type { PostListItem } from "../lib/posts";
+
 interface Props {
-  href: string;
-  title: string;
-  date: Date;
-  category?: string;
-  summary?: string;
-  cover?: string;
-  tags?: string[];
+  post: PostListItem;
+  /** Heading level inside the page outline (h2 on archives, h3 under a home section). */
+  level?: 2 | 3;
 }
-const { href, title, date, category, summary, cover, tags = [] } = Astro.props;
-const dateStr = date.toISOString().slice(0, 10);
+
+const { post, level = 2 } = Astro.props;
+const Heading = level === 3 ? "h3" : "h2";
+const tags = post.tags.slice(0, 6);
 ---
 
-<a class={`post-card ${cover ? "post-card--with-cover" : "post-card--text-only"}`} href={href}>
-  {cover && (
-    <div class="post-card-thumb-wrap">
-      <img class="post-card-thumb" src={cover} alt="" loading="lazy" decoding="async" />
-    </div>
-  )}
+<article class={`post-card ${post.cover ? "post-card--with-cover" : "post-card--text-only"}`}>
   <div class="post-card-body">
     <div class="post-card-meta">
-      <time datetime={dateStr}>{dateStr}</time>
-      {category && <span class="post-card-category">{category}</span>}
+      <time datetime={post.dateStr}>{post.dateStr}</time>
+      {post.category && (post.category.url ? (
+        <a class="post-card-category" href={post.category.url}>{post.category.label}</a>
+      ) : (
+        <span class="post-card-category">{post.category.label}</span>
+      ))}
     </div>
-    <h2 class="post-card-title">{title}</h2>
-    {summary && <p class="post-card-summary">{summary}</p>}
+    <Heading class="post-card-title"><a class="post-card-link" href={post.url}>{post.title}</a></Heading>
+    {post.summary && <p class="post-card-summary">{post.summary}</p>}
     {tags.length > 0 && (
-      <ul class="tags post-card-tags" aria-label="Tags">
-        {tags.slice(0, 6).map((t) => <li>{t}</li>)}
+      <ul class="tags post-card-tags" aria-label="주제">
+        {tags.map((tag) => <li><a href={tag.url}>{tag.label}</a></li>)}
       </ul>
     )}
   </div>
-</a>
+  {post.cover && (
+    <div class="post-card-thumb-wrap" aria-hidden="true">
+      <img class="post-card-thumb" src={post.cover} alt="" loading="lazy" decoding="async" />
+    </div>
+  )}
+</article>

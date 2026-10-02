@@ -1,285 +1,96 @@
 ---
 import { SITE, UI } from "../config";
-import { getCategories, getPublishedPosts, categoryUrl, postUrl } from "../lib/posts";
-
-const path = Astro.url.pathname;
-const decodedPath = decodeURI(path);
-const isHome = path === "/";
-const categories = await getCategories();
-const posts = await getPublishedPosts();
-const searchItems = posts.map((post) => ({
-  title: post.data.title,
-  summary: post.data.summary,
-  category: post.data.categories[0] || "",
-  tags: post.data.tags,
-  url: postUrl(post.data.slug),
-}));
-const searchIndex = JSON.stringify(searchItems);
-const nav = [
-  { name: UI.navPosts, href: "/posts/" },
-];
-const isActive = (href: string) => decodedPath === href || decodedPath.startsWith(href);
-const activeCategory = categories.find((category) => isActive(categoryUrl(category.name)));
-const isCategoryActive = Boolean(activeCategory);
 ---
 
-<header class="top-bar">
-  <div class="top-bar-inner">
-    <div class="top-bar-left">
-      <a class="top-bar-brand" href="/">{SITE.title}</a>
-      <nav id="primary-nav" class="top-bar-nav" aria-label="Main navigation">
-        <a href="/" class={isHome ? "is-active" : ""} aria-current={isHome ? "page" : undefined}>
-          {UI.navHome}
-        </a>
-        {nav.map((item) => (
-          <a
-            href={item.href}
-            class={isActive(item.href) ? "is-active" : ""}
-            aria-current={isActive(item.href) ? "page" : undefined}
-          >
-            {item.name}
-          </a>
-        ))}
-        {categories.length > 0 && (
-          <details class="top-bar-categories">
-            <summary class={isCategoryActive ? "is-active" : ""}>
-              {activeCategory ? activeCategory.name : UI.categories}
-            </summary>
-            <div class="top-bar-category-menu">
-              {categories.map((category) => {
-                const href = categoryUrl(category.name);
-                const active = isActive(href);
-                return (
-                  <a href={href} class={active ? "is-active" : ""} aria-current={active ? "page" : undefined}>
-                    <span>{category.name} ({category.count})</span>
-                  </a>
-                );
-              })}
-            </div>
-          </details>
-        )}
-      </nav>
-    </div>
-    <div class={`top-bar-search${isActive("/search/") ? " is-active" : ""}`} data-top-search>
-      <button
-        class="top-bar-search__toggle"
-        type="button"
-        aria-label={UI.navSearch}
-        aria-expanded="false"
-        data-top-search-toggle
-      >
-        <svg viewBox="0 0 24 24" aria-hidden="true">
-          <circle cx="11" cy="11" r="7"></circle>
-          <path d="m16.5 16.5 4 4"></path>
-        </svg>
-      </button>
-      <form class="top-bar-search__form" action="/search/" role="search" data-top-search-form>
-        <label class="sr-only" for="top-search-input">{UI.navSearch}</label>
-        <input
-          id="top-search-input"
-          type="search"
-          name="q"
-          inputmode="search"
-          autocomplete="off"
-          placeholder="블로그 검색"
-          data-top-search-input
-        />
-      </form>
-      <div class="top-bar-search__results" hidden data-top-search-results></div>
-      <template data-top-search-index>{searchIndex}</template>
-    </div>
-    <div class="top-bar-utils">
-      <button
-        class="nav-toggle"
-        type="button"
-        data-nav-toggle
-        aria-controls="primary-nav"
-        aria-expanded="false"
-        aria-label="메뉴 열기"
-      >
-        <span class="nav-toggle-box" aria-hidden="true">
-          <span class="nav-toggle-bar"></span>
-          <span class="nav-toggle-bar"></span>
-          <span class="nav-toggle-bar"></span>
-        </span>
-      </button>
-      <button
-        class="theme-toggle"
-        type="button"
-        data-theme-toggle
-        data-light-label="라이트"
-        data-dark-label="다크"
-        aria-label={UI.themeToggle}
-        aria-pressed="false"
-        title="다크"
-      >
-        <svg class="theme-icon theme-icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <circle cx="12" cy="12" r="5"></circle>
-          <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"></path>
-        </svg>
-        <svg class="theme-icon theme-icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      </button>
-    </div>
+<header class="mobile-header">
+  <button
+    class="nav-toggle"
+    type="button"
+    data-nav-toggle
+    aria-controls="profile-rail"
+    aria-expanded="false"
+    aria-label="메뉴 열기"
+  >
+    <span class="nav-toggle-box" aria-hidden="true">
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+      <span class="nav-toggle-bar"></span>
+    </span>
+  </button>
+  <a class="mobile-brand" href="/">{SITE.title}</a>
+  <div class="mobile-actions">
+    <a class="icon-button" href="/search/" aria-label={UI.navSearch}>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path></svg>
+    </a>
+    <button
+      class="icon-button theme-toggle"
+      type="button"
+      data-theme-toggle
+      data-light-label="라이트 화면으로 전환"
+      data-dark-label="다크 화면으로 전환"
+      aria-label={UI.themeToggle}
+      aria-pressed="false"
+    >
+      <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.5"></circle><path d="M12 2v2M12 20v2M4.2 4.2l1.4 1.4M18.4 18.4l1.4 1.4M2 12h2M20 12h2M4.2 19.8l1.4-1.4M18.4 5.6l1.4-1.4"></path></svg>
+      <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8z"></path></svg>
+    </button>
   </div>
 </header>
 
 <script is:inline>
   (() => {
     const toggle = document.querySelector("[data-nav-toggle]");
-    const nav = document.getElementById("primary-nav");
-    const categoryMenus = Array.from(document.querySelectorAll(".top-bar-categories"));
-    const search = document.querySelector("[data-top-search]");
-    const searchToggle = document.querySelector("[data-top-search-toggle]");
-    const searchInput = document.querySelector("[data-top-search-input]");
-    const searchResults = document.querySelector("[data-top-search-results]");
-    const searchIndex = document.querySelector("[data-top-search-index]");
-    if (!toggle || !nav) return;
+    const drawer = document.getElementById("profile-rail");
+    const scrim = document.querySelector("[data-drawer-scrim]");
+    if (!toggle || !drawer) return;
 
-    const QUERY = "(max-width: 720px)";
-    const mq = window.matchMedia(QUERY);
-    const items = (() => {
-      if (!searchIndex) return [];
-      const raw = searchIndex instanceof HTMLTemplateElement ? searchIndex.content.textContent : searchIndex.textContent;
-      try {
-        return JSON.parse((raw || "[]").trim());
-      } catch {
-        return [];
-      }
-    })();
+    const mq = window.matchMedia("(max-width: 768px)");
+    const focusable = () => [...drawer.querySelectorAll("a[href], button:not([disabled]), input:not([disabled])")];
+    const behind = [...document.querySelectorAll("[data-drawer-inert]")];
 
-    const setOpen = (open) => {
-      nav.classList.toggle("is-open", open);
+    const setOpen = (open, { restoreFocus = true } = {}) => {
+      drawer.classList.toggle("is-open", open);
       document.body.classList.toggle("nav-open", open);
+      for (const element of behind) element.toggleAttribute("inert", open);
+      if (scrim) scrim.hidden = !open;
       toggle.setAttribute("aria-expanded", open ? "true" : "false");
       toggle.setAttribute("aria-label", open ? "메뉴 닫기" : "메뉴 열기");
+      if (open) focusable()[0]?.focus({ preventScroll: true });
+      else if (restoreFocus) toggle.focus({ preventScroll: true });
     };
 
-    const closeSearch = () => {
-      if (!search || !searchToggle || !searchResults) return;
-      search.classList.remove("is-open");
-      searchToggle.setAttribute("aria-expanded", "false");
-      searchResults.hidden = true;
-    };
+    toggle.addEventListener("click", () => setOpen(!drawer.classList.contains("is-open")));
+    scrim?.addEventListener("click", () => setOpen(false));
 
-    const openSearch = () => {
-      if (!search || !searchToggle || !(searchInput instanceof HTMLInputElement)) return;
-      categoryMenus.forEach((menu) => menu.removeAttribute("open"));
-      search.classList.add("is-open");
-      searchToggle.setAttribute("aria-expanded", "true");
-      searchInput.focus();
-      searchInput.select();
-    };
+    drawer.addEventListener("click", (event) => {
+      if (mq.matches && event.target instanceof Element && event.target.closest("a[href]")) setOpen(false, { restoreFocus: false });
+    });
 
-    const renderSearch = () => {
-      if (!(searchInput instanceof HTMLInputElement) || !searchResults) return;
-      const query = searchInput.value.trim().toLowerCase();
-      searchResults.textContent = "";
-      if (!query) {
-        searchResults.hidden = true;
+    document.addEventListener("keydown", (event) => {
+      if (!drawer.classList.contains("is-open")) return;
+      if (event.key === "Escape") {
+        setOpen(false);
         return;
       }
-      const found = items
-        .filter((item) => [item.title, item.summary, item.category, ...(item.tags || [])].join(" ").toLowerCase().includes(query))
-        .slice(0, 6);
-      if (found.length === 0) {
-        const empty = document.createElement("p");
-        empty.className = "top-bar-search__empty";
-        empty.textContent = "검색 결과가 없습니다";
-        searchResults.append(empty);
-      } else {
-        for (const item of found) {
-          const link = document.createElement("a");
-          link.href = item.url;
-          const title = document.createElement("strong");
-          title.textContent = item.title;
-          const meta = document.createElement("span");
-          meta.textContent = item.category || "post";
-          link.append(title, meta);
-          searchResults.append(link);
-        }
-      }
-      searchResults.hidden = false;
-    };
-
-    toggle.addEventListener("click", (e) => {
-      e.stopPropagation();
-      setOpen(!nav.classList.contains("is-open"));
-    });
-
-    // Close after navigating from the menu.
-    nav.addEventListener("click", (e) => {
-      if (e.target instanceof Element && e.target.closest("a")) {
-        categoryMenus.forEach((menu) => menu.removeAttribute("open"));
-        setOpen(false);
+      if (event.key !== "Tab") return;
+      // Keep Tab inside the open drawer.
+      const items = focusable();
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     });
 
-    categoryMenus.forEach((menu) => {
-      menu.addEventListener("toggle", () => {
-        if (!menu.hasAttribute("open")) return;
-        closeSearch();
-        categoryMenus.forEach((other) => {
-          if (other !== menu) other.removeAttribute("open");
-        });
-      });
-    });
-
-    searchToggle?.addEventListener("click", (e) => {
-      e.stopPropagation();
-      if (search?.classList.contains("is-open")) closeSearch();
-      else openSearch();
-    });
-
-    searchInput?.addEventListener("input", renderSearch);
-
-    searchInput?.addEventListener("keydown", (e) => {
-      if (e.key === "Escape") {
-        e.preventDefault();
-        closeSearch();
-        searchToggle?.focus();
-      }
-    });
-
-    // Close on Escape.
-    document.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && nav.classList.contains("is-open")) {
-        setOpen(false);
-        toggle.focus();
-      } else if (e.key === "Escape") {
-        closeSearch();
-        categoryMenus.forEach((menu) => menu.removeAttribute("open"));
-      }
-    });
-
-    // Close when clicking outside the menu.
-    document.addEventListener("click", (e) => {
-      if (!nav.classList.contains("is-open")) return;
-      const t = e.target;
-      if (t instanceof Node && search && !search.contains(t)) {
-        closeSearch();
-      }
-      if (t instanceof Node && !categoryMenus.some((menu) => menu.contains(t))) {
-        categoryMenus.forEach((menu) => menu.removeAttribute("open"));
-      }
-      if (t instanceof Node && !nav.contains(t) && t !== toggle && !toggle.contains(t)) {
-        setOpen(false);
-      }
-    });
-
-    // Reset state when leaving the mobile breakpoint.
     const onChange = () => {
-      if (!mq.matches) setOpen(false);
+      if (!mq.matches && drawer.classList.contains("is-open")) setOpen(false, { restoreFocus: false });
     };
     if (mq.addEventListener) mq.addEventListener("change", onChange);
     else mq.addListener(onChange);
-
-    document.addEventListener("click", (e) => {
-      const target = e.target;
-      if (target instanceof Node && search && !search.contains(target)) {
-        closeSearch();
-      }
-    });
   })();
 </script>

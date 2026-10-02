@@ -1,0 +1,45 @@
+---
+import { pageHref } from "../lib/taxonomy.mjs";
+
+interface Props {
+  /** List URL of page 1, e.g. `/posts/`. */
+  base: string;
+  page: number;
+  pages: number;
+  label: string;
+}
+
+const { base, page, pages, label } = Astro.props;
+const numbers = Array.from({ length: pages }, (_, index) => index + 1);
+---
+
+{pages > 1 && (
+  <nav class="pagination" aria-label={`${label} 페이지`}>
+    {page > 1 ? (
+      <a class="pagination__step" href={pageHref(base, page - 1)} rel="prev">
+        <span aria-hidden="true">‹</span> 이전
+      </a>
+    ) : (
+      <span class="pagination__step" aria-disabled="true"><span aria-hidden="true">‹</span> 이전</span>
+    )}
+    <ol class="pagination__pages">
+      {numbers.map((number) => (
+        <li>
+          {number === page ? (
+            <a class="pagination__page is-active" href={pageHref(base, number)} aria-current="page" aria-label={`${number}페이지, 현재 페이지`}>{number}</a>
+          ) : (
+            <a class="pagination__page" href={pageHref(base, number)} aria-label={`${number}페이지`}>{number}</a>
+          )}
+        </li>
+      ))}
+    </ol>
+    {page < pages ? (
+      <a class="pagination__step" href={pageHref(base, page + 1)} rel="next">
+        다음 <span aria-hidden="true">›</span>
+      </a>
+    ) : (
+      <span class="pagination__step" aria-disabled="true">다음 <span aria-hidden="true">›</span></span>
+    )}
+    <p class="pagination__status">{page} / {pages}</p>
+  </nav>
+)}
