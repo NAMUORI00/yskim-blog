@@ -25,6 +25,8 @@
   "devDependencies": {
     "happy-dom": "20.14.5",
     "markdownlint-cli2": "0.22.1",
+    "remark-parse": "11.0.0",
+    "unified": "11.0.5",
     "wrangler": "4.100.0"
   }
 }

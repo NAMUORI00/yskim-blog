@@ -109,12 +109,8 @@ while IFS= read -r -d '' file; do
     add_error "Frontmatter field 'comments' must be true or false: ${file}"
   fi
 
-  if grep -Eq '\[\[[^]]+\]\]' <<<"$text"; then
-    add_error "Obsidian wikilink remains in exported content: ${file}"
-  fi
-
-  if grep -Eq '!\[\[[^]]+\]\]' <<<"$text"; then
-    add_error "Obsidian embed remains in exported content: ${file}"
+  if ! node "${ROOT}/scripts/validate-wikilinks.mjs" "$file"; then
+    add_error "Obsidian links or embeds remain outside code examples: ${file}"
   fi
 
   if grep -Eiq 'https?://[^[:space:])"]*(notion-static\.com|notion\.site|amazonaws\.com)[^[:space:])"]*(X-Amz-|notion|secure)' <<<"$text"; then
