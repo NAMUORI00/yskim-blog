@@ -76,11 +76,9 @@ Get-ChildItem -LiteralPath $postsRoot -Recurse -File -Filter "*.md" | ForEach-Ob
   if ($frontMatterText -notmatch "(?m)^comments:\s*(true|false)\s*$") {
     Add-Error "Frontmatter field 'comments' must be true or false: $path"
   }
-  if ($text -match "\[\[[^\]]+\]\]") {
-    Add-Error "Obsidian wikilink remains in exported content: $path"
-  }
-  if ($text -match "(?m)!\[\[[^\]]+\]\]") {
-    Add-Error "Obsidian embed remains in exported content: $path"
+  & node (Join-Path $Root "scripts\validate-wikilinks.mjs") $path
+  if ($LASTEXITCODE -ne 0) {
+    Add-Error "Obsidian links or embeds remain outside code examples: $path"
   }
   if ($text -match 'https?://[^\s\)`"]*(notion-static\.com|notion\.site|amazonaws\.com)[^\s\)`"]*(X-Amz-|notion|secure)') {
     Add-Error "Temporary Notion file URL remains in exported content: $path"
