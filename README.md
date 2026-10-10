@@ -1,132 +1,56 @@
-# yskim-blog
+# 나무가든 블로그
 
-Public Astro site source for **나무가든**.
+[blog.namuori.net](https://blog.namuori.net) | [포트폴리오 namuori.net](https://namuori.net)
 
-This repository owns the layouts, components, build scripts, Cloudflare
-Functions, comment UI, validation, and deployment configuration. It is the only
-GitHub repository used for production publishing.
+연구, 엔지니어링, 지식 관리 노트를 기록하는 블로그의 소스입니다. 글은 Notion에서 쓰고, GitHub Actions가 Markdown으로 변환해 검증한 뒤 Astro로 빌드해 Cloudflare Pages에 배포합니다.
 
-## Stack
+![나무가든 블로그 게시 흐름](docs/assets/publishing-flow.svg)
 
-- **Astro 6** static site (`src/`) with **Svelte 5** islands for interactivity.
-- **Notion** as the CMS (single source of truth for posts and selected
-  static pages).
-- **Cloudflare Pages** hosting + Pages Functions (`functions/`) for comments
-  and the optional media proxy.
+## 주요 기능
 
-## Branch model
+- Notion 데이터베이스 기반 글 관리와 6시간 주기 자동 게시
+- 카테고리와 태그로 글 사이 관계를 보여 주는 지식 맵 (Svelte)
+- 수식(KaTeX), 영상, 오디오 등 Notion 블록 변환
+- GitHub 계정 댓글(Giscus)과 선택형 익명 댓글(Cloudflare D1, Turnstile)
+- 검색, RSS, 관련 글, SEO 메타데이터
 
-- `main`: project source only. Astro layouts/components, scripts, tests, docs,
-  functions, and client assets live here.
-- `production`: generated deploy state. GitHub Actions recreates public
-  `content/`, Notion-hosted images, and generated data here before deploying.
+## 기술 스택
 
-Do not edit generated Markdown or Notion images by hand. Notion is the source
-of truth for post content and any static page generated with
-`generated_by: "notion"`.
+| 영역 | 기술 |
+| --- | --- |
+| 사이트 | Astro 6, Svelte 5, KaTeX |
+| 콘텐츠 | Notion API, notion-to-md |
+| 배포와 서버 기능 | GitHub Actions, Cloudflare Pages, Pages Functions, D1, KV |
+| 개발 도구 | Claude Code, Codex (AI 코딩 에이전트) |
 
-## Publishing flow
+## 브랜치
 
-1. Write and edit posts in the private Notion CMS database.
-2. Mark a post `Published`.
-3. GitHub Actions runs on manual dispatch, schedule, or `main` push.
-4. The workflow fetches Notion content, validates Markdown, builds the Astro
-   site, and commits generated artifacts to `production`.
-5. Wrangler deploys the built `dist/` artifact to Cloudflare Pages as the
-   `production` branch.
+- `main`: 레이아웃, 컴포넌트, 스크립트, 테스트, Pages Functions 등 소스
+- `production`: Actions가 생성한 글과 이미지를 기록하는 배포 브랜치 (직접 수정하지 않음)
 
-See `docs/notion-publishing.md` for Notion rules and
-`docs/cloudflare-pages.md` for deployment settings.
+## 로컬 개발
 
-## Local development
-
-Authenticate with GitHub (`gh auth login`) and provide `NOTION_TOKEN` plus
-both split database ids (`NOTION_POSTS_DATABASE_ID` and
-`NOTION_SITE_DATABASE_ID`) to fetch content.
+Notion 연동 값(`NOTION_TOKEN`, `NOTION_POSTS_DATABASE_ID`, `NOTION_SITE_DATABASE_ID`)을 환경 변수로 지정한 뒤 실행합니다.
 
 ```powershell
 npm install
 $env:CONTENT_SOURCE = "notion"
 .\scripts\fetch-content.ps1
 .\scripts\fetch-github-profile.ps1
-npm run dev      # local preview at http://localhost:4321
+npm run dev
 ```
 
-Production build:
+검증과 빌드는 `.\scripts\validate-content.ps1`, `npm test`, `npm run build` 순서로 실행합니다.
 
-```powershell
-$env:CONTENT_SOURCE = "notion"
-.\scripts\fetch-content.ps1
-.\scripts\fetch-github-profile.ps1
-.\scripts\validate-content.ps1
-npm run build    # outputs to dist/
-```
+## 문서
 
-Generated `content/` and `static/images/` are ignored on `main`. They are
-force-added only by the production publishing workflow. `content/pages/`
-keeps committed source pages such as privacy/contact/disclaimer, while Notion
-rows from the Site DB can generate the home intro (`home`), profile, links,
-privacy, disclaimer, contact, or other static pages in the same folder.
-
-Site configuration (title, author, giscus, search-engine verification codes,
-AdSense publisher id) lives in `src/config.ts`. The deployment URL is set as
-`site` in `astro.config.mjs`.
-
-## Comments
-
-Post pages support:
-
-- GitHub-authenticated comments through Giscus and GitHub Discussions.
-- Optional anonymous comments through Cloudflare Pages Functions, Turnstile,
-  and D1.
-
-Giscus is enabled through the `General` discussion category (configured in
-`src/config.ts`). Anonymous comments stay disabled until the Cloudflare D1 and
-Turnstile settings are configured. See `docs/comments.md`.
-
-## Media hosting
-
-Heavy media (video, audio, attachments) can either be self-hosted in the build
-(`download`, default) or served directly from Notion via a redirect Function
-backed by KV (`proxy`). Toggle with the `NOTION_MEDIA_MODE` variable. See
-`docs/media-hosting.md`.
-
-## Cloudflare Pages
-
-Production deploys are handled by GitHub Actions
-(`.github/workflows/validate-and-build.yml`) using `wrangler pages deploy dist`.
-
-Required GitHub Actions secrets:
-
-- `NOTION_TOKEN`
-- `CLOUDFLARE_API_TOKEN`
-- `CLOUDFLARE_ACCOUNT_ID`
-
-Required repository variables:
-
-- `CONTENT_SOURCE=notion`
-- `NOTION_POSTS_DATABASE_ID`
-- `NOTION_SITE_DATABASE_ID`
-- `NOTION_STATUS=Published`
-- `PUBLISH_BRANCH=production` (optional; workflow default is `production`)
-- `NOTION_MEDIA_MODE` (`download` default, or `proxy`)
-
-Recommended Notion CMS structure:
-
-- `퍼블리시 중인 페이지` -> `블로그 DB 관리` -> Posts DB:
-  `Title`, `Status`, `Slug`, `PublishedAt`, `Category`, `Tags`, `Excerpt`,
-  `Cover`, `CanonicalUrl`, `CommentsEnabled`, `Featured`, `Series`.
-- `퍼블리시 중인 페이지` -> `블로그 DB 관리` -> Site DB:
-  `Title`, `Status`, `Key`, `Kind`, `Slot`, `Label`, `Value`, `URL`, `Order`,
-  `IconKey`, `Config`.
-
-Posts DB is optimized for public writing. Site DB is optimized for reusable
-site slots such as profile, sidebar links, footer links, legal pages, and home
-copy. Use `Config` only for structured values that do not deserve their own
-column yet.
-
-For the media `proxy` mode, the Pages project also needs a runtime
-`NOTION_TOKEN` secret and the `MEDIA_CACHE` KV binding (see `wrangler.toml`).
-
-Cloudflare Pages should keep native Git builds disconnected. GitHub Actions is
-the production build path.
+| 문서 | 내용 |
+| --- | --- |
+| [notion-publishing.md](docs/notion-publishing.md) | Notion 데이터베이스 구조와 변환 규칙 |
+| [notion-blocks.md](docs/notion-blocks.md) | 블록별 변환 방식 |
+| [cloudflare-pages.md](docs/cloudflare-pages.md) | 배포 설정, Actions 시크릿과 변수 |
+| [comments.md](docs/comments.md) | Giscus와 익명 댓글 설정 |
+| [media-hosting.md](docs/media-hosting.md) | 미디어 저장 방식 (download, proxy) |
+| [custom-domain.md](docs/custom-domain.md) | 커스텀 도메인 연결 |
+| [seo-search-console.md](docs/seo-search-console.md) | 검색 엔진 등록 |
+| [obsidian-publishing.md](docs/obsidian-publishing.md) | 생성되는 frontmatter 형식 |

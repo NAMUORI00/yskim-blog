@@ -4,7 +4,7 @@ This is the lightweight production target for managing blog content in a private
 
 ## Goal
 
-Keep `yskim-blog` as the only active publishing repository. Notion-managed content becomes Astro-ready Markdown before validation, category path organization, Astro build, comments, and deployment run.
+Notion-managed content becomes Astro-ready Markdown before validation, category path organization, Astro build, comments, and deployment run.
 
 Notion is the CMS and editorial workspace. Astro remains the owned static rendering layer. Do not embed Notion pages or scrape Notion public HTML.
 
@@ -12,7 +12,6 @@ Notion is the CMS and editorial workspace. Astro remains the owned static render
 
 - `main`: public project source, theme, build scripts, validation, Cloudflare Functions, docs, and tests.
 - `production`: generated public content branch. GitHub Actions force-adds generated `content/`, `static/images/`, and generated data here before deploying.
-- Legacy blog repositories such as `yskim-blog-private` and `blog_renew` should be renamed with an `-archive` suffix after production deploy is verified.
 
 ## Source of truth
 
@@ -130,27 +129,9 @@ Every build should perform a full regeneration from `Status = Published`.
 
 Do not do partial updates at first. Full rebuild keeps unpublished, deleted, or renamed Notion posts from lingering in the generated site.
 
-## Rollout
-
-1. Create a private Notion blog database and share it with a read-only integration.
-2. Add a Notion fetcher behind the content source config.
-3. Test with one Notion smoke post that includes a normal image and an equation.
-4. Add KaTeX or MathJax support to Hugo and verify rendered math.
-5. Switch GitHub Actions to the Notion source with manual dispatch and cron polling.
-6. Publish generated artifacts to `production` and deploy that branch to Cloudflare Pages.
-7. Verify production home, category page, post page, Giscus comments, images, and equations in the browser.
-8. Rename legacy repositories with an `-archive` suffix once Notion is stable.
-
-## Needed before implementation
-
-- Notion integration token stored as a GitHub Actions secret.
-- Split Notion database ids for Posts and Site content.
-- Exact database property names for the managed Posts DB and Site DB schemas.
-
 ## Current CMS setup
 
-The Notion CMS databases are configured outside this public repository under
-`퍼블리시 중인 페이지` -> `블로그 DB 관리`. The structure uses two databases:
+The Notion CMS uses two private databases kept outside this repository:
 
 - Posts DB: public blog posts.
 - Site DB: home intro, profile, address, links, privacy, disclaimer, contact,
@@ -200,7 +181,7 @@ GitHub Actions expects these values:
 
 Do not commit the Notion token. Keep generated Markdown and images out of source control.
 
-The database page link, such as `https://namuori00.notion.site/2e8cf325d81c4acdb302800e2dcfc4df`, identifies the database for a person. It does not grant API access by itself. For GitHub Actions to read the database, connect the read-only Notion integration from the database page's Share/Connections menu and store that integration token as the GitHub secret `NOTION_TOKEN`.
+The database page link identifies the database for a person. It does not grant API access by itself. For GitHub Actions to read the database, connect the read-only Notion integration from the database page's Share/Connections menu and store that integration token as the GitHub secret `NOTION_TOKEN`.
 
 Run this helper to check the current GitHub-side setup and print the next command:
 
@@ -208,9 +189,7 @@ Run this helper to check the current GitHub-side setup and print the next comman
 npm run check:notion
 ```
 
-The existing Notion page titled `Markdown` from the old publishing notes has been duplicated into the new CMS and moved to `Published` after the Notion fetcher, image/file rewriting, math rendering, and unsupported-block checks passed end to end.
-
-Use the GitHub Actions manual workflow inputs to test the Notion source before cutover:
+Use the GitHub Actions manual workflow inputs to test the Notion source before publishing:
 
 - `content_source=notion`
 - `notion_status=Ready` for pre-publication validation rows, or `Published` for production content.
