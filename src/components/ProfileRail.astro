@@ -35,7 +35,7 @@ const searchIndex = JSON.stringify(
         <img src={profile.avatar} alt="" width="80" height="80" decoding="async" />
       </a>
       <a class="rail-brand" href="/">{SITE.title}</a>
-      <p class="rail-handle">{profile.name} / @{profile.handle}</p>
+      <p class="rail-handle">{profile.name} (@{profile.handle})</p>
       {profile.bio && <p class="rail-bio">{profile.bio}</p>}
       {profile.address && (
         <p class="rail-place"><span class="rail-place__dot" aria-hidden="true"></span>{profile.address}</p>

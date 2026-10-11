@@ -58,7 +58,7 @@ const categories = taxonomy.categories.map((category) => ({
               ) : (
                 <span class="category-row__name">{category.label}</span>
               )}
-              <span class="category-row__meta">글 {category.count}{category.latestDay && <> / 최근 <time datetime={category.latestDay}>{category.latestDay}</time></>}</span>
+              <span class="category-row__meta">글 {category.count}{category.latestDay && <>, 최근 <time datetime={category.latestDay}>{category.latestDay}</time></>}</span>
             </div>
             {category.topics.length > 0 && (
               <ul class="tags category-row__topics" aria-label={`${category.label}의 주제`}>

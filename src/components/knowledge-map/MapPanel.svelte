@@ -82,7 +82,7 @@
   {@const list = posts(domain.posts)}
   <section class="km-detail kg3-detail" aria-label={domain.label} data-focus="domain" data-mode={rowMode}>
     {@render modeRow(rowMode, rowMode === "open" ? "Esc로 전체 보기" : "누르거나 Enter로 펼치기")}
-    <p class="km-detail-kicker"><span>카테고리 / 글 {domain.count} / 주제 {domain.topics.length}</span></p>
+    <p class="km-detail-kicker"><span>카테고리, 글 {domain.count}개, 주제 {domain.topics.length}개</span></p>
     <h3 class="km-detail-title">{domain.label}</h3>
     {#if domain.latest}<p class="kg3-meta">최근 글 {domain.latest}</p>{/if}
     {#if rowMode === "preview"}
@@ -121,7 +121,7 @@
     {@const domain = domainOf(node)}
     <section class="km-detail kg3-detail" aria-label={node.title} data-focus="node" data-mode="preview">
       {@render modeRow("preview", "누르면 펼쳐서 고정")}
-      <p class="km-detail-kicker"><span>{domain?.label ?? ""} / {node.kind === "post" ? "글" : "주제"}</span></p>
+      <p class="km-detail-kicker"><span>{domain?.label ?? ""}, {node.kind === "post" ? "글" : "주제"}</span></p>
       <h3 class="km-detail-title">{node.title}</h3>
       {#if node.kind === "post"}
         {#if node.date}<p class="kg3-meta">{node.date}</p>{/if}
@@ -138,7 +138,7 @@
         <div class="kg3-current">
           <p class="km-detail-kicker"><span>지금 읽는 글</span></p>
           <h3 class="km-detail-title">{context.post.title}</h3>
-          <p class="kg3-meta">{context.post.date}{#if context.domain} / {context.domain.label}{/if}</p>
+          <p class="kg3-meta">{context.post.date}{#if context.domain}, {context.domain.label}{/if}</p>
           {#if context.topics.length > 0}
             <ul class="km-chips">
               {#each context.topics as topic (topic.id)}<li>{@render topicChip(topic)}</li>{/each}
@@ -177,7 +177,7 @@
   {@const topics = node.topics.map((id) => graph.byId.get(id)).filter(Boolean)}
   <section class="km-detail kg3-detail" aria-label={node.title} data-focus="node" data-kind="post" data-mode={pinnedId === node.id ? "pinned" : "preview"}>
     {@render modeRow(pinnedId === node.id ? "pinned" : "preview", "누르거나 Enter로 고정")}
-    <p class="km-detail-kicker"><span>{domain?.label ?? ""} / 글{node.date ? ` / ${node.date}` : ""}</span></p>
+    <p class="km-detail-kicker"><span>{domain?.label ?? ""}, 글{node.date ? `, ${node.date}` : ""}</span></p>
     <h3 class="km-detail-title">{node.title}</h3>
     {#if node.id === currentId}<ul class="kg3-badges"><li>지금 읽는 글</li></ul>{/if}
     {#if node.summary}<p class="km-detail-text">{node.summary}</p>{/if}
@@ -204,7 +204,7 @@
   {@const others = node.categories.filter((id) => id !== opened.id).map((id) => graph.domainById.get(id)).filter(Boolean)}
   <section class="km-detail kg3-detail" aria-label={node.title} data-focus="node" data-kind="topic" data-mode={pinnedId === node.id ? "pinned" : "preview"}>
     {@render modeRow(pinnedId === node.id ? "pinned" : "preview", "누르거나 Enter로 고정")}
-    <p class="km-detail-kicker"><span>주제 / 전체 글 {node.count}</span></p>
+    <p class="km-detail-kicker"><span>주제, 전체 글 {node.count}개</span></p>
     <h3 class="km-detail-title">{node.title}</h3>
     {#if inCategory.length > 0}
       <div class="km-detail-section">

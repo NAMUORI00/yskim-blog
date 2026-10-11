@@ -90,7 +90,7 @@ const searchIndex = JSON.stringify(searchItems);
 
           const meta = document.createElement("span");
           meta.className = "search-result-meta";
-          meta.textContent = [item.date, ...(item.categories || [])].filter(Boolean).join(" / ");
+          meta.textContent = [item.date, ...(item.categories || [])].filter(Boolean).join(", ");
 
           const title = document.createElement("strong");
           title.textContent = item.title;

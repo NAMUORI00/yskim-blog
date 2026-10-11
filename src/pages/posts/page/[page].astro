@@ -15,7 +15,7 @@ const { posts, page, pages } = Astro.props;
 const taxonomy = await getTaxonomy();
 ---
 
-<Base title={`${UI.allPosts} / ${page}페이지`} description="공개 발행된 노트와 글.">
+<Base title={`${UI.allPosts} (${page}페이지)`} description="공개 발행된 노트와 글.">
   <ArchiveView
     kicker="Archive"
     title={UI.allPosts}

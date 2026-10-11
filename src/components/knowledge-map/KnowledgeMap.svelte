@@ -128,7 +128,7 @@
     <section class="km-compact" aria-label="지식 지도">
       <div class="km-head">
         <span class="km-kicker">Knowledge Map</span>
-        {#if data}<span class="km-compact-count">글 {postCount} / 주제 {topicCount}</span>{/if}
+        {#if data}<span class="km-compact-count">글 {postCount}개, 주제 {topicCount}개</span>{/if}
       </div>
       <div class="kg3-thumb" bind:clientWidth={thumbWidth} bind:clientHeight={thumbHeight}>
         {#if status === "ready" && data && thumbView && thumbCamera}
