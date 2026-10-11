@@ -1,6 +1,6 @@
 export const SITE = {
   title: "나무가든",
-  description: "연구·엔지니어링·지식관리 노트를 기록하는 블로그.",
+  description: "연구, 엔지니어링, 지식관리 노트를 기록하는 블로그.",
   author: "yskim",
   handle: "namuori",
   location: "Seoul, Korea",

@@ -348,7 +348,7 @@
         </button>
       {/if}
     </div>
-    <p class="km-sub">{overview ? "카테고리를 고르면 주제와 글로 펼칩니다" : "카테고리 · 주제 · 글"}</p>
+    <p class="km-sub">{overview ? "카테고리를 고르면 주제와 글로 펼칩니다" : "카테고리, 주제, 글"}</p>
   {/if}
 
   <div class="km-surface-body">

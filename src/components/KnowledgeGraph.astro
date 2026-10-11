@@ -35,7 +35,7 @@ const src = `/knowledge-map.json?v=${ASSET_VERSION}`;
           <p class="km-detail-title">{currentPost.title}</p>
           <p class="kg3-meta">
             {currentPost.date.toISOString().slice(0, 10)}
-            {currentCategory && <> · <a href={currentCategory.url}>{currentCategory.label}</a></>}
+            {currentCategory && <> / <a href={currentCategory.url}>{currentCategory.label}</a></>}
           </p>
           {currentTags.length > 0 && (
             <ul class="km-chips">

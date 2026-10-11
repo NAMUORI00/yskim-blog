@@ -23,7 +23,7 @@ const category = taxonomy.categoryById.get(id)!;
 const pages = paginate(category.posts.map((slug) => taxonomy.bySlug.get(slug)!));
 ---
 
-<Base title={`${category.label} · ${page}페이지`} description={`카테고리: ${category.label}`}>
+<Base title={`${category.label} / ${page}페이지`} description={`카테고리: ${category.label}`}>
   <ArchiveView
     kicker="Category"
     title={category.label}

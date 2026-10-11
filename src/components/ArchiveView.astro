@@ -30,7 +30,7 @@ const { kicker, title, description, total, posts, base, page, pages, facets, emp
     <p class="eyebrow">{kicker}</p>
     <h1 id="archive-title">{title}</h1>
     <p class="page-head__meta">
-      글 {total}개{pages > 1 && <span> · {page} / {pages} 페이지</span>}
+      글 {total}개{pages > 1 && <span> / {page} / {pages} 페이지</span>}
     </p>
     {description && <p class="page-head__desc">{description}</p>}
     {facets && facets.items.length > 0 && (

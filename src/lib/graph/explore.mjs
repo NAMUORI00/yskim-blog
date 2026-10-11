@@ -70,7 +70,7 @@ export function announce(graph, before, after) {
     if (title) parts.push(`${title} 고정됨`);
     else if (before.pinnedId && after.mode === before.mode && after.domain === before.domain) parts.push("고정 해제됨");
   }
-  return parts.join(" · ");
+  return parts.join(" / ");
 }
 
 /* ── transitions: bring forward → unfold, fold → back home ───── */

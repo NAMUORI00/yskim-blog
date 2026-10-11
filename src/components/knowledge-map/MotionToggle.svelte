@@ -26,6 +26,6 @@
 >
   <span class="kg3-motion-dot" aria-hidden="true"></span>
   움직임
-  <span class="kg3-motion-state" aria-hidden="true">{motion.reduced ? "끔 · 기기 설정" : on ? "켬" : "끔"}</span>
+  <span class="kg3-motion-state" aria-hidden="true">{motion.reduced ? "끔 (기기 설정)" : on ? "켬" : "끔"}</span>
 </button>
 <span id={helpId} class="km-sr">{help}</span>

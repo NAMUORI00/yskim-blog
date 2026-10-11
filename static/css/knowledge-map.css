@@ -1149,7 +1149,7 @@ html.js .km-host:not([data-km-state="failed"]):not([data-km-state="empty"]) .km-
 }
 
 .kg3-plain-list li::before {
-  content: "· ";
+  content: "";
   color: var(--km-muted);
 }
 

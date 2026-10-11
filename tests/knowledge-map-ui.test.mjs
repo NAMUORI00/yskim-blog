@@ -259,7 +259,7 @@ test("the compact card shows a still globe and opens the same wide view", async 
     assert.ok(map.$(".km-compact .kg3-canvas"));
     assert.equal(map.$(".km-compact .kg3-overlay").getAttribute("aria-hidden"), "true");
     assert.equal(map.$$(".km-compact button.kg3-domain").length, 0, "the thumbnail should not be interactive");
-    assert.match(map.$(".km-compact-count").textContent, /글 4 · 주제 4/);
+    assert.equal(map.$(".km-compact-count").textContent, "글 4 / 주제 4");
     map.$(".km-drawer-open").click();
     flushSync();
     await settle(2);
